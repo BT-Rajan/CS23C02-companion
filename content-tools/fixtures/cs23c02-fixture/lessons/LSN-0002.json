@@ -1,0 +1,24 @@
+{
+  "id": "LSN-0002",
+  "title": "Changing a variable",
+  "topic": "TOP-0001",
+  "minutes": 5,
+  "blocks": [
+    {
+      "type": "paragraph",
+      "text": "Assigning again replaces the old value."
+    },
+    {
+      "type": "code",
+      "code": "x = 1\nx = x + 1\nprint(x)",
+      "expected_output": "2"
+    }
+  ],
+  "quiz": null,
+  "practice": {
+    "items": [],
+    "exercises": [
+      "EXR-0001"
+    ]
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "id": "LSN-0001",
+  "title": "What is a variable?",
+  "topic": "TOP-0001",
+  "minutes": 6,
+  "blocks": [
+    {
+      "type": "paragraph",
+      "text": "A variable is a name that refers to a value."
+    },
+    {
+      "type": "definition",
+      "term": "variable",
+      "text": "A name bound to a value."
+    },
+    {
+      "type": "code",
+      "code": "age = 19\nprint(age)",
+      "expected_output": "19"
+    },
+    {
+      "type": "syntax",
+      "text": "name = expression"
+    }
+  ],
+  "quiz": "ASM-0001",
+  "practice": {
+    "items": [
+      "ITM-0001",
+      "ITM-0002",
+      "ITM-0003"
+    ],
+    "exercises": []
+  }
+}

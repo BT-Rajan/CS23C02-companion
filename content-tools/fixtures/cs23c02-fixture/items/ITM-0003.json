@@ -1,0 +1,27 @@
+{
+  "id": "ITM-0003",
+  "type": "mcq",
+  "purpose": "practice",
+  "level": 1,
+  "stem": "Which is a valid variable name?",
+  "options": [
+    {
+      "id": "a",
+      "text": "2nd_place"
+    },
+    {
+      "id": "b",
+      "text": "total_score"
+    },
+    {
+      "id": "c",
+      "text": "my-var"
+    }
+  ],
+  "answer": "b",
+  "explanation": "FIXTURE-EXPLAIN-3: names cannot start with a digit or contain hyphens.",
+  "option_explanations": {
+    "a": "Starts with a digit.",
+    "c": "Hyphen is subtraction."
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "id": "ITM-0002",
+  "type": "mcq",
+  "purpose": "practice",
+  "level": 1,
+  "stem": "After `x = 3` then `x = x * 2`, what is x?",
+  "options": [
+    {
+      "id": "a",
+      "text": "3"
+    },
+    {
+      "id": "b",
+      "text": "5"
+    },
+    {
+      "id": "c",
+      "text": "6"
+    }
+  ],
+  "answer": "c",
+  "explanation": "FIXTURE-EXPLAIN-2: the right side is evaluated first using the old x (3), giving 6.",
+  "option_explanations": {
+    "a": "x was reassigned.",
+    "b": "Multiplication, not addition."
+  }
+}

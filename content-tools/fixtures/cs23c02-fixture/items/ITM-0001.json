@@ -1,0 +1,27 @@
+{
+  "id": "ITM-0001",
+  "type": "mcq",
+  "purpose": "practice",
+  "level": 1,
+  "stem": "What does `x = 5` do?",
+  "options": [
+    {
+      "id": "a",
+      "text": "Compares x with 5"
+    },
+    {
+      "id": "b",
+      "text": "Binds the name x to the value 5"
+    },
+    {
+      "id": "c",
+      "text": "Prints 5"
+    }
+  ],
+  "answer": "b",
+  "explanation": "FIXTURE-EXPLAIN-1: assignment binds a name to a value; it does not compare or print.",
+  "option_explanations": {
+    "a": "That would be ==.",
+    "c": "Assignment prints nothing."
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "units": [
+    {
+      "id": "UNT-0001",
+      "title": "Fixture unit: getting started",
+      "topics": [
+        {
+          "id": "TOP-0001",
+          "title": "Values and variables",
+          "lessons": [
+            "LSN-0001",
+            "LSN-0002"
+          ]
+        },
+        {
+          "id": "TOP-0002",
+          "title": "Making decisions",
+          "lessons": [
+            "LSN-0003"
+          ]
+        }
+      ]
+    }
+  ]
+}

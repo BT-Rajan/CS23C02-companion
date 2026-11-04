@@ -1,0 +1,13 @@
+{
+  "id": "ASM-0001",
+  "title": "Lesson quiz: variables",
+  "purpose": "lesson_quiz",
+  "items": [
+    "ITM-0001",
+    "ITM-0002",
+    "ITM-0003"
+  ],
+  "rules": {
+    "shuffle": true
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "id": "LSN-0003",
+  "title": "if and else",
+  "topic": "TOP-0002",
+  "minutes": 8,
+  "blocks": [
+    {
+      "type": "paragraph",
+      "text": "An if statement runs code only when a condition is true."
+    },
+    {
+      "type": "code",
+      "code": "n = 7\nif n % 2 == 0:\n    print('even')\nelse:\n    print('odd')",
+      "expected_output": "odd"
+    }
+  ],
+  "quiz": null,
+  "practice": {
+    "items": [],
+    "exercises": [
+      "EXR-0002"
+    ]
+  }
+}

@@ -14,3 +14,5 @@ build/
 .venv/
 .pytest_cache/
 *.csv
+content-tools/dist/
+var/

@@ -1,0 +1,26 @@
+{
+  "id": "EXR-0002",
+  "title": "Odd or even",
+  "statement": "Read an integer. Print even or odd.",
+  "io_spec": "Read from input, print to output.",
+  "starter": "n = int(input())\n",
+  "python": "3.12",
+  "timeout_s": 2,
+  "tests": [
+    {
+      "stdin": "10\n",
+      "expect": "even\n",
+      "visibility": "public"
+    },
+    {
+      "stdin": "7\n",
+      "expect": "odd\n",
+      "visibility": "hidden"
+    }
+  ],
+  "hints": [
+    "FIXTURE-HINT-3: use the remainder operator."
+  ],
+  "solution_approach": "FIXTURE-APPROACH-2: n % 2.",
+  "reference_solution": "n = int(input())\nprint('even' if n % 2 == 0 else 'odd')  # FIXTURE-REFERENCE-SOLUTION-2\n"
+}
