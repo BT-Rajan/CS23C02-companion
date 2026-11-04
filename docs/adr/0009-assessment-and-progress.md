@@ -1,0 +1,9 @@
+# 0009 Assessment integrity, offline policy, progress sync
+**Decision.**
+- **Server-owned assessment state machine:** `start` (server selects/orders questions, shuffles options with a per-attempt seed, sets `expires_at`) → autosave (`PUT` with monotonic sequence number) → `submit` (idempotent via client request id). The server scores. No pre-submit payload contains any correctness information. Results/explanations are released after submit by policy; the attempt stores a snapshot of what was shown. Assessments require connectivity.
+- **Practice MCQ:** the client sends the chosen option; the server returns verdict + explanation for that question only, rate-limited. Keys are never bulk-downloadable. **Offline practice MCQs are not supported in release 1**; offline mode covers reading, examples, local Run and tracing walkthroughs that need no key. (Revisit only if usability testing demands it; it would put keys on device for practice items only.)
+- **Code tracing:** the stepping data (states per line) is part of the public package *after* the student commits a prediction; the prediction check is server-side in practice and assessment.
+- **Hints/solutions:** released by content policy (e.g., hint 1 after first failed submit, solution after N attempts or time), enforced server-side, logged.
+- **Progress:** append-only event log from the client with client-generated UUIDs (idempotent), merged server-side. Server-verified outcomes (assessment scores, exercise passes) are authoritative; lesson-read marks are client-reported and low-stakes. Conflicts resolved by union / max (completion never regresses via sync). All user identity comes from the token, never from request parameters.
+- **Policies still to approve** (proposed defaults in `docs/open-questions.md`): attempt limits, time limits, release timing.
+**Consequences.** Score manipulation, replay and local-state tampering cannot affect recorded assessment results.
