@@ -1,6 +1,6 @@
 # Test evidence — Phase 2 (commercial access foundation)
 Environment: MySQL 8.0.46, Python 3.12, schema built from the Alembic migration, runtime DB user with production-style grants.
-Result of the last run: **43 passed** (three consecutive full runs; concurrency tests repeated 12 times with no failure).
+Result of the last run: **Phase 2: 43 tests; Phase 3 slice 1: +17 backend tests = 60 backend tests, plus 12 content-tools tests, all passing** (Phase 2 concurrency tests repeated 12 times with no failure).
 Static analysis: `bandit -ll` no findings. Dependencies: `pip-audit` no known vulnerabilities (at run time).
 **Not evidenced yet:** CI on GitHub (workflow written, not yet run), real Gmail delivery, load testing, external penetration test, any content/assessment/sandbox controls (later phases).
 
@@ -33,3 +33,21 @@ Static analysis: `bandit -ll` no findings. Dependencies: `pip-audit` no known vu
 | F-4 | MySQL cannot REVOKE a table privilege granted at database level; the planned audit-log restriction would have failed silently | High (security control) | Fixed: per-table grants generated from the models |
 | F-5 | A per-IP failure cap of 20/day would lock out honest students behind a shared campus/hostel IP | Medium (UX) | Changed: default 100/day, configurable; the tight limit is per account |
 | F-6 | Rate limiter is check-then-record, so heavy concurrency can overshoot a limit slightly | Low | Accepted; documented |
+
+
+# Phase 3, slice 1 — content delivery and progress (backend only)
+Not covered: any Android code (not started), real book content (none exists; tests use clearly-marked fixtures), offline encryption (Phase 6), the sandbox (Phase 5).
+**Mutation checks** (each control deliberately broken, then restored; the tests failed every time): removing the edition-ownership filter on file downloads; skipping signature verification; accepting any requested edition; allowing arbitrary progress event kinds; accepting unknown content ids; skipping the importer leak check.
+
+| ID | Result | Tests |
+|---|---|---|
+| C1 content without activation | Pass: login required (401); no entitlement (403) for manifest and files | `test_content_requires_login_and_activation` |
+| C2 changing edition/object ids (BOLA) | Pass: unknown edition and someone else's edition give the identical 403; another edition's file hash and unknown/invalid hashes give the identical 404; progress is per account and a client-supplied user id is rejected | `test_unknown_edition_and_someone_elses_edition…`, `test_files_of_another_edition…`, `test_each_account_sees_only_its_own_progress…` |
+| C3 keys in packages (build side) | Pass: public objects are built by allowlist; an unlisted source field cannot leak; an injected leak is caught by the independent leak check; Release validation rejects bad source | `content-tools/tests/test_build.py` |
+| C3 / D2 keys in served files | Pass: every served file and the manifest were compared against all protected strings (15+ checked); importer re-checks and refuses even a validly signed package carrying a protected field | `test_nothing_protected_is_reachable…`, `test_importer_rejects_a_validly_signed…` |
+| Package integrity | Pass: edited manifest, edited file, unlisted file, missing file, wrong signing key and path traversal are all refused; nothing is half-imported | `test_importer_rejects_tampering_in_every_form` |
+| C5 revoked access | Pass: revoked entitlement stops manifest and file access (superseded files remain available to current owners so downloads survive an update; drafts are never served) | `test_drafts_are_not_served…` |
+| D8 forged progress | Partial pass: only lesson_opened/lesson_completed are accepted from clients, content ids must exist in the account's current release, replays are idempotent (8 concurrent identical events → 1 accepted). Assessment and exercise outcomes are not client-writable (they do not exist yet) | `tests/test_progress.py` |
+| C6 bulk scraping | Partial: 2000 file requests/hour/account brake is implemented; no volume-anomaly alerting yet and the limit itself is untested at its threshold | – |
+
+Findings: none new from Phase 3 testing (first full run passed; the mutation checks above are the evidence that the tests are not vacuous). Two weak assertions in my own tests were found and tightened during review.

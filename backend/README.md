@@ -1,8 +1,8 @@
 # Backend (Phase 2: commercial access foundation)
 FastAPI + MySQL 8. Implemented: registration with emailed verification code, login, rotating refresh tokens with reuse
 detection, device cap, password reset by emailed code, one-time activation codes with atomic redemption, entitlement
-check dependency, audit log, DB-backed rate limits, admin CLI for code batches. **Not yet built:** content, progress,
-assessments, execution (later phases).
+check dependency, audit log, DB-backed rate limits, admin CLI for code batches. Phase 3 slice 1 adds signed content packages
+(import, entitlement-gated manifest and files) and progress events with resume. **Not yet built:** assessments, execution, Android app.
 
 ## Run locally
 ```
@@ -21,6 +21,8 @@ python -m app.cli create-batch --edition cs23c02-2026 --count 500 --label "print
 python -m app.cli release-batch --batch 1      # when the books ship
 python -m app.cli revoke-batch --batch 1       # contain a leak (activated books are untouched)
 python -m app.cli batch-report --batch 1
+python -m app.cli import-content --edition cs23c02-2026 --public OUT/public --protected OUT/protected.json [--publish]
+python -m app.cli publish-release --release 1
 python -m app.cli purge-rate-events            # run daily from cron
 ```
 `codes.csv` is the only place plaintext codes exist (mode 0600). Send it to the printer over an encrypted channel and delete it.

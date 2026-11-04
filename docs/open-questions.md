@@ -12,8 +12,8 @@ Resolved by the owner: Android builds on GitHub Actions (ADR 0012); MySQL 8 (not
 | 7 | Allowed Python modules | Initial list in ADR 0006; extend per lesson via content |
 | 8 | Domain, email sending domain (SPF/DKIM/DMARC), Play developer account | Needed before Phase 2 staging |
 | 9 | Token hygiene | Replace the classic token with a fine-grained one scoped to the companion (and read-only textbook) repo; revoke the current one |
-| 10 | Phase 3 slice order (backend content delivery → Android shell → home/navigation → lesson reader → progress) | Awaiting explicit approval |
-| 11 | Defer search and bookmarks until after Phase 3 | Awaiting explicit approval |
-| 12 | Reference low-end Android phone (model) for performance targets | Awaiting owner |
-| 13 | Anomaly re-verification for credential sharing: before or after the Android shell | Awaiting owner (default: after) |
-| 14 | Gmail credentials in `backend/.env` for real delivery testing | Awaiting owner |
+| 10 | Phase 3 slice order | **Approved** |
+| 11 | Defer search and bookmarks until after Phase 3 | **Confirmed** |
+| 12 | Reference low-end phone | **Redmi A7, 3 GB, Android 14** (confirm exact model) |
+| 13 | Anomaly re-verification | **After** the Android shell |
+| 14 | Gmail credentials | **Left untested for now** |

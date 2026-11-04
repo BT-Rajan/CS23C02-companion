@@ -15,5 +15,8 @@ Legend: **Proposed** (designed, not built) · **Incomplete** · **Implemented** 
 | Gmail SMTP delivery | Implemented, **not tested against real Gmail** | needs `.env` credentials |
 | GitHub Actions CI | Written, **not yet run** | – |
 | Anomaly re-verification for credential sharing | Proposed (not built) | – |
-| Content, progress, assessments, execution, Android app | Not started | – |
+| Content packages: builder, signing, leak check, fixtures | Implemented, Tested (12 tests) | `content-tools/` |
+| Content delivery API (signed manifest, entitlement-gated files), importer, progress events + resume | Implemented, Tested (17 tests + mutation checks), backend only | `docs/security/test-evidence.md` |
+| Assessments, execution | Not started | – |
+| Android app | Not started (build via GitHub Actions, ADR 0012; workflow not yet written) | – |
 | Android build environment | Decided: GitHub Actions (ADR 0012); workflow **not yet written or run** | – |

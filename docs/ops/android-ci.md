@@ -10,4 +10,4 @@ Send: what you tapped, what you expected, what happened, the phone model and And
 |---|---|
 | It compiles; lint passes; unit tests pass; no known-vulnerable dependencies | Layout and readability; typing comfort in the editor; startup speed and smoothness on a low-end phone; real network behaviour |
 ## Reference device
-Not yet chosen (see `open-questions.md`). Until then performance numbers are labelled "emulator" or "unmeasured".
+Owner's phone: **Redmi A7, 3 GB RAM, Android 14** (model name to be confirmed; the Redmi 7A shipped with Android 9). Treat it as the low-end target: 3 GB RAM, API 34. Performance numbers measured elsewhere are labelled "emulator" or "unmeasured".

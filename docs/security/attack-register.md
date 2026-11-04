@@ -20,21 +20,21 @@
 | B6 | Tamper access token | Auth | Signature + expiry + algorithm pinning | `alg=none`, bad-sig tests | Pass (Phase 2) – see test-evidence.md | None |
 | B7 | Skip entitlement check | API | Central dependency on every protected route | Route inventory test: every route declares policy | Pass (Phase 2) – see test-evidence.md | None |
 | B8 | Recovery via support social engineering | Process | Proof-of-purchase procedure | Process review | Not tested | Medium |
-| C1 | Fetch content without activation | Content | Entitlement on manifest and files | Negative tests | Not tested | None |
-| C2 | Change edition/object IDs (BOLA) | Content/progress | Object's edition checked against entitlement; own-user only | Authorization matrix tests | Not tested | None |
-| C3 | Extract keys from APK/cache | Content | Keys/hidden tests never in packages | Package scan in CI | Not tested | None |
+| C1 | Fetch content without activation | Content | Entitlement on manifest and files | Negative tests | Pass (Phase 3 backend) – see test-evidence.md | None |
+| C2 | Change edition/object IDs (BOLA) | Content/progress | Object's edition checked against entitlement; own-user only | Authorization matrix tests | Pass (Phase 3 backend) – see test-evidence.md | None |
+| C3 | Extract keys from APK/cache | Content | Keys/hidden tests never in packages | Package scan in CI | Pass for build, importer and served files (Phase 3) – see test-evidence.md | None |
 | C4 | Flip local entitlement flag | Client | No effect on server data; offline key expires | Patch + offline test | Not tested | Low |
-| C5 | Read cache after logout/user switch | Client | Encrypted store keyed per account; wiped on logout | Device test | Not tested | Low |
-| C6 | Bulk scrape lessons | Content | Volume/rate detection; signed short-lived URLs | Load + alert test | Not tested | **Medium** |
+| C5 | Read cache after logout/user switch | Client | Encrypted store keyed per account; wiped on logout | Device test | Backend revocation passes; device cache not built – see test-evidence.md | Low |
+| C6 | Bulk scrape lessons | Content | Volume/rate detection; signed short-lived URLs | Load + alert test | Partial: per-account brake only – see test-evidence.md | **Medium** |
 | C7 | Screenshot/photograph content | Content | None possible | – | Accepted | **High (accepted)** |
 | D1 | Read answers from API/pre-submit | Assessment | No correctness in pre-submit payloads | Response schema test | Not tested | None |
-| D2 | Inspect app resources for keys | Assessment | None shipped | CI package scan | Not tested | None |
+| D2 | Inspect app resources for keys | Assessment | None shipped | CI package scan | Pass for packages (Phase 3); app resources not built – see test-evidence.md | None |
 | D3 | Submit altered scores/answers | Assessment | Server scores from raw choices | Tamper tests | Not tested | None |
 | D4 | Replay a submission | Assessment | Idempotent request id | Replay test | Not tested | None |
 | D5 | Unlimited retries via local reset | Assessment | Attempt counts server-side | Reset test | Not tested | None |
 | D6 | Share answers by option position | Assessment | Per-attempt shuffle | Statistical test | Not tested | Low |
 | D7 | Repeated practice calls to learn keys | Practice | Per-question verdicts rate-limited; anomaly alerts | Enumeration test | Not tested | **Medium** (inherent to immediate feedback) |
-| D8 | Forge progress events | Progress | Only low-stakes events accepted from client; verified events server-derived | Event fuzz | Not tested | Low |
+| D8 | Forge progress events | Progress | Only low-stakes events accepted from client; verified events server-derived | Event fuzz | Partial pass (Phase 3) – see test-evidence.md | Low |
 | E1 | Infinite loop | Sandbox | Wall/CPU limits, kill | Hostile suite | Not tested | None |
 | E2 | Memory bomb | Sandbox | cgroup limit | Hostile suite | Not tested | None |
 | E3 | Output flood | Sandbox/app | Output cap, truncation | Hostile suite | Not tested | None |
