@@ -1,5 +1,5 @@
 # Open questions and proposed defaults
-Resolved by the owner: MySQL 8 (not PostgreSQL); Gmail SMTP configured via .env; content layout and proposed defaults #2–#5 approved; web = landing page only; email + password with emailed recovery code; minSdk 26; execution planned for performance and security (hybrid); textbook repo at `BT-Rajan/CS23C02`.
+Resolved by the owner: Android builds on GitHub Actions (ADR 0012); MySQL 8 (not PostgreSQL); Gmail SMTP configured via .env; content layout and proposed defaults #2–#5 approved; web = landing page only; email + password with emailed recovery code; minSdk 26; execution planned for performance and security (hybrid); textbook repo at `BT-Rajan/CS23C02`.
 
 | # | Question | Proposed default (needs approval) |
 |---|---|---|
@@ -12,3 +12,8 @@ Resolved by the owner: MySQL 8 (not PostgreSQL); Gmail SMTP configured via .env;
 | 7 | Allowed Python modules | Initial list in ADR 0006; extend per lesson via content |
 | 8 | Domain, email sending domain (SPF/DKIM/DMARC), Play developer account | Needed before Phase 2 staging |
 | 9 | Token hygiene | Replace the classic token with a fine-grained one scoped to the companion (and read-only textbook) repo; revoke the current one |
+| 10 | Phase 3 slice order (backend content delivery → Android shell → home/navigation → lesson reader → progress) | Awaiting explicit approval |
+| 11 | Defer search and bookmarks until after Phase 3 | Awaiting explicit approval |
+| 12 | Reference low-end Android phone (model) for performance targets | Awaiting owner |
+| 13 | Anomaly re-verification for credential sharing: before or after the Android shell | Awaiting owner (default: after) |
+| 14 | Gmail credentials in `backend/.env` for real delivery testing | Awaiting owner |

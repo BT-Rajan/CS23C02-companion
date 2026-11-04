@@ -14,3 +14,4 @@ Format: Context → Decision → Consequences. Status is **Proposed** until the 
 | 0009 | Assessment integrity and progress sync | Proposed |
 | 0010 | Database: MySQL 8 | Approved by owner |
 | 0011 | Email via Gmail SMTP behind a provider interface | Approved by owner |
+| 0012 | Android builds run on GitHub Actions | Approved by owner |

@@ -16,3 +16,4 @@ Legend: **Proposed** (designed, not built) · **Incomplete** · **Implemented** 
 | GitHub Actions CI | Written, **not yet run** | – |
 | Anomaly re-verification for credential sharing | Proposed (not built) | – |
 | Content, progress, assessments, execution, Android app | Not started | – |
+| Android build environment | Decided: GitHub Actions (ADR 0012); workflow **not yet written or run** | – |
