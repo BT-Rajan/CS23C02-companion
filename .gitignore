@@ -22,3 +22,4 @@ android/app/build/
 android/.kotlin/
 *.apk
 *.aab
+android/.env

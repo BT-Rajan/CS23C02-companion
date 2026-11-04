@@ -13,6 +13,9 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     defaults: { run: { working-directory: android } }
+    env:
+      API_BASE_URL: ${{ vars.API_BASE_URL }}      # repository variable; empty falls back to the debug placeholder
+      API_CERT_PINS: ${{ vars.API_CERT_PINS }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
