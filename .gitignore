@@ -1,0 +1,13 @@
+.env
+.env.*
+!.env.example
+*.keystore
+*.jks
+local.properties
+__pycache__/
+node_modules/
+build/
+.gradle/
+.idea/
+*.pem
+*.key
