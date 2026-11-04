@@ -10,4 +10,9 @@ Legend: **Proposed** (designed, not built) · **Incomplete** · **Implemented** 
 | Content contract | Proposed (textbook repo is empty) | `docs/content-contract.md` |
 | Threat model, attack register, control matrix | Proposed (no attack tested yet) | `docs/security/` |
 | UX journeys, screen map, design system | Proposed | `docs/ux/` |
-| Any application code | Not started | – |
+| Backend foundation: registration, verification, login, refresh rotation, device cap, password reset | Implemented, Tested (43 tests, real MySQL) | `docs/security/test-evidence.md` |
+| Activation: code generation, atomic redemption, entitlements, audit, admin CLI | Implemented, Tested | same |
+| Gmail SMTP delivery | Implemented, **not tested against real Gmail** | needs `.env` credentials |
+| GitHub Actions CI | Written, **not yet run** | – |
+| Anomaly re-verification for credential sharing | Proposed (not built) | – |
+| Content, progress, assessments, execution, Android app | Not started | – |
