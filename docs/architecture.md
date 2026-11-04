@@ -11,7 +11,7 @@ flowchart LR
   end
   UI -- TLS + pinned cert --> API
   subgraph Cloud
-    API[FastAPI modular monolith] --> PG[(PostgreSQL)]
+    API[FastAPI modular monolith] --> PG[(MySQL 8)]
     API --> OBJ[(Object store: signed content packages)]
     API -- mTLS, private network --> EXE[Execution service: gVisor/nsjail pool]
     CI[Textbook repo CI: validate + build] --> OBJ
@@ -26,7 +26,7 @@ Rules: the execution service has no route to the database or internet. The app n
 sequenceDiagram
   participant S as Student app
   participant A as API
-  participant D as PostgreSQL
+  participant D as MySQL 8
   S->>A: POST /v1/activation {code} (access token)
   A->>A: rate-limit(account, IP); verified email? check char valid?
   A->>D: BEGIN; UPDATE codes SET state='redeemed' WHERE hmac=? AND state='issued' RETURNING
@@ -72,16 +72,16 @@ erDiagram
   USERS ||--o{ AUDIT_LOG : acts
 ```
 Key tables and constraints:
-- `users(id uuid, email citext unique, email_verified_at, pw_hash, created_at, disabled_at)`
+- `users(id CHAR(36) uuid, email lower-cased varchar unique, email_verified_at, pw_hash, created_at, disabled_at)`
 - `sessions(id, user_id, family_id, refresh_hash unique, device_label, created_at, last_used_at, revoked_at, reuse_detected bool)`
 - `one_time_codes(id, user_id/email, purpose{verify,reset}, code_hash, expires_at, attempts, used_at, sends)`
 - `activation_codes(id, batch_id, code_hmac unique, state, redeemed_by, redeemed_at)`; partial index on `state='issued'`
 - `entitlements(id, user_id, edition_id, activation_code_id unique, created_at, revoked_at)`; `unique(user_id, edition_id)`
 - `content_releases(id, edition_id, version, manifest_hash, signed_at, min_app_version, status)`
 - Protected content tables: `mcq_keys`, `trace_answers`, `exercise_tests(hidden)`, `solutions`, keyed by stable content IDs from the textbook repo.
-- `progress_events(id uuid PK client-generated, user_id, kind, content_id, payload jsonb, client_ts, server_ts)`; `lesson_progress` is a derived view.
-- `assessment_attempts(id, user_id, assessment_id, seed, started_at, expires_at, submitted_at, score, snapshot jsonb, request_id unique per user)`; `attempt_answers(attempt_id, question_id, chosen, seq)`
-- `exercise_submissions(id, user_id, exercise_id, code_hash, code, result jsonb, created_at)`
+- `progress_events(id CHAR(36) uuid PK client-generated, user_id, kind, content_id, payload JSON, client_ts, server_ts)`; `lesson_progress` is a derived view.
+- `assessment_attempts(id, user_id, assessment_id, seed, started_at, expires_at, submitted_at, score, snapshot JSON, request_id unique per user)`; `attempt_answers(attempt_id, question_id, chosen, seq)`
+- `exercise_submissions(id, user_id, exercise_id, code_hash, code, result JSON, created_at)`
 - `audit_log(id, at, actor, action, object, outcome, ip_hash, ref)` append-only (no UPDATE/DELETE grants to the app role).
 Database roles: the app role has no DDL rights; a separate migration role runs Alembic.
 
@@ -115,4 +115,4 @@ Common: `user_id` is never accepted from the client; object IDs are checked agai
 Entitlement offline: the encrypted package key is cached after a successful online check and expires (e.g., 14 days) unless refreshed, so logout/revocation takes effect and offline access cannot outlive entitlement indefinitely.
 
 ## 7. Observability
-Structured logs without secrets or raw codes; metrics for activation failures, refresh-reuse events, sandbox kills/timeouts, rate-limit hits; alerts on batch-level anomalies. Backups: PostgreSQL PITR; restore tested in Phase 8.
+Structured logs without secrets or raw codes; metrics for activation failures, refresh-reuse events, sandbox kills/timeouts, rate-limit hits; alerts on batch-level anomalies. Backups: MySQL 8 binlog PITR; restore tested in Phase 8.

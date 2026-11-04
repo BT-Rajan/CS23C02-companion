@@ -1,4 +1,4 @@
-# 0002 Backend: modular FastAPI monolith + PostgreSQL
+# 0002 Backend: modular FastAPI monolith (PostgreSQL part superseded by ADR 0010: MySQL 8)
 **Context.** Zigora's backend is one 9.5k-line file on MariaDB. The product has a small API (auth, activation, content, progress, assessment, exec).
 **Decision.** Python 3.12, FastAPI, SQLAlchemy 2 + Alembic migrations, PostgreSQL. Modules: `auth`, `activation`, `entitlements`, `content`, `progress`, `assessment`, `exec_client`, `audit`. One deployable; the execution sandbox is a *separate* service.
 **Why Postgres.** Row-level atomicity primitives we rely on (`UPDATE … RETURNING`, partial unique indexes, `SELECT … FOR UPDATE SKIP LOCKED`), better constraints than MariaDB defaults. MariaDB remains acceptable if the owner prefers; the design only needs transactional atomic updates and unique indexes.

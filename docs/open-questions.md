@@ -1,5 +1,5 @@
 # Open questions and proposed defaults
-Resolved by the owner: web = landing page only; email + password with emailed recovery code; minSdk 26; execution planned for performance and security (hybrid); textbook repo at `BT-Rajan/CS23C02`.
+Resolved by the owner: MySQL 8 (not PostgreSQL); Gmail SMTP configured via .env; content layout and proposed defaults #2–#5 approved; web = landing page only; email + password with emailed recovery code; minSdk 26; execution planned for performance and security (hybrid); textbook repo at `BT-Rajan/CS23C02`.
 
 | # | Question | Proposed default (needs approval) |
 |---|---|---|
