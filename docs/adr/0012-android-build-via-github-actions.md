@@ -9,3 +9,6 @@
 4. Pinned versions: Gradle wrapper, Android Gradle Plugin, Kotlin and Compose BOM versions are pinned and checked in; dependency updates are deliberate. `gradle/actions/wrapper-validation` verifies the wrapper jar.
 5. Dependency audit and secret scanning also run in CI for the Android module.
 **Consequences.** Each fix cycle takes minutes, not seconds, so changes are batched into small, testable slices. The assistant cannot observe the app running; look and feel, performance and usability are judged by the owner on a real phone (see `docs/ops/android-ci.md`). A reference low-end device is still needed for the performance targets.
+
+## Amendment (2026-11-04): Gradle wrapper
+The sandbox cannot download Gradle to generate a wrapper, so the first workflow pins Gradle with `gradle/actions/setup-gradle` (`gradle-version: 8.10.2`). Rule 4 (wrapper validation) applies once a wrapper is generated and committed; until then versions are pinned in the workflow and `android/build.gradle.kts`.

@@ -16,3 +16,9 @@ build/
 *.csv
 content-tools/dist/
 var/
+android/.gradle/
+android/build/
+android/app/build/
+android/.kotlin/
+*.apk
+*.aab
