@@ -12,3 +12,7 @@
 
 ## Amendment (2026-11-04): Gradle wrapper
 The sandbox cannot download Gradle to generate a wrapper, so the first workflow pins Gradle with `gradle/actions/setup-gradle` (`gradle-version: 8.10.2`). Rule 4 (wrapper validation) applies once a wrapper is generated and committed; until then versions are pinned in the workflow and `android/build.gradle.kts`.
+
+## Evidence (2026-11-04): the loop works
+Hello-world app, run 41913367690: checkout, JDK 17, Gradle 8.10.2, `lintDebug` + `testDebugUnitTest` + `assembleDebug` all executed and passed (BUILD SUCCESSFUL in 2m 20s); the debug APK (8.3 MB) and reports uploaded as artifacts; the log tail was published to the `ci-logs` branch and read back from the sandbox. Run status and step results are read via `api.github.com`. Direct job-log download answers with a redirect (HTTP 302) to a storage host that was not tried; the `ci-logs` branch is the supported way to read logs.
+
