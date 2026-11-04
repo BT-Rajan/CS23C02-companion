@@ -13,12 +13,16 @@ os.environ.setdefault("MIGRATION_DATABASE_URL", "mysql+pymysql://migrator:migrat
 os.environ.setdefault("TEST_ADMIN_URL", "mysql+pymysql://root@localhost/?unix_socket=/var/run/mysqld/mysqld.sock")
 
 import re  # noqa: E402
+import json  # noqa: E402
+import shutil  # noqa: E402
+import sys  # noqa: E402
+import tempfile  # noqa: E402
 
 import pytest  # noqa: E402
 from alembic import command  # noqa: E402
 from alembic.config import Config  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
-from sqlalchemy import create_engine, text  # noqa: E402
+from sqlalchemy import create_engine, select, text  # noqa: E402
 
 from app import mail  # noqa: E402
 from app.activation import codes as codelib  # noqa: E402
@@ -30,6 +34,13 @@ from app.models import ActivationBatch, ActivationCode, Base, Edition, User  # n
 from app.security import hash_password  # noqa: E402
 
 BACKEND = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(BACKEND.parent / "content-tools"))
+from cs23c02_content import build as cbuild  # noqa: E402
+from app.config import get_settings  # noqa: E402
+from app.content import importer  # noqa: E402
+from app.models import Entitlement  # noqa: E402
+FIXTURE = BACKEND.parent / "content-tools" / "fixtures" / "cs23c02-fixture"
+SIGNING = {}
 MIG = create_engine(os.environ["MIGRATION_DATABASE_URL"])
 APP_HOST = os.environ.get('TEST_APP_USER_HOST', 'localhost')
 ADMIN = create_engine(os.environ["TEST_ADMIN_URL"])
@@ -124,3 +135,58 @@ def seed_codes(n=1, state="issued", edition="ed1", title="CS23C02 First Edition"
             out.append(c)
         db.commit()
     return out
+
+
+@pytest.fixture(scope="session", autouse=True)
+def content_env():
+    priv, pub = cbuild.new_keypair()
+    SIGNING.update(priv=priv, pub=pub)
+    st = get_settings()
+    st.content_dir = tempfile.mkdtemp(prefix="content-")
+    st.content_signing_pubkey = pub
+    yield
+    shutil.rmtree(st.content_dir, ignore_errors=True)
+
+
+def build_package(version="0.1.0", mutate=None, priv=None):
+    """Builds the fixture into a fresh temp dir, optionally altering the source first. Returns (public_dir, protected_path)."""
+    work = pathlib.Path(tempfile.mkdtemp(prefix="pkg-"))
+    src = work / "src"
+    shutil.copytree(FIXTURE, src)
+    b = json.loads((src / "book.json").read_text())
+    b["version"] = version
+    (src / "book.json").write_text(json.dumps(b))
+    if mutate:
+        mutate(src)
+    cbuild.build(src, work / "out", cbuild.load_private(priv or SIGNING["priv"]))
+    return work / "out" / "public", work / "out" / "protected.json"
+
+
+def ensure_edition(edition="ed1", title="CS23C02 First Edition"):
+    with SessionLocal() as db:
+        if not db.get(Edition, edition):
+            db.add(Edition(id=edition, title=title, created_at=utcnow()))
+            db.commit()
+
+
+def import_fixture(edition="ed1", version="0.1.0", publish=True, mutate=None):
+    ensure_edition(edition)
+    pub, prot = build_package(version, mutate)
+    with SessionLocal() as db:
+        return importer.import_release(db, edition, pub, prot, publish=publish)
+
+
+def grant(user_id, edition="ed1"):
+    """Give an account an entitlement the way a redeemed code would."""
+    ensure_edition(edition)
+    (code,) = seed_codes(1, state="redeemed", edition=edition)
+    with SessionLocal() as db:
+        cid = db.scalar(select(ActivationCode.id).where(ActivationCode.code_hmac == code_hmac(code)))
+        db.add(Entitlement(user_id=user_id, edition_id=edition, activation_code_id=cid, created_at=utcnow()))
+        db.commit()
+
+
+def owner(client, edition="ed1"):
+    u, tok, h = signed_in(client)
+    grant(u.id, edition)
+    return u, h

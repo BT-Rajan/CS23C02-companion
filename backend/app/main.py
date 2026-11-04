@@ -3,6 +3,8 @@ from fastapi import FastAPI, Request
 from . import errors
 from .activation.router import router as activation_router
 from .auth.router import router as auth_router
+from .content.router import router as content_router
+from .progress import router as progress_router
 from .config import get_settings
 from .me import router as me_router
 
@@ -65,6 +67,8 @@ def create_app() -> FastAPI:
     app.include_router(auth_router)
     app.include_router(activation_router)
     app.include_router(me_router)
+    app.include_router(content_router)
+    app.include_router(progress_router)
 
     @app.get("/healthz", include_in_schema=False)
     def healthz():
@@ -73,7 +77,7 @@ def create_app() -> FastAPI:
     @app.middleware("http")
     async def security_headers(request: Request, call_next):
         r = await call_next(request)
-        r.headers["Cache-Control"] = "no-store"
+        r.headers.setdefault("Cache-Control", "no-store")  # content files set their own private/immutable policy
         r.headers["X-Content-Type-Options"] = "nosniff"
         r.headers["Referrer-Policy"] = "no-referrer"
         r.headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'" if s.env == "prod" else r.headers.get("content-security-policy", "")

@@ -36,6 +36,8 @@ class Settings(BaseSettings):
 
     trust_proxy_headers: bool = False  # only behind a proxy that overwrites X-Forwarded-For
     max_body_bytes: int = 65536
+    content_dir: str = "./var/content"  # content-addressed public files; keep outside the web root
+    content_signing_pubkey: str = ""  # base64 Ed25519 public key that signs packages
     db_pool_size: int = 10
     db_max_overflow: int = 20
 

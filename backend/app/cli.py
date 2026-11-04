@@ -8,7 +8,10 @@ import sys
 from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
 
+import pathlib
+
 from . import mail, ratelimit
+from .content import importer
 from .activation import codes
 from .activation.service import code_hmac
 from .audit import audit
@@ -79,6 +82,21 @@ def report(a):
             print(f"{state:10} {n}")
 
 
+def import_content(a):
+    with SessionLocal() as db:
+        try:
+            rid = importer.import_release(db, a.edition, pathlib.Path(a.public), pathlib.Path(a.protected), publish=a.publish)
+        except importer.PackageError as e:
+            sys.exit(f"import refused: {e}")
+    print(f"release {rid} imported ({'published' if a.publish else 'draft'})")
+
+
+def publish_release(a):
+    with SessionLocal() as db:
+        importer.publish_release(db, a.release)
+    print("published")
+
+
 def send_test_email(a):
     mail.send_email(a.to, "CS23C02 Companion test", "If you can read this, SMTP is configured.")
     print("sent (check the inbox; failures are logged without secrets)")
@@ -95,6 +113,9 @@ def main():
     x = sub.add_parser("batch-report"); x.add_argument("--batch", type=int, required=True); x.set_defaults(f=report)
     x = sub.add_parser("print-grants"); x.add_argument("--schema", required=True); x.add_argument("--user", required=True, help="e.g. \"'cs23c02_app'@'%%'\""); x.set_defaults(f=print_grants)
     x = sub.add_parser("purge-rate-events"); x.set_defaults(f=lambda a: print(ratelimit.purge(), "rate events purged"))
+    x = sub.add_parser("import-content"); x.add_argument("--edition", required=True); x.add_argument("--public", required=True)
+    x.add_argument("--protected", required=True); x.add_argument("--publish", action="store_true"); x.set_defaults(f=import_content)
+    x = sub.add_parser("publish-release"); x.add_argument("--release", type=int, required=True); x.set_defaults(f=publish_release)
     x = sub.add_parser("send-test-email"); x.add_argument("to"); x.set_defaults(f=send_test_email)
     a = p.parse_args()
     a.f(a)

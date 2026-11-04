@@ -3,7 +3,8 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import BigInteger, CHAR, CheckConstraint, ForeignKey, Index, Integer, String, UniqueConstraint
-from sqlalchemy.dialects.mysql import DATETIME
+from sqlalchemy import JSON
+from sqlalchemy.dialects.mysql import DATETIME, MEDIUMBLOB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -117,3 +118,64 @@ class AuditLog(Base):
     ip_hash: Mapped[str | None] = mapped_column(CHAR(16))
     ref: Mapped[str | None] = mapped_column(CHAR(8))
     __table_args__ = (Index("ix_audit_action_at", "action", "at"), Index("ix_audit_actor", "actor_id", "at"))
+
+
+class ContentRelease(Base):
+    """One imported, signed App Content Package for an edition. Only 'published' (and 'superseded', for in-flight downloads) is served."""
+    __tablename__ = "content_releases"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    edition_id: Mapped[str] = mapped_column(String(40), ForeignKey("editions.id"))
+    version: Mapped[str] = mapped_column(String(32))
+    book_id: Mapped[str] = mapped_column(String(16))
+    manifest: Mapped[bytes] = mapped_column(MEDIUMBLOB)  # the exact signed bytes
+    manifest_sha256: Mapped[str] = mapped_column(CHAR(64))
+    signature: Mapped[str] = mapped_column(String(120))
+    min_app_version: Mapped[str] = mapped_column(String(32))
+    status: Mapped[str] = mapped_column(String(12), default="draft")
+    created_at: Mapped[datetime] = mapped_column(DT)
+    published_at: Mapped[datetime | None] = mapped_column(DT)
+    __table_args__ = (UniqueConstraint("edition_id", "version", name="uq_release_edition_version"),
+                      CheckConstraint("status IN ('draft','published','superseded')", name="ck_release_status"),
+                      Index("ix_release_edition_status", "edition_id", "status"))
+
+
+class ContentFile(Base):
+    __tablename__ = "content_files"
+    release_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("content_releases.id", ondelete="CASCADE"), primary_key=True)
+    path: Mapped[str] = mapped_column(String(200), primary_key=True)
+    sha256: Mapped[str] = mapped_column(CHAR(64), index=True)
+    size: Mapped[int] = mapped_column(Integer)
+
+
+class ContentLesson(Base):
+    """Lessons of a release in reading order; used to validate progress events and compute where to resume."""
+    __tablename__ = "content_lessons"
+    release_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("content_releases.id", ondelete="CASCADE"), primary_key=True)
+    lesson_id: Mapped[str] = mapped_column(String(16), primary_key=True)
+    ord: Mapped[int] = mapped_column(Integer)
+    title: Mapped[str] = mapped_column(String(200))
+    unit_id: Mapped[str] = mapped_column(String(16))
+    topic_id: Mapped[str] = mapped_column(String(16))
+
+
+class ProtectedContent(Base):
+    """Answers, explanations, hidden tests, hints, solutions. Never served by Phase 3 endpoints; used by Phases 4-5."""
+    __tablename__ = "protected_content"
+    release_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("content_releases.id", ondelete="CASCADE"), primary_key=True)
+    kind: Mapped[str] = mapped_column(String(12), primary_key=True)  # item | exercise
+    content_id: Mapped[str] = mapped_column(String(16), primary_key=True)
+    data: Mapped[dict] = mapped_column(JSON)
+
+
+class ProgressEvent(Base):
+    __tablename__ = "progress_events"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(CHAR(36), ForeignKey("users.id"))
+    event_uuid: Mapped[str] = mapped_column(CHAR(36))  # client-generated; makes retries idempotent
+    edition_id: Mapped[str] = mapped_column(String(40), ForeignKey("editions.id"))
+    kind: Mapped[str] = mapped_column(String(24))
+    content_id: Mapped[str] = mapped_column(String(16))
+    client_ts: Mapped[datetime | None] = mapped_column(DT)  # untrusted, informational
+    server_ts: Mapped[datetime] = mapped_column(DT)
+    __table_args__ = (UniqueConstraint("user_id", "event_uuid", name="uq_progress_user_event"),
+                      Index("ix_progress_user_edition_kind", "user_id", "edition_id", "kind"))
