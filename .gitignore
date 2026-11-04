@@ -11,3 +11,6 @@ build/
 .idea/
 *.pem
 *.key
+.venv/
+.pytest_cache/
+*.csv
