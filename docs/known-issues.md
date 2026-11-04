@@ -2,7 +2,7 @@
 | ID | Issue | Severity | Status |
 |---|---|---|---|
 | K1 | Zigora test suite, dependency CVE scan and secret scan not yet run | Info | Open |
-| K2 | Textbook repo empty — content contract unvalidated against real content | High (blocks Phase 3–4 content work) | Open |
+| K2 | Textbook repo has an architecture draft but no chapters or items; several decisions (P1–P9) pending; app package schema unvalidated against real content | High (blocks real-content work in Phases 3–4) | Open |
 | K3 | Pyodide performance on low-end devices unmeasured | Medium | Open (gate in Phase 5) |
 | K4 | Printing/code-handoff process undefined | Medium | Open |
 | K5 | Classic PAT with broad scopes shared in chat | High | Open — owner to rotate |

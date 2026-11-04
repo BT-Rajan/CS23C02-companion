@@ -21,14 +21,14 @@ See [`docs/status.md`](docs/status.md) for what is implemented, tested, incomple
 | `docs/zigora-audit.md` | Verified audit of the Zigora repo: reuse / rebuild / discard |
 | `docs/adr/` | Architecture decision records |
 | `docs/architecture.md` | Components, data flow, data model, API surface |
-| `docs/content-contract.md` | Proposed contract between the textbook repo and the app |
+| `docs/content-interface.md` | What the app consumes from the textbook repo; App Content Package v0; requests to the textbook side |
 | `docs/security/` | Threat model, attack register, control matrix, residual risks |
 | `docs/ux/` | Journeys, screen map, design system |
 | `docs/open-questions.md` | Decisions awaiting approval |
 | `docs/known-issues.md` | Known-issues register |
 
 ## Source repositories
-- Textbook (canonical content): `BT-Rajan/CS23C02` (private; empty at time of writing)
+- Textbook (canonical content and architecture): `BT-Rajan/CS23C02` (private; architecture drafts only, no chapters yet)
 - Zigora (code quarry, not a base): `BT-Rajan/zigora`
 
 ## Working rules

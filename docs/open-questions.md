@@ -3,7 +3,7 @@ Resolved by the owner: MySQL 8 (not PostgreSQL); Gmail SMTP configured via .env;
 
 | # | Question | Proposed default (needs approval) |
 |---|---|---|
-| 1 | Textbook repo is empty: confirm the layout in `content-contract.md` may be created there, and where the "approved content architecture" lives | Approve the proposal, or share the existing spec |
+| 1 | Textbook repo now has an approved architecture. Approve the requests in `content-interface.md` §3 (public/hidden tests, trace data, option explanations, edition fields, non-MCQ items) for the textbook session to consider | Approve §3 as proposals; I will not edit the textbook repo |
 | 2 | Assessment policy | 1 attempt per unit assessment per 24 h after the first; no time limit but a 3-hour session expiry; results and explanations shown after submit; review allowed afterwards |
 | 3 | Hints/solutions policy | Hint 1 after 1 failed check, hint 2 after 3, solution after 5 failed checks or on completion |
 | 4 | Support/recovery: lost code, damaged scratch panel, lost email access | Support form + photo of book/receipt; manual replacement code from a reserved `issued` pool; every action audited |

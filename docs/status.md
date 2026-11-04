@@ -7,7 +7,7 @@ Legend: **Proposed** (designed, not built) · **Incomplete** · **Implemented** 
 | Zigora test run, dependency CVE scan, secret scan | Incomplete | – |
 | ADRs 0001–0009 | Proposed | `docs/adr/` |
 | Architecture, data model, API surface | Proposed | `docs/architecture.md` |
-| Content contract | Proposed (textbook repo is empty) | `docs/content-contract.md` |
+| Content interface (supersedes my earlier contract) | Proposed; textbook architecture draft is the authority | `docs/content-interface.md` |
 | Threat model, attack register, control matrix | Proposed (no attack tested yet) | `docs/security/` |
 | UX journeys, screen map, design system | Proposed | `docs/ux/` |
 | Backend foundation: registration, verification, login, refresh rotation, device cap, password reset | Implemented, Tested (43 tests, real MySQL) | `docs/security/test-evidence.md` |
