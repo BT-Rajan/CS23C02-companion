@@ -17,7 +17,7 @@ Legend: **Proposed** (designed, not built) · **Incomplete** · **Implemented** 
 | Anomaly re-verification for credential sharing | Proposed (not built) | – |
 | Content packages: builder, signing, leak check, fixtures | Implemented, Tested (12 tests) | `content-tools/` |
 | Content delivery API (signed manifest, entitlement-gated files), importer, progress events + resume | Implemented, Tested (17 tests + mutation checks), backend only | `docs/security/test-evidence.md` |
-| Assessments, execution | Not started | – |
+| Assessments, graded execution | Not started (A6, A7) | – |
 | Android build loop (push → GitHub Actions → lint, unit test, debug APK → result read via API / ci-logs branch) | Implemented, **proven** with a hello-world app | run 41913367690 |
 | Android shell (A1): welcome, create account, verify, sign in, forgot/reset, activate, A1 home; Keystore-encrypted tokens; single-flight refresh; OkHttp pinning (2 pins required for release); no backup/transfer | Implemented, Tested (35 JVM tests incl. live-backend contract); **not yet run on a real phone** | `docs/security/test-evidence.md` (A1) |
 | Stepper slice 1: recorder harness `runtime/stepper` (sys.monitoring; limits; input; determinism; allow-list; book-build CLI check) | Implemented, Tested (29 tests, CPython 3.12 + 3.13; CI `runtime`) | `runtime/README.md` |
@@ -29,3 +29,4 @@ Legend: **Proposed** (designed, not built) · **Incomplete** · **Implemented** 
 | Progress on the phone: event queue with UUIDs, batched sync, server merge (union), resume rule = server's, survives reinstall | Implemented, Tested (unit + live backend contract) | same |
 | Debug-only SAMPLE lessons (5, labelled as not book content) to try the reader without a server | Implemented | `content-tools/samples/reader-sample`, `android/scripts/make-sample-content.py` |
 | Android build environment | GitHub Actions (ADR 0012), proven; screens rendered to a `screens` artifact on each run | run 41913367690 |
+| Practice (A5): `POST /v1/practice/items/{id}/answer` (practice items only, one at a time, reveal after right answer or 2 wrong tries, rate limits); trace items (`code` in the public item, answer on the server); app: Practise card in lessons, one question at a time, Check → verdict + why → Try again / Next; trace: predict, then **Step through to see why**; offline message; debug SAMPLE questions | Implemented, Tested (11 backend tests, mutation-checked; app tests; live backend contract; screenshots) | `docs/security/test-evidence.md` (A5) |

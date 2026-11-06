@@ -25,7 +25,19 @@ data class BookInfo(val id: String, val title: String, val edition: String, val 
 
 /** One app lesson (book decision R1: one LSN delivers one topic or contiguous subtopics). */
 @Serializable
-data class Lesson(val id: String, val title: String, val topic: String, val minutes: Int = 0, val blocks: List<Block> = emptyList())
+data class Lesson(val id: String, val title: String, val topic: String, val minutes: Int = 0, val blocks: List<Block> = emptyList(),
+                  val practice: Practice = Practice())
+
+@Serializable
+data class Practice(val items: List<String> = emptyList(), val exercises: List<String> = emptyList())
+
+/** A question as shipped publicly: never its answer or explanations (those stay on the server, ADR 0005). */
+@Serializable
+data class Item(val id: String, val type: String, val purpose: String, val level: Int = 1, val stem: String,
+                val options: List<ItemOption> = emptyList(), val code: String? = null)
+
+@Serializable
+data class ItemOption(val id: String, val text: String)
 
 /**
  * A semantic block. Known types: paragraph, heading, definition, code, syntax, note, list. Unknown types from a newer

@@ -20,16 +20,25 @@ w("lessons/LSN-0002.json", {"id": "LSN-0002", "title": "Changing a variable", "t
 w("lessons/LSN-0003.json", {"id": "LSN-0003", "title": "if and else", "topic": "TOP-0002", "minutes": 8, "blocks": [
     {"type": "paragraph", "text": "An if statement runs code only when a condition is true."},
     {"type": "code", "code": "n = 7\nif n % 2 == 0:\n    print('even')\nelse:\n    print('odd')", "expected_output": "odd"}],
-    "quiz": None, "practice": {"items": [], "exercises": ["EXR-0002"]}})
-def mcq(i, stem, opts, ans, expl, oexp):
-    w(f"items/ITM-{i:04d}.json", {"id": f"ITM-{i:04d}", "type": "mcq", "purpose": "practice", "level": 1, "stem": stem,
-      "options": [{"id": k, "text": v} for k, v in opts.items()], "answer": ans, "explanation": expl, "option_explanations": oexp})
+    "quiz": None, "practice": {"items": ["ITM-0004"], "exercises": ["EXR-0002"]}})
+def mcq(i, stem, opts, ans, expl, oexp, type="mcq", purpose="practice", code=None):
+    obj = {"id": f"ITM-{i:04d}", "type": type, "purpose": purpose, "level": 1, "stem": stem,
+           "options": [{"id": k, "text": v} for k, v in opts.items()], "answer": ans, "explanation": expl, "option_explanations": oexp}
+    if code is not None:
+        obj["code"] = code
+    w(f"items/ITM-{i:04d}.json", obj)
 mcq(1, "What does `x = 5` do?", {"a": "Compares x with 5", "b": "Binds the name x to the value 5", "c": "Prints 5"}, "b",
     "FIXTURE-EXPLAIN-1: assignment binds a name to a value; it does not compare or print.", {"a": "That would be ==.", "c": "Assignment prints nothing."})
 mcq(2, "After `x = 3` then `x = x * 2`, what is x?", {"a": "3", "b": "5", "c": "6"}, "c",
     "FIXTURE-EXPLAIN-2: the right side is evaluated first using the old x (3), giving 6.", {"a": "x was reassigned.", "b": "Multiplication, not addition."})
 mcq(3, "Which is a valid variable name?", {"a": "2nd_place", "b": "total_score", "c": "my-var"}, "b",
     "FIXTURE-EXPLAIN-3: names cannot start with a digit or contain hyphens.", {"a": "Starts with a digit.", "c": "Hyphen is subtraction."})
+mcq(4, "What does this program print?", {"a": "even", "b": "odd", "c": "7"}, "b",
+    "FIXTURE-EXPLAIN-4: 7 % 2 is 1, so the condition is False and the else branch prints odd.",
+    {"a": "7 % 2 is 1, not 0.", "c": "print shows the string, not the number."}, type="trace",
+    code="n = 7\nif n % 2 == 0:\n    print('even')\nelse:\n    print('odd')")
+mcq(5, "FIXTURE assessment-only question: what is 2 + 3?", {"a": "5", "b": "23"}, "a",
+    "FIXTURE-EXPLAIN-5: integer addition.", {}, purpose="assessment")
 w("assessments/ASM-0001.json", {"id": "ASM-0001", "title": "Lesson quiz: variables", "purpose": "lesson_quiz",
                                  "items": ["ITM-0001", "ITM-0002", "ITM-0003"], "rules": {"shuffle": True}})
 def exr(i, title, statement, starter, tests, hints, approach, ref):

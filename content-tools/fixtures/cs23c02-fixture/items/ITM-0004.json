@@ -1,0 +1,28 @@
+{
+  "id": "ITM-0004",
+  "type": "trace",
+  "purpose": "practice",
+  "level": 1,
+  "stem": "What does this program print?",
+  "options": [
+    {
+      "id": "a",
+      "text": "even"
+    },
+    {
+      "id": "b",
+      "text": "odd"
+    },
+    {
+      "id": "c",
+      "text": "7"
+    }
+  ],
+  "answer": "b",
+  "explanation": "FIXTURE-EXPLAIN-4: 7 % 2 is 1, so the condition is False and the else branch prints odd.",
+  "option_explanations": {
+    "a": "7 % 2 is 1, not 0.",
+    "c": "print shows the string, not the number."
+  },
+  "code": "n = 7\nif n % 2 == 0:\n    print('even')\nelse:\n    print('odd')"
+}

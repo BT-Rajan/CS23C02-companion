@@ -167,6 +167,7 @@ fun LessonScreen(
     pkg: InstalledPackage, lessonId: String, done: Boolean, startAt: Int,
     onStep: ((title: String, code: String) -> Unit)?, onTryIt: ((String) -> Unit)?,
     onPosition: (Int) -> Unit, onDone: () -> Unit, onClose: () -> Unit, isLast: Boolean,
+    onPractise: (() -> Unit)? = null,
 ) {
     val lesson: Lesson? = runCatching { pkg.lesson(lessonId) }.getOrNull()
     val place = pkg.manifest.nav.place(lessonId)
@@ -196,6 +197,18 @@ fun LessonScreen(
                 item { Message("This lesson could not be opened. It may be damaged; it will be downloaded again next time you are online.", isError = true) }
             } else {
                 lesson.blocks.forEach { b -> item { BlockView(b, lesson.title, onStep, onTryIt) } }
+                val n = lesson.practice.items.size
+                if (n > 0 && onPractise != null) item {
+                    Surface(color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f), shape = MaterialTheme.shapes.medium,
+                        modifier = Modifier.fillMaxWidth()) {
+                        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text("Check your understanding", style = MaterialTheme.typography.titleMedium)
+                            Text("$n question${if (n == 1) "" else "s"}. You see straight away whether you are right, and why.",
+                                style = MaterialTheme.typography.bodyLarge)
+                            OutlinedButton(onClick = onPractise, modifier = Modifier.heightIn(min = 48.dp)) { Text("Practise") }
+                        }
+                    }
+                }
                 item {
                     Column(Modifier.padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         if (done) Text("✓ You have finished this lesson.", style = MaterialTheme.typography.bodyLarge)

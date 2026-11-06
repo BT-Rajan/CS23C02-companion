@@ -92,6 +92,18 @@ class LiveBackendContractTest {
             assertEquals("unknown_content", api.putProgress(ent.editionId, listOf(app.cs23c02.companion.api.ProgressEventOut(
                 java.util.UUID.randomUUID().toString(), "lesson_opened", "LSN-9999"))).single().status)
 
+            // A5: practice is checked on the server, one question at a time.
+            val trace = pkg.item("ITM-0004")!!
+            assertEquals("trace", trace.type); assertTrue(trace.code!!.contains("print('odd')"))
+            val w1 = r.checkPractice("ITM-0001", "a", ent.editionId)
+            assertTrue(!w1.correct && !w1.revealed && w1.answer == null && w1.why == "That would be ==.")
+            val w2 = r.checkPractice("ITM-0001", "c", ent.editionId)
+            assertTrue(w2.revealed && w2.answer == "b" && w2.explanation!!.startsWith("FIXTURE-EXPLAIN-1"))
+            assertTrue(r.checkPractice("ITM-0004", "b", ent.editionId).correct)
+            try { r.checkPractice("ITM-0005", "a", ent.editionId); fail() }        // assessment item: not checkable here
+            catch (e: ApiError) { assertEquals(404, e.status); assertEquals("not_found", e.code) }
+            assertTrue(api.progress(ent.editionId).completed == listOf("LSN-0001"))  // practice never counts as progress
+
             tmp.resolve("p.json").delete()                       // "reinstall": local progress gone
             val fresh = repo()
             fresh.sync(ent.editionId)

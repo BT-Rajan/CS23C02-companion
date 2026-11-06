@@ -99,7 +99,12 @@ class ReaderRepository(
     val progress: ProgressStore,
     /** Debug-only SAMPLE package bundled in the APK; when set, nothing is sent to or fetched from the server. */
     private val samplePackage: (suspend () -> Pair<ByteArray, Map<String, ByteArray>>)? = null,
+    private val sampleChecker: SamplePracticeChecker? = null,
 ) {
+    /** One practice answer: checked by the server (or, for debug SAMPLE questions only, locally). Never recorded as progress. */
+    suspend fun checkPractice(itemId: String, option: String, edition: String?): app.cs23c02.companion.api.PracticeVerdict =
+        sampleChecker?.check(itemId, option) ?: api.answerPractice(itemId, option, edition)
+
     val isSample get() = samplePackage != null
 
     sealed interface SyncOutcome {

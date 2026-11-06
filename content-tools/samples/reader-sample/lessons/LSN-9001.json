@@ -33,7 +33,10 @@
   ],
   "quiz": null,
   "practice": {
-    "items": [],
+    "items": [
+      "ITM-9001",
+      "ITM-9002"
+    ],
     "exercises": []
   }
 }

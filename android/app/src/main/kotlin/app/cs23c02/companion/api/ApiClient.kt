@@ -86,6 +86,12 @@ class ApiClient(
         return authedRaw("GET", "/v1/content/files/$sha256", null).bytes
     }
 
+    suspend fun answerPractice(itemId: String, option: String, edition: String?): PracticeVerdict {
+        require(Regex("^ITM-\\d{4,6}$").matches(itemId))
+        val body = buildJsonObject { put("option", JsonPrimitive(option)); edition?.let { put("edition", JsonPrimitive(it)) } }
+        return json.decodeFromString(PracticeVerdict.serializer(), authed("POST", "/v1/practice/items/$itemId/answer", body))
+    }
+
     suspend fun progress(edition: String?): ProgressSummary {
         val q = edition?.let { "?edition=" + java.net.URLEncoder.encode(it, "UTF-8") } ?: ""
         return json.decodeFromString(ProgressSummary.serializer(), authed("GET", "/v1/progress$q", null))

@@ -20,6 +20,7 @@ import stepper  # noqa: E402
 
 SRC = ROOT / "content-tools" / "samples" / "reader-sample"
 ASSETS = ROOT / "android" / "app" / "src" / "debug" / "assets" / "sample-content"
+KEYS = ROOT / "android" / "app" / "src" / "debug" / "assets" / "sample-practice-keys.json"
 KOTLIN = ROOT / "android" / "app" / "src" / "debug" / "kotlin" / "app" / "cs23c02" / "companion" / "SampleContent.kt"
 
 
@@ -32,8 +33,20 @@ def check_code_blocks():
                 assert r["stdout"].rstrip("\n") == b.get("expected_output", "").rstrip("\n"), (f.name, r["stdout"])
 
 
+def check_trace_items():
+    """A trace question's correct option must be exactly what the program prints (so the key can never disagree with Python)."""
+    for f in sorted((SRC / "items").glob("*.json")):
+        it = json.loads(f.read_text())
+        if it["type"] != "trace":
+            continue
+        r = stepper.record(it["code"])
+        right = next(o["text"] for o in it["options"] if o["id"] == it["answer"])
+        assert r["status"] == "ok" and r["stdout"].rstrip("\n") == right, (f.name, r["stdout"], right)
+
+
 def main():
     check_code_blocks()
+    check_trace_items()
     priv, pub = build.new_keypair()
     with tempfile.TemporaryDirectory() as tmp:
         out = pathlib.Path(tmp) / "out"
@@ -41,6 +54,11 @@ def main():
         if ASSETS.exists():
             shutil.rmtree(ASSETS)
         shutil.copytree(out / "public", ASSETS)
+        # Debug only: answers for the SAMPLE practice questions, so practice can be tried without a server. Kept OUT of the
+        # signed package (which stays leak-free); release builds have no such file and always ask the server.
+        prot = json.loads((out / "protected.json").read_text())
+        KEYS.write_text(json.dumps({"_note": "DEBUG SAMPLE ONLY - answers to sample questions, never book content",
+                                    "items": prot["items"]}, indent=1, ensure_ascii=False) + "\n")
     KOTLIN.parent.mkdir(parents=True, exist_ok=True)
     KOTLIN.write_text(f'''package app.cs23c02.companion
 
@@ -48,6 +66,7 @@ def main():
 object SampleContent {{
     const val PUBLIC_KEY = "{pub}"
     const val ASSET_DIR = "sample-content"
+    const val PRACTICE_KEYS = "sample-practice-keys.json"
 }}
 ''')
     print(f"sample package {m['book']['version']}: {len(m['files'])} files -> {ASSETS.relative_to(ROOT)}")

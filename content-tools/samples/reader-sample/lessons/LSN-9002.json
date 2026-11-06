@@ -28,7 +28,9 @@
   ],
   "quiz": null,
   "practice": {
-    "items": [],
+    "items": [
+      "ITM-9003"
+    ],
     "exercises": []
   }
 }

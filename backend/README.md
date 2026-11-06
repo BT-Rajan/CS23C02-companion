@@ -2,7 +2,9 @@
 FastAPI + MySQL 8. Implemented: registration with emailed verification code, login, rotating refresh tokens with reuse
 detection, device cap, password reset by emailed code, one-time activation codes with atomic redemption, entitlement
 check dependency, audit log, DB-backed rate limits, admin CLI for code batches. Phase 3 slice 1 adds signed content packages
-(import, entitlement-gated manifest and files) and progress events with resume. **Not yet built:** assessments, execution, Android app.
+(import, entitlement-gated manifest and files) and progress events with resume. A5 adds practice checking
+(`POST /v1/practice/items/{id}/answer`: practice items only, one at a time, answer revealed after a right answer or two wrong tries,
+rate-limited). **Not yet built:** assessments, graded execution.
 
 ## Run locally
 ```

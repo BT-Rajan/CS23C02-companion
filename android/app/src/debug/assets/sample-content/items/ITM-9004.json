@@ -1,0 +1,1 @@
+{"code":"n = 4\nif n > 10:\n    print('big')\nelse:\n    print('small')","id":"ITM-9004","level":1,"options":[{"id":"a","text":"big"},{"id":"b","text":"small"},{"id":"c","text":"big and small"}],"purpose":"practice","stem":"What does this program print?","type":"trace"}

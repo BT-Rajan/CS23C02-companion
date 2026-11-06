@@ -96,7 +96,7 @@ Database roles: the app role has no DDL rights; a separate migration role runs A
 | `GET /content/files/{hash}` | access | yes | short-lived signed URL; ownership via manifest |
 | `PUT /progress/events` (batch) | access | yes | idempotent by event UUID |
 | `GET /progress` | access | yes | own data only |
-| `POST /practice/mcq/{qid}/answer` | access | yes | verdict + explanation for that question |
+| `POST /practice/items/{id}/answer` | access | yes | practice items only (MCQ and trace); verdict + why for that option; answer + explanation after a right answer or 2 wrong tries; rate-limited (built in A5) |
 | `POST /assessments/{id}/attempts`, `PUT …/answers`, `POST …/submit`, `GET …/result` | access | yes | state machine (ADR 0009) |
 | `POST /exercises/{id}/submissions` | access | yes | graded in sandbox |
 | `GET /exercises/{id}/hint`, `/solution` | access | yes | policy-gated, logged |

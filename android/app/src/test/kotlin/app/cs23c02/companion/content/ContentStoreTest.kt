@@ -15,6 +15,7 @@ class ContentStoreTest {
     @get:Rule val tmp = TemporaryFolder()
     private fun store(dir: File = tmp.root) = ContentStore(dir, Sample.KEY, "0.0.1")
     private var fetches = 0
+    private val fileCount = PackageVerifier.verifyManifest(Sample.manifest, Sample.signature, Sample.KEY, "0.0.1").files.size
     private suspend fun fetch(e: FileEntry): ByteArray { fetches++; return Sample.file(e.path) }
 
     @Test fun installThenReadLessons() = runBlocking {
@@ -24,14 +25,14 @@ class ContentStoreTest {
         val pkg = s.current()!!
         assertEquals("What is a variable?", pkg.lesson("LSN-9001")!!.title)
         assertEquals("code", pkg.lesson("LSN-9001")!!.blocks[2].type)
-        assertEquals(5, fetches)
+        assertEquals(fileCount, fetches)
     }
 
     @Test fun secondInstallFetchesNothing() = runBlocking {
         val s = store()
         s.install(Sample.manifest, Sample.signature, ::fetch)
         s.install(Sample.manifest, Sample.signature, ::fetch)
-        assertEquals(5, fetches)
+        assertEquals(fileCount, fetches)
     }
 
     @Test fun reopeningFromDiskVerifiesAgain() = runBlocking {

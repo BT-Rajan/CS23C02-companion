@@ -30,9 +30,9 @@ class ReaderFlowTest {
     private fun vm(): AppViewModel {
         val api = ApiClient("https://api.invalid", InMemoryTokenStore())
         return AppViewModel(api, "test", previewTutor = true, readerFor = { _ ->
-            ReaderRepository(api, ContentStore(File(tmp.root, "pkg"), Sample.KEY, "0.0.1"), ProgressStore(File(tmp.root, "p.json"))) {
+            ReaderRepository(api, ContentStore(File(tmp.root, "pkg"), Sample.KEY, "0.0.1"), ProgressStore(File(tmp.root, "p.json")), samplePackage = {
                 (Sample.signature + "\n").toByteArray() + Sample.manifest to m.files.associate { it.path to Sample.file(it.path) }
-            }
+            })
         })
     }
     private fun AppViewModel.awaitPkg() {

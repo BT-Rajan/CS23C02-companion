@@ -56,11 +56,11 @@ class ReaderRepositoryTest {
     @Test fun firstSyncDownloadsVerifiesAndMergesProgress() = runBlocking {
         val r = repo()
         assertEquals(ReaderRepository.SyncOutcome.Updated, r.sync("ed"))
-        assertEquals(5, fileHits)
+        assertEquals(m.files.size, fileHits)
         assertEquals("Changing a variable", r.content.current()!!.lesson("LSN-9002")!!.title)
         assertEquals(setOf("LSN-9001"), r.progress.state.completed)
         assertEquals(ReaderRepository.SyncOutcome.UpToDate, repo().sync("ed"))  // same version: no downloads
-        assertEquals(5, fileHits)
+        assertEquals(m.files.size, fileHits)
     }
 
     @Test fun offlineKeepsWhatIsInstalled() = runBlocking {
@@ -80,9 +80,9 @@ class ReaderRepositoryTest {
 
     @Test fun samplePackageLoadsFromTheApkWithoutTheServer() = runBlocking {
         val api = ApiClient("https://api.invalid", InMemoryTokenStore())
-        val r = ReaderRepository(api, ContentStore(File(tmp.root, "s"), Sample.KEY, "0.0.1"), ProgressStore(File(tmp.root, "sp.json"))) {
+        val r = ReaderRepository(api, ContentStore(File(tmp.root, "s"), Sample.KEY, "0.0.1"), ProgressStore(File(tmp.root, "sp.json")), samplePackage = {
             (Sample.signature + "\n").toByteArray() + Sample.manifest to m.files.associate { it.path to Sample.file(it.path) }
-        }
+        })
         assertEquals(ReaderRepository.SyncOutcome.Updated, r.sync(null))
         assertEquals(5, r.content.current()!!.manifest.nav.lessonIds().size)
         assertEquals(0, server.requestCount)

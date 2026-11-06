@@ -167,5 +167,29 @@ class ScreenshotTest {
         WelcomeScreen(AppViewModel(ApiClient("https://api.invalid", InMemoryTokenStore()), "test", demos, previewTutor = true))
     }
 
+    private fun verdict(id: String, correct: Boolean, revealed: Boolean, why: String?, answer: String?, expl: String?) =
+        app.cs23c02.companion.api.PracticeVerdict(id, correct, if (correct) 0 else 1, why, revealed, answer, expl)
+
+    @Test fun practiceQuestions() {
+        val i1 = samplePkg.item("ITM-9001")
+        shot("23-practice-question") { app.cs23c02.companion.ui.screens.PracticeScreen(i1, 0, 2, "What is a variable?", null, false, null, {}, {}, {}, {}, {}, null, initialChoice = "a") }
+        shot("23-practice-wrong") { app.cs23c02.companion.ui.screens.PracticeScreen(i1, 0, 2, "What is a variable?",
+            verdict("ITM-9001", false, false, "Comparing uses ==, not =.", null, null), false, null, {}, {}, {}, {}, {}, null, initialChoice = "a") }
+        shot("23-practice-revealed-dark", dark = true) { app.cs23c02.companion.ui.screens.PracticeScreen(i1, 0, 2, "What is a variable?",
+            verdict("ITM-9001", false, true, "Nothing is printed until print() is called.", "b",
+                "SAMPLE: = stores the value on the right under the name on the left. It does not compare and does not print."),
+            false, null, {}, {}, {}, {}, {}, null, initialChoice = "c") }
+        val tr = samplePkg.item("ITM-9004")
+        shot("24-trace-correct") { app.cs23c02.companion.ui.screens.PracticeScreen(tr, 0, 1, "if and else",
+            verdict("ITM-9004", true, true, null, "b", "SAMPLE: 4 > 10 is False, so the if block is skipped and the else block runs."),
+            false, null, {}, {}, {}, {}, {}, { _ -> }, initialChoice = "b") }
+        shot("24-trace-offline") { app.cs23c02.companion.ui.screens.PracticeScreen(tr, 0, 1, "if and else", null, false,
+            "Checking answers needs a connection. Reading still works offline.", {}, {}, {}, {}, {}, { _ -> }, initialChoice = "a") }
+    }
+
+    @Test fun lessonWithPractice() = shot("22-lesson-practise") {
+        app.cs23c02.companion.ui.screens.LessonScreen(samplePkg, "LSN-9002", false, 4, { _, _ -> }, {}, {}, {}, {}, false, onPractise = {})
+    }
+
     @Test @Config(fontScale = 2.0f) fun largeFontSignIn() = shot("08-sign-in-200pct-font") { SignInScreen(vm, UiState(Screen.SignIn, error = "Email or password is incorrect.")) }
 }

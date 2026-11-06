@@ -24,9 +24,11 @@
 | K21 | Activation by camera scan (journey J1) not built; typing and paste only | Low | Open (after A2) |
 | K22 | Certificate pinning is wired but untested against a real certificate (no staging host) | Medium | Open (A8) |
 | K23 | Whether Android WebView routes a Web Worker's requests through the asset loader is unverified; if not, the runner falls back to in-page Python (watchdog then rebuilds the WebView, slower recovery) | Medium | Open: the debug header shows "(worker)" or "(page)" |
-| K24 | APK grows by ≈ 8.4 MB for the Python runtime (18.1 MB debug) | Low | Accepted (offline Python, no server cost); revisit with an app bundle / on-demand delivery |
+| K24 | The Python runtime makes the debug APK ≈ 17 MB; the **release APK is 7.2 MB** (R8 + compression: the 10.1 MB wasm compresses to 3.2 MB; measured 2026-11-06) | Low | Accepted |
 | K25 | Book references are sample data until the book's construct registry and page map exist (book X4) | Medium | Open (book side) |
 | K26 | Offline lesson copy is in app-private, no-backup storage and wiped on sign-out, but not encrypted and has no offline-entitlement expiry yet (architecture §6) | Medium | Open (before release; C5) |
 | K27 | Progress queue and lesson store use small JSON files instead of Room; sync runs on Home and after each event instead of WorkManager | Low | Accepted for now (ADR 0007 amendment); revisit if data grows |
 | K28 | A1 claimed release builds required two certificate pins; the Gradle check had not been applied. Found and fixed in A2 | Medium | **Closed** |
-| K29 | Practice items and exercises listed in lessons (`practice`) are not shown yet: they arrive with A5/A6, so the reader omits them rather than showing placeholders | Info | Open (A5) |
+| K29 | Practice exercises (EXR) listed in lessons are not shown yet: they need graded runs (A6), so the reader omits them rather than showing placeholders. Practice questions (ITM) are shown since A5 | Info | Open (A6) |
+| K30 | The book build must check every trace item's answer against the recorder (the sample script already does); not yet in content-tools' Release validation because the book tooling (B2) is not built | Medium | Open (B2) |
+| K31 | Practice reveal counts use the rate-event table (7-day window); the daily purge job keeps 2 days, so after a purge a student may need 2 more wrong tries before the answer is revealed | Low | Open (store attempts in their own table if this matters) |

@@ -1,0 +1,28 @@
+{
+  "id": "ITM-9004",
+  "type": "trace",
+  "purpose": "practice",
+  "level": 1,
+  "stem": "What does this program print?",
+  "options": [
+    {
+      "id": "a",
+      "text": "big"
+    },
+    {
+      "id": "b",
+      "text": "small"
+    },
+    {
+      "id": "c",
+      "text": "big and small"
+    }
+  ],
+  "answer": "b",
+  "explanation": "SAMPLE: 4 > 10 is False, so the if block is skipped and the else block runs.",
+  "option_explanations": {
+    "a": "4 > 10 is False.",
+    "c": "Only one of the two blocks runs."
+  },
+  "code": "n = 4\nif n > 10:\n    print('big')\nelse:\n    print('small')"
+}

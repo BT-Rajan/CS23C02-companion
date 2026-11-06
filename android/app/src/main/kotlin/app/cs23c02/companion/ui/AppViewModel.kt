@@ -35,6 +35,8 @@ sealed interface Screen {
     data class Home(val me: Me, val sample: Boolean = false) : Screen
     data class UnitPage(val unitId: String, val back: Screen) : Screen
     data class LessonPage(val lessonId: String, val back: Screen) : Screen
+    /** Practice for one lesson, one question at a time (screens 9-10). */
+    data class PracticePage(val lessonId: String, val index: Int, val back: Screen) : Screen
     /** [start]: step to open at; [live]: recorded on the phone just now (so input can be supplied and re-run). */
     data class Stepper(val program: StepProgram, val back: Screen, val start: Int = 0, val live: Boolean = false) : Screen
     /** Free coding with live explanations (needs on-device Python). */
@@ -57,6 +59,10 @@ data class ReaderUi(
 ) {
     val resume: String? get() = pkg?.let { ProgressStore.resume(it.manifest.nav.lessonIds(), completed, lastOpened) }
 }
+
+/** Verdicts received this session, per question. Keys are never stored beyond what the server already revealed. */
+data class PracticeUi(val verdicts: Map<String, app.cs23c02.companion.api.PracticeVerdict> = emptyMap(),
+                      val checking: Boolean = false, val error: String? = null)
 
 data class UiState(
     val screen: Screen = Screen.Loading,
@@ -83,6 +89,8 @@ class AppViewModel(
     /** Lessons + progress (A2). [readerFor] (true) gives the debug SAMPLE package, (false) the account's own. */
     private val readerFor: ((sample: Boolean) -> ReaderRepository)? = null,
 ) : ViewModel() {
+    private val _practice = MutableStateFlow(PracticeUi())
+    val practice: StateFlow<PracticeUi> = _practice.asStateFlow()
     private val _reader = MutableStateFlow(ReaderUi())
     val reader: StateFlow<ReaderUi> = _reader.asStateFlow()
     private var repo: ReaderRepository? = null
@@ -159,6 +167,7 @@ class AppViewModel(
             is Screen.Home -> return s
             is Screen.UnitPage -> s.back
             is Screen.LessonPage -> s.back
+            is Screen.PracticePage -> s.back
             is Screen.Stepper -> s.back
             is Screen.Playground -> s.back
             is Screen.Tutor -> s.back
@@ -183,6 +192,41 @@ class AppViewModel(
     fun saveLessonPosition(lessonId: String, scroll: Int) {
         repo?.progress?.position(lessonId, scroll)
         publishReader()
+    }
+
+    fun openPractice(lessonId: String, index: Int = 0) {
+        val lesson = _reader.value.pkg?.let { runCatching { it.lesson(lessonId) }.getOrNull() } ?: return
+        if (lesson.practice.items.isEmpty()) return
+        val back = (_state.value.screen as? Screen.PracticePage)?.back ?: _state.value.screen
+        _practice.update { it.copy(error = null) }
+        go(Screen.PracticePage(lessonId, index.coerceIn(0, lesson.practice.items.lastIndex), back))
+    }
+
+    fun checkPractice(itemId: String, option: String) {
+        val r = repo ?: return
+        if (_practice.value.checking) return
+        _practice.update { it.copy(checking = true, error = null) }
+        viewModelScope.launch {
+            try {
+                val v = r.checkPractice(itemId, option, edition)
+                _practice.update { it.copy(checking = false, verdicts = it.verdicts + (itemId to v)) }
+            } catch (e: ApiError) {
+                val msg = when {
+                    e.isNetwork -> "Checking answers needs a connection. Reading still works offline."
+                    e.status == 429 -> "That's a lot of tries in a short time. Take a break and come back to it."
+                    else -> e.message
+                }
+                _practice.update { it.copy(checking = false, error = msg) }
+            } catch (e: app.cs23c02.companion.content.ContentError) {
+                _practice.update { it.copy(checking = false, error = e.message) }
+            }
+        }
+    }
+
+    /** "Try again": forget the last verdict for this question (the server still counts the wrong attempt). */
+    fun retryPractice(itemId: String) = _practice.update { p ->
+        val v = p.verdicts[itemId]
+        if (v != null && !v.revealed) p.copy(verdicts = p.verdicts - itemId) else p
     }
 
     /** "Done": marks the lesson complete and moves to the next one (or back home after the last). */
@@ -242,6 +286,7 @@ class AppViewModel(
             is Screen.Playground -> go(s.back)
             is Screen.UnitPage -> go(s.back)
             is Screen.LessonPage -> go(s.back)
+            is Screen.PracticePage -> go(s.back)
             is Screen.TypeIt -> go(s.back)
             else -> return false
         }

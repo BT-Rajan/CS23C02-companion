@@ -1,0 +1,1 @@
+{"code":"score = 10\nscore = score + 5\nprint(score)","id":"ITM-9003","level":1,"options":[{"id":"a","text":"10"},{"id":"b","text":"15"},{"id":"c","text":"score + 5"}],"purpose":"practice","stem":"What does this program print?","type":"trace"}

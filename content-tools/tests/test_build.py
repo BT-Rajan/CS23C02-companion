@@ -31,7 +31,7 @@ def test_build_produces_signed_manifest_and_hashed_files(built):
     out, m, pub = built
     mbytes = (out / "public" / "manifest.json").read_bytes()
     Ed25519PublicKey.from_public_bytes(base64.b64decode(pub)).verify(base64.b64decode((out / "public" / "manifest.sig").read_text()), mbytes)
-    assert m["book"]["id"] == "BOK-0001" and len(m["files"]) == 3 + 3 + 2 + 1
+    assert m["book"]["id"] == "BOK-0001" and len(m["files"]) == 3 + 5 + 2 + 1
     for f in m["files"]:
         assert hashlib.sha256((out / "public" / f["path"]).read_bytes()).hexdigest() == f["sha256"]
 
@@ -108,3 +108,22 @@ def test_release_validation_rejects_bad_source(tmp_path, keys, mutate, expect):
     (src / "nav.json").write_text(json.dumps(d["nav"]))
     with pytest.raises(B.BuildError, match=expect):
         B.build(src, tmp_path / "o", B.load_private(keys[0]))
+
+
+def test_trace_item_ships_its_code_but_never_its_answer(built):
+    out, _, _ = built
+    pub = json.loads((out / "public" / "items" / "ITM-0004.json").read_text())
+    assert pub["type"] == "trace" and "print('odd')" in pub["code"]
+    assert set(pub) == {"id", "type", "purpose", "level", "stem", "code", "options"}
+    prot = json.loads((out / "protected.json").read_text())["items"]["ITM-0004"]
+    assert prot["answer"] == "b" and prot["explanation"].startswith("FIXTURE-EXPLAIN-4")
+
+
+def test_trace_item_without_code_fails_release_validation(tmp_path, keys):
+    src = tmp_path / "src"
+    shutil.copytree(FIX, src)
+    it = json.loads((src / "items" / "ITM-0004.json").read_text())
+    del it["code"]
+    (src / "items" / "ITM-0004.json").write_text(json.dumps(it))
+    with pytest.raises(B.BuildError, match="trace item needs the code"):
+        B.build(src, tmp_path / "out", B.load_private(keys[0]))

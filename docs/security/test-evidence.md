@@ -122,3 +122,19 @@ memory use, and speed on the Redmi. The Chromium test emulates the asset loader 
 storage and wiped on sign-out, but not encrypted (K26). Behaviour on a real phone.
 **Found and fixed during A2:** the A1 rule "release builds need two certificate pins" had never been applied (an edit that did not
 match the file); it is now in place together with "release builds need CONTENT_SIGNING_PUBKEY", and both were checked to fail a release build.
+
+# Roadmap A5 — practice
+| Area | Evidence |
+|---|---|
+| Right answer → verdict + explanation; wrong → verdict + why that option is wrong, answer withheld until the 2nd wrong try; per account | `backend/tests/test_practice.py` |
+| Trace items checked the same way; their public file carries the code, never the answer | `test_practice.py`, `content-tools/tests/test_build.py` |
+| Assessment items get the same 404 as unknown ids (D1) | `test_assessment_items_are_indistinguishable_from_unknown_ones` (mutation: removing the purpose check fails it) |
+| No session → 401; no entitlement / other edition → 403; unpublished release → 404 | `test_practice.py` |
+| Tampering: unknown option, client-supplied `correct` or `user_id`, injection-shaped option, wrong id shapes → 422/404 | `test_tampered_requests_are_rejected` |
+| 31st try at one question within an hour → 429 (D7) | `test_hammering_one_question_is_rate_limited` |
+| Manifest + every public file contain no answers or explanations | `test_no_endpoint_hands_out_keys_before_an_attempt` |
+| Reveal policy enforced by the server (mutation: always revealing fails two tests) | mutation run, A5 |
+| App sends only the choice (and edition); practice never changes progress | `PracticeTest`, live contract test |
+| **Real backend:** wrong → why only; 2nd wrong → answer + explanation; trace correct; assessment item 404; progress unchanged | `LiveBackendContractTest` |
+| Sample trace questions: the right option equals what the recorder prints | `android/scripts/make-sample-content.py` |
+**Not built:** anomaly alerts for unusual practice patterns (D7), per-option analytics, offline practice (by design, ADR 0009).

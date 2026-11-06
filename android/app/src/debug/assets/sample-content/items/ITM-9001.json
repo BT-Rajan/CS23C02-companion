@@ -1,0 +1,1 @@
+{"id":"ITM-9001","level":1,"options":[{"id":"a","text":"Checks whether age is 19"},{"id":"b","text":"Stores the value 19 under the name age"},{"id":"c","text":"Prints 19"}],"purpose":"practice","stem":"What does `age = 19` do?","type":"mcq"}

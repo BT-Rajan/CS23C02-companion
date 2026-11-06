@@ -38,6 +38,7 @@ import app.cs23c02.companion.content.ProgressStore
 import app.cs23c02.companion.content.ReaderRepository
 import app.cs23c02.companion.content.next
 import app.cs23c02.companion.ui.screens.LessonScreen
+import app.cs23c02.companion.ui.screens.PracticeScreen
 import app.cs23c02.companion.ui.screens.UnitScreen
 import java.io.File
 import app.cs23c02.companion.ui.screens.TutorScreen
@@ -72,7 +73,9 @@ class MainActivity : ComponentActivity() {
                 .decodeFromString(app.cs23c02.companion.content.Manifest.serializer(), manifest.decodeToString()).files.map { it.path }
             (sig + "\n").toByteArray() + manifest to paths.associateWith { p -> assets.open("$dir/$p").use { it.readBytes() } }
         })
-        return ReaderRepository(api, store, progress, loader)
+        val checker = if (!sample) null else app.cs23c02.companion.content.SamplePracticeChecker.parse(
+            assets.open(SampleContent.PRACTICE_KEYS).use { it.readBytes() }.decodeToString())
+        return ReaderRepository(api, store, progress, loader, checker)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -96,10 +99,11 @@ class MainActivity : ComponentActivity() {
                     val vm: AppViewModel = viewModel(factory = factory)
                     val s by vm.state.collectAsStateWithLifecycle()
                     val reader by vm.reader.collectAsStateWithLifecycle()
+                    val practice by vm.practice.collectAsStateWithLifecycle()
                     val canGoBack = s.screen is Screen.CreateAccount || s.screen is Screen.SignIn || s.screen is Screen.VerifyEmail ||
                         s.screen is Screen.Forgot || s.screen is Screen.Reset || s.screen is Screen.Stepper ||
                         s.screen is Screen.Tutor || s.screen is Screen.TypeIt || s.screen is Screen.Playground ||
-                        s.screen is Screen.UnitPage || s.screen is Screen.LessonPage
+                        s.screen is Screen.UnitPage || s.screen is Screen.LessonPage || s.screen is Screen.PracticePage
                     BackHandler(enabled = canGoBack) { vm.back() }
                     Surface(Modifier.fillMaxSize().safeDrawingPadding(), color = MaterialTheme.colorScheme.background) {
                         when (val sc = s.screen) {
@@ -122,7 +126,19 @@ class MainActivity : ComponentActivity() {
                                     onStep = vm.runner?.let { { t: String, c: String -> vm.stepThroughCode(t, c) } },
                                     onTryIt = vm.runner?.let { { c: String -> vm.openPlayground(c) } },
                                     onPosition = { vm.saveLessonPosition(sc.lessonId, it) }, onDone = { vm.completeLesson(sc.lessonId) },
-                                    onClose = { vm.back() }, isLast = pkg.manifest.nav.next(sc.lessonId) == null)
+                                    onClose = { vm.back() }, isLast = pkg.manifest.nav.next(sc.lessonId) == null,
+                                    onPractise = { vm.openPractice(sc.lessonId) })
+                            }
+                            is Screen.PracticePage -> reader.pkg?.let { pkg ->
+                                val lesson = runCatching { pkg.lesson(sc.lessonId) }.getOrNull()
+                                val ids = lesson?.practice?.items.orEmpty()
+                                val itemId = ids.getOrNull(sc.index)
+                                val item = itemId?.let { runCatching { pkg.item(it) }.getOrNull() }
+                                PracticeScreen(item, sc.index, ids.size, lesson?.title.orEmpty(), practice.verdicts[itemId], practice.checking,
+                                    practice.error, onCheck = { o -> itemId?.let { vm.checkPractice(it, o) } },
+                                    onRetry = { itemId?.let { vm.retryPractice(it) } },
+                                    onNext = { vm.openPractice(sc.lessonId, sc.index + 1) }, onFinish = { vm.back() }, onClose = { vm.back() },
+                                    onStepThrough = vm.runner?.let { { code: String -> vm.stepThroughCode("Why: ${item?.stem.orEmpty()}", code) } })
                             }
                             is Screen.Stepper -> StepperScreenAt(sc.program, sc.start, onClose = { vm.back() },
                                 onInput = if (sc.live) vm::provideInput else null, busy = s.busy, error = s.error)

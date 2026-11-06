@@ -1,9 +1,9 @@
 name: backend
 on:
   push:
-    paths: ["backend/**", ".github/workflows/backend.yml"]
+    paths: ["backend/**", "content-tools/**", ".github/workflows/backend.yml"]
   pull_request:
-    paths: ["backend/**"]
+    paths: ["backend/**", "content-tools/**"]
 jobs:
   test:
     runs-on: ubuntu-24.04

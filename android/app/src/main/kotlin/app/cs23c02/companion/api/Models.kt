@@ -51,3 +51,15 @@ data class ProgressBatch(val edition: String?, val events: List<ProgressEventOut
 
 @Serializable data class EventResult(val id: String, val status: String)
 @Serializable data class EventResults(val results: List<EventResult>)
+
+/** The server's verdict for ONE practice question (backend/app/practice.py). [answer]/[explanation] only once revealed. */
+@Serializable
+data class PracticeVerdict(
+    @SerialName("item_id") val itemId: String,
+    val correct: Boolean,
+    @SerialName("attempts_wrong") val attemptsWrong: Int = 0,
+    val why: String? = null,
+    val revealed: Boolean = false,
+    val answer: String? = null,
+    val explanation: String? = null,
+)

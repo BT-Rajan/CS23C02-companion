@@ -17,7 +17,7 @@ from .leakcheck import check as leak_check
 
 FORMAT = "cs23c02-package/0"
 LESSON_FIELDS = ("id", "title", "topic", "minutes", "blocks", "quiz", "practice")
-ITEM_FIELDS = ("id", "type", "purpose", "level", "stem")
+ITEM_FIELDS = ("id", "type", "purpose", "level", "stem", "code")  # code: the program a trace item asks about
 EXR_FIELDS = ("id", "title", "statement", "io_spec", "starter", "python", "timeout_s")
 ASM_FIELDS = ("id", "title", "purpose", "items", "rules")
 VISIBILITIES = {"public", "hidden"}
@@ -68,12 +68,14 @@ def validate(book, nav, lessons, items, exrs, asms) -> list[str]:
                 errs.append(f"{lid}: unknown exercise {e}")
     for iid, it in items.items():
         ids = [o["id"] for o in it.get("options", [])]
-        if it["type"] == "mcq" and (it.get("answer") not in ids or len(ids) != len(set(ids)) or len(ids) < 2):
+        if it["type"] in ("mcq", "trace") and (it.get("answer") not in ids or len(ids) != len(set(ids)) or len(ids) < 2):
             errs.append(f"{iid}: mcq needs unique option ids and exactly one valid answer")
         if not it.get("explanation"):
             errs.append(f"{iid}: missing explanation")
         if it.get("purpose") not in ("practice", "assessment"):
             errs.append(f"{iid}: purpose must be practice or assessment")
+        if it["type"] == "trace" and not it.get("code"):
+            errs.append(f"{iid}: a trace item needs the code it asks about")
     for eid, e in exrs.items():
         vis = [t.get("visibility") for t in e.get("tests", [])]
         if any(v not in VISIBILITIES for v in vis) or "public" not in vis or "hidden" not in vis:

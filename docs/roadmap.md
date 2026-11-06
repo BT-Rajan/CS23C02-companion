@@ -21,7 +21,7 @@ Still needed from the owner:
 | Phase | Deliverable | Done when |
 |---|---|---|
 | B1 Foundations | `syllabus/syllabus.yaml`, conventions doc (D10), unit/outcome plan (5 units provisional), construct registry draft | Every syllabus item has one home topic (U7) on paper |
-| B2 Tooling | ID registry tool (R7/S8), validator with Draft/Release profiles + waivers (S9, A2), pinned Pandoc `commonmark_x` reader (P4), code runner (A5, spec §18.8) **plus the X2 stepper check on every executable block**, **digital extraction → App Content Package v0** (spec §18.11, same schema as `content-tools/`), validator fixture suite incl. broken files | Tool tests green in CI; extraction output passes the companion `leakcheck` |
+| B2 Tooling | ID registry tool (R7/S8), validator with Draft/Release profiles + waivers (S9, A2), pinned Pandoc `commonmark_x` reader (P4), code runner (A5, spec §18.8) **plus the X2 stepper check on every executable block and a check that each trace item's answer equals the recorded output**, **digital extraction → App Content Package v0** (spec §18.11, same schema as `content-tools/`), validator fixture suite incl. broken files | Tool tests green in CI; extraction output passes the companion `leakcheck` |
 | B3 **Pilot unit** (Unit 1, fully) | Topics, worked examples with `step_notes`, code, ITM (5/lesson, R6), EXR with public/hidden tests, unit assessment, LSN registrations | Passes Release; imported by the companion backend; readable in the app (joins Track A3) |
 | B4 Units 2–5 | Same as pilot, one unit at a time, each through Release | Coverage report shows taught/reinforced/assessed for every syllabus item |
 | B5 Print | Pandoc → LaTeX print filters, 6×9 template, selection manifests, answer key, index, proofs | Full PDF compiles; page-budget report reviewed |
@@ -44,7 +44,7 @@ on-device Python runtime and its performance gate come before practice items.
 
 ## Order of work
 1. **A1 Android shell** — done (CI green).
-2. **A3 stepper + tutor** — recorder, stepper, tutor and **Python on the phone** (own code, live explanations, input) done; **waiting on the owner's Redmi numbers** (performance gate); A2 (reader) done; next A4 (real content, when the book has chapters) or A5 (practice).
+2. **A3 stepper + tutor** — recorder, stepper, tutor and **Python on the phone** (own code, live explanations, input) done; **waiting on the owner's Redmi numbers** (performance gate); A2 (reader) and A5 (practice) done; next A6 (exercises with graded runs) or A4 when the book has chapters.
 3. **B2 tooling** in the book repo (registry, validator, code runner + stepper check from X2, extraction to App Content Package v0).
 4. **B1/B3** as soon as the syllabus (U1) arrives; then A4 → A7 alongside book writing (the long pole).
 
