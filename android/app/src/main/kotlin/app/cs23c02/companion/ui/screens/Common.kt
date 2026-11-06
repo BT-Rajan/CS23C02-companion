@@ -76,8 +76,9 @@ fun Message(text: String, isError: Boolean) {
 }
 
 @Composable
-fun PrimaryButton(label: String, busy: Boolean, onClick: () -> Unit) {
-    Button(onClick = onClick, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+/** [busy] = work in progress (shows a spinner); [enabled] = false just greys it out (e.g. nothing chosen yet). */
+fun PrimaryButton(label: String, busy: Boolean, enabled: Boolean = true, onClick: () -> Unit) {
+    Button(onClick = onClick, enabled = enabled && !busy, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
         if (busy) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp) else Text(label)
     }
 }

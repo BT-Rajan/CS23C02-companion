@@ -84,7 +84,7 @@ fun PlaygroundScreen(runner: PythonRunner, onStepThrough: (source: String, stdin
                 Editor(text, marks) { nv -> text = autoIndent(text, nv) }
                 OutlinedTextField(stdin, { stdin = it }, label = { Text("Input for the program (one line each)") },
                     minLines = 1, maxLines = 4, modifier = Modifier.fillMaxWidth())
-                PrimaryButton("Step through", busy || rs !is RunnerState.Ready || text.text.isBlank()) { onStepThrough(text.text, stdin) }
+                PrimaryButton("Step through", busy = busy, enabled = rs is RunnerState.Ready && text.text.isNotBlank()) { onStepThrough(text.text, stdin) }
             }
             Surface(tonalElevation = 3.dp, modifier = Modifier.fillMaxWidth()) {
                 Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp, vertical = 4.dp),

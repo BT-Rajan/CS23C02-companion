@@ -150,6 +150,8 @@ class ScreenshotTest {
         }
     }
 
+    @Test fun playgroundEmpty() = shot("17-playground-empty") { app.cs23c02.companion.ui.screens.PlaygroundScreen(py, { _, _ -> }, {}) }
+
     @Test fun playgroundShowsAFriendlyError() {
         val src = "total = 0\nfor m in [1, 2]\n    total += m\n"
         val live = kotlinx.coroutines.runBlocking { py.run(src, "") }
@@ -172,6 +174,7 @@ class ScreenshotTest {
 
     @Test fun practiceQuestions() {
         val i1 = samplePkg.item("ITM-9001")
+        shot("23-practice-nothing-chosen") { app.cs23c02.companion.ui.screens.PracticeScreen(i1, 0, 2, "What is a variable?", null, false, null, {}, {}, {}, {}, {}, null) }
         shot("23-practice-question") { app.cs23c02.companion.ui.screens.PracticeScreen(i1, 0, 2, "What is a variable?", null, false, null, {}, {}, {}, {}, {}, null, initialChoice = "a") }
         shot("23-practice-wrong") { app.cs23c02.companion.ui.screens.PracticeScreen(i1, 0, 2, "What is a variable?",
             verdict("ITM-9001", false, false, "Comparing uses ==, not =.", null, null), false, null, {}, {}, {}, {}, {}, null, initialChoice = "a") }

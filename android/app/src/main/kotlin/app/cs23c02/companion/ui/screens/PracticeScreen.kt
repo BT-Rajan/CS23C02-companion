@@ -102,7 +102,7 @@ fun PracticeScreen(
             }
             error?.let { Message(it, isError = true) }
             if (verdict == null) {
-                PrimaryButton(if (checking) "Checking…" else "Check", busy = checking || chosen.isEmpty()) { onCheck(chosen) }
+                PrimaryButton("Check", busy = checking, enabled = chosen.isNotEmpty()) { onCheck(chosen) }
             } else {
                 VerdictCard(verdict)
                 if (item.type == "trace" && onStepThrough != null && item.code != null) {
