@@ -16,7 +16,7 @@ from .activation import codes
 from .activation.service import code_hmac
 from .audit import audit
 from .db import SessionLocal, utcnow
-from .models import ActivationBatch, ActivationCode, Base, Edition
+from .models import ActivationBatch, ActivationCode, AuditLog, Base, Edition, User
 
 
 def grants_sql(schema: str, user: str) -> list[str]:
@@ -97,6 +97,27 @@ def publish_release(a):
     print("published")
 
 
+def flagged_accounts(a):
+    """Accounts with repeated anomaly triggers (ADR 0004). Review: contact the owner; never lock automatically."""
+    with SessionLocal() as db:
+        rows = db.scalars(select(User).where(User.support_flag_at.is_not(None)).order_by(User.support_flag_at)).all()
+        for u in rows:
+            n = db.scalar(select(func.count()).select_from(AuditLog).where(AuditLog.actor_id == u.id, AuditLog.action == "anomaly_detected")) or 0
+            print(f"{u.support_flag_at:%Y-%m-%d %H:%M}  {u.email}  triggers:{n}  reverify_since:{u.reverify_since or '-'}")
+        print(f"{len(rows)} flagged")
+
+
+def clear_flag(a):
+    with SessionLocal() as db:
+        u = db.scalar(select(User).where(User.email == a.email.lower()))
+        if u is None:
+            sys.exit("no such account")
+        u.support_flag_at = None
+        audit("support_flag", "cleared", u.id, a.note[:80], db=db)
+        db.commit()
+    print("flag cleared")
+
+
 def send_test_email(a):
     mail.send_email(a.to, "CS23C02 Companion test", "If you can read this, SMTP is configured.")
     print("sent (check the inbox; failures are logged without secrets)")
@@ -116,6 +137,8 @@ def main():
     x = sub.add_parser("import-content"); x.add_argument("--edition", required=True); x.add_argument("--public", required=True)
     x.add_argument("--protected", required=True); x.add_argument("--publish", action="store_true"); x.set_defaults(f=import_content)
     x = sub.add_parser("publish-release"); x.add_argument("--release", type=int, required=True); x.set_defaults(f=publish_release)
+    x = sub.add_parser("flagged-accounts"); x.set_defaults(f=flagged_accounts)
+    x = sub.add_parser("clear-flag"); x.add_argument("--email", required=True); x.add_argument("--note", required=True); x.set_defaults(f=clear_flag)
     x = sub.add_parser("send-test-email"); x.add_argument("to"); x.set_defaults(f=send_test_email)
     a = p.parse_args()
     a.f(a)

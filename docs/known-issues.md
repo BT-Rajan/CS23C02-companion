@@ -9,7 +9,7 @@
 | K6 | Gmail SMTP path untested against a real account; consumer Gmail has daily send limits | Medium | Open (needs credentials; ADR 0011) |
 | K7 | CI workflow written but not yet executed on GitHub | Low | **Closed**: backend CI ran green on GitHub (run 41912969946) |
 | K8 | Argon2id parameters (64 MiB, t=3) not yet benchmarked on the production host | Low | Open |
-| K9 | Anomaly re-verification (B1) not built; only the 3-device cap exists | Medium | Open (Phase 2 follow-up) |
+| K9 | Anomaly re-verification (B1) not built; only the 3-device cap exists | Medium | **Closed** (built and tested; thresholds tracked as K43) |
 | K10 | Rate limiter can overshoot slightly under heavy concurrency; DB-backed (no Redis) | Low | Accepted |
 | K11 | `rate_events` needs the daily `purge-rate-events` cron job | Low | Open (ops) |
 | K12 | Content tests use fixtures; real lessons, figures and long code have never passed through the pipeline | Medium | Open (needs real content) |
@@ -43,3 +43,5 @@
 | K40 | Backups are written on the same VM; copying them off the machine is documented but not automated (destination is the owner's choice) | Medium | Open |
 | K41 | No uptime monitoring or alerting on `/healthz` yet | Low | Open |
 | K42 | The privacy policy page is a DRAFT describing what the software does; needs review before public release | Medium | Open |
+| K43 | Anomaly thresholds (6 sign-ins or 4 sign-in networks in 24 h, 4 device-cap evictions in 7 days) are first estimates; tune them on staging data (`docker compose exec api python -m app.cli flagged-accounts`, audit `anomaly_detected`) before release | Low | Open |
+| K44 | Re-verification is by email, so a sharer who forwards every code can still share; it raises the cost and leaves an audit trail and a support flag, as ADR 0004 intends | Info | Accepted |

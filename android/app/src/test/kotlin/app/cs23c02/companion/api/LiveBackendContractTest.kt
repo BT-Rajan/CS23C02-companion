@@ -156,4 +156,25 @@ class LiveBackendContractTest {
         api.login(email, "another long passphrase", "IT")
         assertEquals(email, api.me().email)
     }
+
+    /** K9 (ADR 0004): many sign-ins in a day trigger "confirm it's you" by a code sent to the account's address; never a lock. */
+    @Test fun anomalyReverificationAgainstRealServer() = runBlocking {
+        assumeTrue("API_IT_URL not set", !url.isNullOrBlank())
+        val store = InMemoryTokenStore()
+        val api = ApiClient(url, store, OkHttpClient(), Dispatchers.IO)
+        val email = "it-share-${System.nanoTime()}@example.com"
+        val pw = "a long test passphrase"
+        api.register(email, pw)
+        api.verifyEmail(email, lastCode(email, "verification"), "phone 1")        // sign-in 1
+        repeat(5) { api.login(email, pw, "phone ${it + 2}") }                    // sign-ins 2..6 from one address: the 6th triggers
+        assertTrue(api.me().reverifyRequired)
+        try { api.manifest(null); fail() } catch (e: ApiError) { assertEquals(403, e.status); assertEquals("reverify_required", e.code) }
+        val sent = api.sendReverifyCode()
+        assertEquals("code_sent", sent.status)
+        assertTrue(sent.emailHint!!.startsWith("i***@"))
+        try { api.reverify("000000"); fail() } catch (e: ApiError) { assertEquals("bad_code", e.code) }
+        api.reverify(lastCode(email, "Your"))
+        assertTrue(!api.me().reverifyRequired)
+        assertEquals("not_needed", api.sendReverifyCode().status)
+    }
 }

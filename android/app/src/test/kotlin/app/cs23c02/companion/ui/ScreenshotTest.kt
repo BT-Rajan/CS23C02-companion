@@ -15,6 +15,7 @@ import app.cs23c02.companion.ui.screens.CreateAccountScreen
 import app.cs23c02.companion.ui.screens.HomeScreen
 import app.cs23c02.companion.ui.ReaderUi
 import app.cs23c02.companion.ui.screens.ResetScreen
+import app.cs23c02.companion.ui.screens.ReverifyScreen
 import app.cs23c02.companion.ui.screens.SignInScreen
 import app.cs23c02.companion.ui.screens.VerifyEmailScreen
 import app.cs23c02.companion.ui.screens.WelcomeScreen
@@ -62,6 +63,10 @@ class ScreenshotTest {
     }
 
     @Test fun reset() = shot("05-reset") { ResetScreen(vm, UiState(Screen.Reset("student@example.com")), "student@example.com") }
+
+    @Test fun reverify() = shot("06b-reverify") {
+        ReverifyScreen(vm, UiState(Screen.Reverify("s***@gmail.com"), info = "We sent a 6-digit code to s***@gmail.com."), "s***@gmail.com")
+    }
 
     @Test fun activate() {
         shot("06-activate") { ActivateScreen(vm, UiState(Screen.Activate)) }

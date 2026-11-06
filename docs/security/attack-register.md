@@ -12,7 +12,7 @@
 | A7 | Replay successful request | Activation | Idempotent; second returns generic failure | Replay test | Pass (Phase 2) – see test-evidence.md | None |
 | A8 | Many accounts, one code | Activation | Unique constraints on code and (user, edition) | Concurrency + DB constraint test | Pass (Phase 2) – see test-evidence.md | None |
 | A9 | Fake client "activated" flag | Client | Flags are cosmetic; every API call checks server entitlement | Patch app; call APIs | Server-authoritative (Phase 2) – see test-evidence.md | None |
-| B1 | Credential sharing | Accounts | Device cap, anomaly re-verification, support flag | Multi-device simulation | Partial: device cap only – see test-evidence.md | **Medium** |
+| B1 | Credential sharing | Accounts | Device cap, anomaly re-verification, support flag | Multi-device simulation | **Pass** (K9): signals, per-device re-verification, support flag; mutation-checked – `test_anomaly.py`, live contract | **Medium** (inherent: a determined owner can forward codes, K44) |
 | B2 | Brute-force login | Auth | Throttling, Argon2id, uniform errors | Burst test | Pass (Phase 2) – see test-evidence.md | Low |
 | B3 | Account enumeration (login, register, forgot) | Auth | Uniform responses and timing | Differential test | Pass (Phase 2) – see test-evidence.md | Low |
 | B4 | Abuse reset codes | Recovery | 6-digit, 10 min, 5 tries, single use, send caps | Attempt test | Pass (Phase 2) – see test-evidence.md | Low |

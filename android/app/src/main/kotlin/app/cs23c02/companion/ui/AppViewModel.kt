@@ -31,6 +31,8 @@ sealed interface Screen {
     data class Forgot(val email: String) : Screen
     data class Reset(val email: String) : Screen
     data object Activate : Screen
+    /** "Confirm it's you" (ADR 0004, K9). [emailHint] like a***@gmail.com once the server has sent the code. */
+    data class Reverify(val emailHint: String? = null) : Screen
     /** [sample]: debug-only SAMPLE lessons bundled in the APK, no account. */
     data class Home(val me: Me, val sample: Boolean = false) : Screen
     data class UnitPage(val unitId: String, val back: Screen) : Screen
@@ -177,6 +179,10 @@ class AppViewModel(
         viewModelScope.launch {
             _reader.update { it.copy(syncing = true, problem = null) }
             val out = r.sync(edition)
+            if ((out as? ReaderRepository.SyncOutcome.Failed)?.code == "reverify_required") {
+                _reader.update { it.copy(syncing = false) }
+                enterReverify(); return@launch
+            }
             publishReader(syncing = false,
                 offline = out is ReaderRepository.SyncOutcome.Offline,
                 problem = (out as? ReaderRepository.SyncOutcome.Failed)?.message
@@ -592,6 +598,31 @@ class AppViewModel(
         }
     }
 
+    // ---- Anomaly re-verification (ADR 0004, K9): never a lock; the account owner confirms each device by email ----------
+    private suspend fun enterReverify() {
+        go(Screen.Reverify())
+        val sent = try { api.sendReverifyCode() } catch (e: ApiError) { if (e.isNetwork) { fail(e); return } else null }
+        if (sent?.status == "not_needed") { routeAfterSignIn(); return }
+        go(Screen.Reverify(sent?.emailHint), info = sent?.emailHint?.let { "We sent a 6-digit code to $it." })
+    }
+
+    fun confirmReverify(code: String) {
+        Validation.codeError(code)?.let { e -> _state.update { it.copy(fieldErrors = mapOf("code" to e), error = null) }; return }
+        run {
+            api.reverify(code)
+            routeAfterSignIn()
+        }
+    }
+
+    fun resendReverifyCode() {
+        val hint = (_state.value.screen as? Screen.Reverify)?.emailHint
+        run {
+            val sent = api.sendReverifyCode()
+            if (sent.status == "not_needed") { routeAfterSignIn(); return@run }
+            go(Screen.Reverify(sent.emailHint ?: hint), info = "A new code is on its way. If you can't see it, check your spam folder.")
+        }
+    }
+
     fun signOut() {
         viewModelScope.launch {
             _state.update { it.copy(busy = true) }
@@ -608,6 +639,7 @@ class AppViewModel(
     // ---- Helpers ----------------------------------------------------------------------------------------------
     private suspend fun routeAfterSignIn() {
         val me = api.me()
+        if (me.reverifyRequired) { enterReverify(); return }
         if (me.entitlements.isEmpty()) { go(Screen.Activate); return }
         go(Screen.Home(me))
         startReader(sample = false, editionId = me.entitlements.first().editionId)
@@ -620,6 +652,9 @@ class AppViewModel(
     }
 
     private fun fail(e: ApiError) {
+        if (e.code == "reverify_required" && _state.value.screen !is Screen.Reverify) {
+            viewModelScope.launch { enterReverify() }; return
+        }
         if (e.isUnauthenticated && e.code == "unauthenticated" && api.hasSession().not() && _state.value.screen !is Screen.SignIn) {
             go(Screen.SignIn, info = e.message); return
         }

@@ -149,7 +149,7 @@ class ReaderRepository(
         data object UpToDate : SyncOutcome
         data object Updated : SyncOutcome
         data class Offline(val hasContent: Boolean) : SyncOutcome
-        data class Failed(val message: String) : SyncOutcome
+        data class Failed(val message: String, val code: String? = null) : SyncOutcome
     }
 
     suspend fun sync(edition: String?): SyncOutcome {
@@ -171,7 +171,7 @@ class ReaderRepository(
         } catch (e: ApiError) {
             if (e.isNetwork) SyncOutcome.Offline(content.current() != null)
             else if (e.code == "no_content") SyncOutcome.Failed("Lessons for your book are not available yet.")
-            else SyncOutcome.Failed(e.message)
+            else SyncOutcome.Failed(e.message, e.code)
         } catch (e: ContentError) {
             SyncOutcome.Failed(e.message ?: "The lessons could not be verified.")
         }

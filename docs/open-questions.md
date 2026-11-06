@@ -19,6 +19,6 @@ hybrid execution; textbook repo at `BT-Rajan/CS23C02`.
 | 10 | Phase 3 slice order | Approved |
 | 11 | Defer search and bookmarks | Confirmed |
 | 12 | Reference low-end phone | Redmi A7, 3 GB, Android 14 (confirm exact model) |
-| 13 | Anomaly re-verification | After the Android shell |
+| 13 | Anomaly re-verification | **Resolved** 2026-11-06: built per ADR 0004 (see its amendment); thresholds to tune on staging (K43) |
 | 14 | Gmail credentials | Left untested for now |
 | 15 | Line-by-line stepping of real code | **Approved (owner request 2026-11-06):** ADR 0013 |

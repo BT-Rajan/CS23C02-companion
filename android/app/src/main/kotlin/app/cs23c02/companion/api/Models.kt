@@ -8,6 +8,7 @@ data class TokenResponse(
     @SerialName("access_token") val accessToken: String,
     @SerialName("refresh_token") val refreshToken: String,
     @SerialName("expires_in") val expiresIn: Long,
+    @SerialName("reverify_required") val reverifyRequired: Boolean = false,
 )
 
 @Serializable
@@ -18,7 +19,15 @@ data class Entitlement(
 )
 
 @Serializable
-data class Me(val email: String, val entitlements: List<Entitlement> = emptyList())
+data class Me(
+    val email: String,
+    val entitlements: List<Entitlement> = emptyList(),
+    /** The server saw this account used on many devices or networks (ADR 0004): this device must confirm with an emailed code. */
+    @SerialName("reverify_required") val reverifyRequired: Boolean = false,
+)
+
+@Serializable
+data class ReverifySent(val status: String, @SerialName("email_hint") val emailHint: String? = null)
 
 @Serializable
 internal data class ErrorBody(val error: ErrorDetail)

@@ -5,6 +5,7 @@ from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
+from . import anomaly
 from .config import get_settings
 from .db import get_db, utcnow
 from .errors import ApiError
@@ -36,8 +37,20 @@ def _unauth() -> ApiError:
     return ApiError(401, "Please sign in again.", "unauthenticated", headers={"WWW-Authenticate": "Bearer"})
 
 
+REVERIFY_MESSAGE = "To keep your account yours, confirm it's you: enter the code we email to your address."
+
+
 def get_current(creds: HTTPAuthorizationCredentials | None = Depends(_bearer), db: Session = Depends(get_db)) -> Principal:
-    """Every protected route depends on this. The session row is checked on each call, so revocation is immediate."""
+    """Every protected route depends on this. The session row is checked on each call, so revocation is immediate.
+    A session that must re-verify (ADR 0004, K9) gets 403 reverify_required everywhere except the routes that use
+    get_current_any (who am I, sign out, and re-verification itself)."""
+    p = get_current_any(creds, db)
+    if anomaly.needs_reverify(p.user, p.session):
+        raise ApiError(403, REVERIFY_MESSAGE, "reverify_required")
+    return p
+
+
+def get_current_any(creds: HTTPAuthorizationCredentials | None = Depends(_bearer), db: Session = Depends(get_db)) -> Principal:
     if creds is None:
         raise _unauth()
     claims = decode_access_token(creds.credentials)

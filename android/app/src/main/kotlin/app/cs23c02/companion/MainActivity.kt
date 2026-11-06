@@ -20,6 +20,7 @@ import app.cs23c02.companion.api.ApiClient
 import app.cs23c02.companion.auth.KeystoreTokenStore
 import app.cs23c02.companion.ui.AppViewModel
 import app.cs23c02.companion.ui.Screen
+import app.cs23c02.companion.ui.screens.ReverifyScreen
 import app.cs23c02.companion.ui.screens.ActivateScreen
 import app.cs23c02.companion.ui.screens.CreateAccountScreen
 import app.cs23c02.companion.ui.screens.ForgotScreen
@@ -107,6 +108,7 @@ class MainActivity : ComponentActivity() {
                             is Screen.Forgot -> ForgotScreen(vm, s, sc.email)
                             is Screen.Reset -> ResetScreen(vm, s, sc.email)
                             Screen.Activate -> ActivateScreen(vm, s)
+                            is Screen.Reverify -> ReverifyScreen(vm, s, sc.emailHint)
                             is Screen.Home -> HomeScreen(sc.me, sc.sample, reader, s.info,
                                 onContinue = vm::openLesson, onUnit = vm::openUnit, onRetry = vm::syncReader,
                                 onTutor = if (vm.demos.isNotEmpty()) ({ vm.openTutor() }) else null,

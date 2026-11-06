@@ -20,7 +20,7 @@ def test_full_first_time_flow_register_verify_use_token(client):
     r = client.post("/v1/auth/verify-email", json={"email": "new@test.dev", "code": last_code("new@test.dev")}, headers=ip_headers())
     assert r.status_code == 200
     me = client.get("/v1/me", headers={"Authorization": "Bearer " + r.json()["access_token"]})
-    assert me.status_code == 200 and me.json() == {"email": "new@test.dev", "entitlements": []}
+    assert me.status_code == 200 and me.json() == {"email": "new@test.dev", "reverify_required": False, "entitlements": []}
 
 
 def test_password_is_stored_as_argon2id_and_codes_as_hashes(client):

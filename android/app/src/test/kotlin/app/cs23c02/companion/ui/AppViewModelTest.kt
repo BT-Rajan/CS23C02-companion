@@ -167,4 +167,40 @@ class AppViewModelTest {
         assertEquals(Screen.Welcome, vm.state.value.screen)
         assertEquals(null, store.load())
     }
+
+    // ---- K9: anomaly re-verification (ADR 0004) ----------------------------------------------------------------------
+    @Test fun signInThatNeedsReverificationAsksForTheEmailedCodeThenContinues() {
+        val vm = vm()
+        server.enqueue(MockResponse().setBody(tokens.replace("}", ""","reverify_required":true}""")))
+        server.enqueue(MockResponse().setBody(meActive.replace("}]}", """}],"reverify_required":true}""")))
+        server.enqueue(MockResponse().setResponseCode(202).setBody("""{"status":"code_sent","email_hint":"s***@example.com"}"""))
+        vm.signIn("s@example.com", "a good passphrase")
+        assertEquals(Screen.Reverify("s***@example.com"), vm.state.value.screen)
+        assertEquals("/v1/auth/reverify/send", server.takeRequestPath(3))
+
+        server.enqueue(err(400, "bad_code", "That code didn't work. Check it, or ask for a new one."))
+        vm.confirmReverify("111111")
+        assertEquals(Screen.Reverify("s***@example.com"), vm.state.value.screen)
+        assertEquals("That code didn't work. Check it, or ask for a new one.", vm.state.value.error)
+
+        server.enqueue(MockResponse().setBody("""{"status":"ok"}"""))
+        server.enqueue(MockResponse().setBody(meActive))
+        vm.confirmReverify("123456")
+        assertTrue(vm.state.value.screen is Screen.Home)
+    }
+
+    @Test fun aReverifyAnswerMidSessionOpensConfirmInsteadOfAnError() {
+        store.save(Tokens("A", "R", Long.MAX_VALUE))
+        server.enqueue(MockResponse().setBody(meEmpty))
+        val vm = vm()
+        assertEquals(Screen.Activate, vm.state.value.screen)
+        server.enqueue(err(403, "reverify_required", "To keep your account yours, confirm it's you."))
+        server.enqueue(MockResponse().setResponseCode(202).setBody("""{"status":"code_sent","email_hint":"s***@example.com"}"""))
+        vm.activate("z83g bhab jd4t h5bb")
+        assertEquals(Screen.Reverify("s***@example.com"), vm.state.value.screen)
+        assertEquals(null, vm.state.value.error)
+        assertEquals(false, vm.back())          // no way around it except confirming or signing out
+    }
+
+    private fun MockWebServer.takeRequestPath(n: Int): String? { var r: String? = null; repeat(n) { r = takeRequest().path }; return r }
 }

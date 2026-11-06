@@ -26,6 +26,12 @@ class Settings(BaseSettings):
     access_ttl_seconds: int = 900
     refresh_idle_days: int = 90
     max_sessions: int = 3
+    # Anomaly re-verification (ADR 0004, K9). Any one signal triggers it; a trigger never locks the account.
+    anomaly_signins_24h: int = 6         # new sign-ins (sessions) in 24 h
+    anomaly_ips_24h: int = 4             # distinct sign-in addresses in 24 h (campus NATs share one address, so sign-ins count, not users)
+    anomaly_evictions_7d: int = 4        # sessions pushed out by the device cap in 7 days (friends taking turns)
+    reverify_window_days: int = 7        # sessions created this long after a trigger must also confirm
+    support_flag_triggers: int = 3       # triggers in 30 days that flag the account for a person to review
     refresh_grace_seconds: int = 10
     otp_ttl_seconds: int = 600
     otp_max_attempts: int = 5

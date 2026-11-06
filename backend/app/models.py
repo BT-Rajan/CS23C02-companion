@@ -27,6 +27,9 @@ class User(Base):
     email_verified_at: Mapped[datetime | None] = mapped_column(DT)
     created_at: Mapped[datetime] = mapped_column(DT)
     disabled_at: Mapped[datetime | None] = mapped_column(DT)
+    # Anomaly re-verification (ADR 0004, K9): while set, sessions not confirmed since this moment must enter an emailed code.
+    reverify_since: Mapped[datetime | None] = mapped_column(DT)
+    support_flag_at: Mapped[datetime | None] = mapped_column(DT)   # repeated anomalies: a person looks at the account
 
 
 class UserSession(Base):
@@ -42,7 +45,9 @@ class UserSession(Base):
     last_used_at: Mapped[datetime] = mapped_column(DT)
     revoked_at: Mapped[datetime | None] = mapped_column(DT)
     revoked_reason: Mapped[str | None] = mapped_column(String(32))
-    __table_args__ = (Index("ix_sessions_user_active", "user_id", "revoked_at"),)
+    ip_hash: Mapped[str | None] = mapped_column(CHAR(16))          # keyed hash of the sign-in address (never the address)
+    reverified_at: Mapped[datetime | None] = mapped_column(DT)
+    __table_args__ = (Index("ix_sessions_user_active", "user_id", "revoked_at"), Index("ix_sessions_user_created", "user_id", "created_at"))
 
 
 class OneTimeCode(Base):

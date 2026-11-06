@@ -5,7 +5,7 @@ from datetime import timedelta
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
-from .. import ratelimit
+from .. import anomaly, ratelimit
 from ..audit import audit
 from ..config import get_settings
 from ..db import utcnow
@@ -79,9 +79,13 @@ def revoke_all(db: Session, user_id: str, reason: str) -> None:
         revoke(db, s, reason)
 
 
-def tokens_for(sess: UserSession, refresh: str) -> dict:
+def tokens_for(sess: UserSession, refresh: str, user: User | None = None) -> dict:
     now = utcnow()
-    return {"access_token": make_access_token(sess.user_id, sess.id, _epoch(now)), "refresh_token": refresh, "token_type": "Bearer", "expires_in": get_settings().access_ttl_seconds}
+    out = {"access_token": make_access_token(sess.user_id, sess.id, _epoch(now)), "refresh_token": refresh, "token_type": "Bearer",
+           "expires_in": get_settings().access_ttl_seconds}
+    if user is not None:
+        out["reverify_required"] = anomaly.needs_reverify(user, sess)   # lets the app go straight to "Confirm it's you"
+    return out
 
 
 def _epoch(naive_utc) -> int:
@@ -93,7 +97,7 @@ def create_session(db: Session, user: User, device_label: str, iph: str) -> dict
     now = utcnow()
     refresh = new_refresh_token()
     sess = UserSession(user_id=user.id, refresh_hash=sha256_hex(refresh), device_label=(device_label or "")[:80],
-                       created_at=now, last_used_at=now)
+                       created_at=now, last_used_at=now, ip_hash=iph)
     db.add(sess)
     db.flush()
     active = [s for s in _active(db, user.id) if s.id != sess.id]
@@ -102,8 +106,9 @@ def create_session(db: Session, user: User, device_label: str, iph: str) -> dict
         revoke(db, old, "device_limit")
         audit("session_revoked", "device_limit", user.id, f"session:{old.id}", iph, db=db)
     audit("session_created", "success", user.id, f"session:{sess.id}", iph, db=db)
+    anomaly.after_signin(db, user, iph, now)
     db.commit()
-    return tokens_for(sess, refresh)
+    return tokens_for(sess, refresh, user)
 
 
 def rotate(db: Session, refresh_token: str, iph: str) -> dict | None:
@@ -132,4 +137,4 @@ def rotate(db: Session, refresh_token: str, iph: str) -> dict | None:
     new = new_refresh_token()
     sess.prev_refresh_hash, sess.refresh_hash, sess.rotated_at, sess.last_used_at = sess.refresh_hash, sha256_hex(new), now, now
     db.commit()
-    return tokens_for(sess, new)
+    return tokens_for(sess, new, user)

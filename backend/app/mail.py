@@ -46,3 +46,10 @@ def account_exists_email(to: str) -> None:
     send_email(to, "CS23C02 Companion: you already have an account",
                "Someone (hopefully you) tried to create an account with this email. You already have one: sign in, or choose "
                "'Forgot password' if you need to reset it. If this was not you, no action is needed.")
+
+
+def reverify_email(to: str, code: str) -> None:
+    send_email(to, "Confirm it's you: CS23C02 Companion",
+               f"Your account was signed in on several devices or networks in a short time. To keep using it on this device, "
+               f"enter the code in the app. Your code is {code}.\nIt expires in 10 minutes.\n\nIf this wasn't you, reset your password "
+               "('Forgot password' in the app): that signs every device out. Your account is not locked.")

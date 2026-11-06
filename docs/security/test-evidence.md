@@ -191,3 +191,19 @@ and checks, over real HTTPS through Caddy:
 | Backup: consistent dump + content archive with checksums; **restore drill** loads it into a scratch MySQL with no network and matches schema version and row counts of 7 tables; content archive complete | `restore-drill.sh` |
 | Database passwords never on a command line (`MYSQL_PWD`) | scripts |
 **Not evidenced:** a real host, real DNS/Let's Encrypt, real Gmail delivery (K6), off-site backup copy (K40), load.
+
+# K9 — anomaly re-verification (ADR 0004, attack B1)
+| Area | Evidence |
+|---|---|
+| Ordinary use (3 devices, one network) never triggers | `test_ordinary_use_on_three_devices_never_triggers` |
+| Four networks in a day trigger: every live session gets 403 `reverify_required` on progress and content; `/v1/me` says so; sign-out and sign-in still work (never a lock) | `test_many_addresses_…`, `test_content_is_gated_too` |
+| Code goes to the account's own address (hint only on screen); wrong code refused; confirmation is per session; a code works once | `test_each_session_confirms_…` |
+| Six sign-ins from one address (hostel NAT) and four device-cap evictions in a week also trigger; the audit names the signal | `test_many_signins_…` |
+| No re-trigger while the window is open; devices first seen after it are free; unconfirmed old sessions still must confirm | `test_no_retrigger_…` |
+| A device confirmed after one trigger must confirm again after a later one | `test_a_confirmed_device_…` |
+| Three triggers in 30 days raise one support flag; CLI lists and clears it with a note | `test_repeated_triggers_…` |
+| Endpoints need a session; "not needed" sends nothing | `test_reverify_endpoints_…` |
+| Mutation checks: removing the gate fails 1 test; ignoring the confirmation time fails 1; requiring every session forever fails 1 | manual, recorded here |
+| App: sign-in that needs confirmation opens "Confirm it's you" with the hint; wrong code shows the server message; right code continues to Home; a mid-session 403 opens the screen instead of an error; Back does not bypass it | `AppViewModelTest` (2 tests), screenshot `06b-reverify` |
+| **Real backend:** six sign-ins → `reverify_required`, content 403, code by email, wrong code refused, confirmed, then "not needed" | `LiveBackendContractTest.anomalyReverificationAgainstRealServer` |
+**Not evidenced:** thresholds on real traffic (K43); alerting beyond the support flag list.

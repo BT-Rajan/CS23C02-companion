@@ -125,3 +125,23 @@ fun ResetScreen(vm: AppViewModel, s: UiState, email: String) {
         QuietButton("Send a new code", enabled = !s.busy) { vm.sendResetCode(email) }
     }
 }
+
+/** ADR 0004 (K9): the account was used on many devices or networks in a short time. Not a lock: the owner confirms this
+ *  device with a code sent to the account's own address, or signs out. */
+@Composable
+fun ReverifyScreen(vm: AppViewModel, s: UiState, emailHint: String?) {
+    var code by rememberSaveable { mutableStateOf("") }
+    val where = emailHint ?: "your account's email address"
+    FormPage("Confirm it's you",
+        lead = "Your account was signed in on several devices or networks in a short time. To keep your account yours, " +
+            "enter the 6-digit code we sent to $where. Each device confirms once.",
+        error = s.error, info = s.info) {
+        Field("6-digit code", code, { code = Validation.cleanSixDigits(it) }, s.fieldErrors["code"], keyboard = KeyboardType.NumberPassword,
+            ime = ImeAction.Done, onDone = { vm.confirmReverify(code) })
+        PrimaryButton("Confirm", s.busy) { vm.confirmReverify(code) }
+        QuietButton("Send a new code", enabled = !s.busy) { vm.resendReverifyCode() }
+        QuietButton("Sign out", enabled = !s.busy) { vm.signOut() }
+        Text("Wasn't you? Sign out, then use \"Forgot password?\" to choose a new password: that signs out every device.",
+            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}

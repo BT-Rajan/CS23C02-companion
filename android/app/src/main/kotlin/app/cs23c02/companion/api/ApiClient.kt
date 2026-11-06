@@ -60,6 +60,14 @@ class ApiClient(
     suspend fun activate(code: String): Entitlement =
         json.decodeFromString(Entitlement.serializer(), authed("POST", "/v1/activation", obj("code" to code)))
 
+    /** Anomaly re-verification (ADR 0004): the server emails a code to the ACCOUNT's address; this device then confirms. */
+    suspend fun sendReverifyCode(): ReverifySent =
+        json.decodeFromString(ReverifySent.serializer(), authed("POST", "/v1/auth/reverify/send", null))
+
+    suspend fun reverify(code: String) {
+        authed("POST", "/v1/auth/reverify", obj("code" to code))
+    }
+
     /** Best effort: the local sign-out happens even when the server cannot be reached. */
     suspend fun logout() {
         try {

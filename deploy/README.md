@@ -102,6 +102,7 @@ Changing certificate authority means shipping an app update with the new pin **f
 | Real restore | `docker compose stop api backup`; `gunzip -c db.sql.gz \| docker compose exec -T mysql sh -c 'MYSQL_PWD=$MYSQL_ROOT_PASSWORD mysql -uroot'`; restore `content.tar.gz` into the `content` volume; `docker compose up -d` |
 | Point-in-time | the binary log (7 days) covers the gap since the last dump |
 | Revoke a printed batch | `docker compose exec api python -m app.cli revoke-batch --batch <n>` |
+| Accounts flagged for sharing (ADR 0004) | `docker compose exec api python -m app.cli flagged-accounts` (weekly); after talking to the owner: `clear-flag --email ... --note "..."` |
 | Purge old rate-limit rows | `docker compose exec api python -m app.cli purge-rate-events` (weekly; cron) |
 
 ## 8. Not done yet (see docs/known-issues.md)

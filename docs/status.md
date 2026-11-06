@@ -14,7 +14,7 @@ Legend: **Proposed** (designed, not built) · **Incomplete** · **Implemented** 
 | Activation: code generation, atomic redemption, entitlements, audit, admin CLI | Implemented, Tested | same |
 | Gmail SMTP delivery | Implemented, **not tested against real Gmail** | needs `.env` credentials |
 | GitHub Actions CI (backend) | Implemented; first run green on GitHub (MySQL service, 60 tests, bandit, pip-audit) | run 41912969946 |
-| Anomaly re-verification for credential sharing | Proposed (not built) | – |
+| Anomaly re-verification for credential sharing (K9): sign-in signals, per-device "Confirm it's you" by emailed code, support flag + CLI; app screen and routing | Implemented, Tested (10 backend tests, mutation-checked; 2 app tests; live contract; screenshot) | `docs/security/test-evidence.md` (K9) |
 | Content packages: builder, signing, leak check, fixtures | Implemented, Tested (12 tests) | `content-tools/` |
 | Content delivery API (signed manifest, entitlement-gated files), importer, progress events + resume | Implemented, Tested (17 tests + mutation checks), backend only | `docs/security/test-evidence.md` |
 | Unit assessments (A7) | Implemented, Tested (see below) | `docs/security/test-evidence.md` (A7) |
