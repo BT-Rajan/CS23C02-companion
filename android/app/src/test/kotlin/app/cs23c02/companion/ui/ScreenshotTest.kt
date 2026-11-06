@@ -190,6 +190,34 @@ class ScreenshotTest {
             "Checking answers needs a connection. Reading still works offline.", {}, {}, {}, {}, {}, { _ -> }, initialChoice = "a") }
     }
 
+    @Test @Config(qualifiers = "w360dp-h1280dp-xhdpi") fun exercisesTall() = exercises("-tall")
+
+    @Test fun exercises() = exercises("")
+
+    private fun exercises(suffix: String) {
+        val ex = samplePkg.exercise("EXR-9001")
+        val A = app.cs23c02.companion.api.TestOutcome("4\n", "8\n", "6\n", false, "ok", null)
+        val failed = app.cs23c02.companion.api.ExerciseResult("EXR-9001", false, listOf(A),
+            app.cs23c02.companion.api.HiddenSummary(0, 2, "wrong output"),
+            app.cs23c02.companion.api.HelpState(1, false, 1, 2, 2, false, 4))
+        val hint = app.cs23c02.companion.api.ExerciseHelp(1, false, 1, 2, 2, false, 4,
+            listOf("SAMPLE: input() gives text. int() turns it into a number you can multiply."), null)
+        val run = kotlinx.coroutines.runBlocking { py.run("n = int(input())\nprint(n + 2)\n", "4\n", echo = false) }
+        shot("25-exercise-start$suffix") { app.cs23c02.companion.ui.screens.ExerciseScreen(ex, null, null, null, null, false, false, null, true,
+            {}, { _ -> }, {}, {}, {}, {}) }
+        shot("25-exercise-failed-hint$suffix") { app.cs23c02.companion.ui.screens.ExerciseScreen(ex, "n = int(input())\nprint(n + 2)\n", failed, hint, run,
+            false, false, null, true, {}, { _ -> }, {}, {}, {}, {}) }
+        val ok = app.cs23c02.companion.api.ExerciseResult("EXR-9001", true,
+            listOf(app.cs23c02.companion.api.TestOutcome("4\n", "8\n", "8\n", true)), app.cs23c02.companion.api.HiddenSummary(2, 2, null),
+            app.cs23c02.companion.api.HelpState(1, true, 2, 2, null, true, null))
+        val sol = app.cs23c02.companion.api.ExerciseHelp(1, true, 2, 2, null, true, null, listOf("SAMPLE: hint one.", "SAMPLE: hint two."),
+            app.cs23c02.companion.api.Solution("SAMPLE: read the number, multiply by 2, print the result.", "n = int(input())\nprint(n * 2)\n"))
+        shot("25-exercise-passed-dark$suffix", dark = true) { app.cs23c02.companion.ui.screens.ExerciseScreen(ex, "n = int(input())\nprint(n * 2)\n", ok, sol,
+            null, false, false, null, true, {}, { _ -> }, {}, {}, {}, {}) }
+        shot("25-exercise-offline$suffix") { app.cs23c02.companion.ui.screens.ExerciseScreen(ex, null, null, null, null, false, false,
+            "Checking needs a connection. Run and Step through work offline.", true, {}, { _ -> }, {}, {}, {}, {}) }
+    }
+
     @Test fun lessonWithPractice() = shot("22-lesson-practise") {
         app.cs23c02.companion.ui.screens.LessonScreen(samplePkg, "LSN-9002", false, 4, { _, _ -> }, {}, {}, {}, {}, false, onPractise = {})
     }

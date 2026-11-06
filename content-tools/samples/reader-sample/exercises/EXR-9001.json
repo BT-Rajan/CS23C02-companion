@@ -1,0 +1,32 @@
+{
+  "id": "EXR-9001",
+  "title": "Double it",
+  "statement": "Read a whole number and print twice its value.",
+  "io_spec": "Input: one whole number on one line. Output: that number multiplied by 2.",
+  "starter": "n = int(input())\n# print twice n\n",
+  "python": "3.12",
+  "timeout_s": 2,
+  "tests": [
+    {
+      "stdin": "4\n",
+      "expect": "8\n",
+      "visibility": "public"
+    },
+    {
+      "stdin": "-3\n",
+      "expect": "-6\n",
+      "visibility": "hidden"
+    },
+    {
+      "stdin": "0\n",
+      "expect": "0\n",
+      "visibility": "hidden"
+    }
+  ],
+  "hints": [
+    "SAMPLE: input() gives text. int() turns it into a number you can multiply.",
+    "SAMPLE: n * 2 is twice n; print it."
+  ],
+  "solution_approach": "SAMPLE: read the number, multiply by 2, print the result.",
+  "reference_solution": "n = int(input())\nprint(n * 2)\n"
+}

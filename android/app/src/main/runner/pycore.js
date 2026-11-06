@@ -14,11 +14,12 @@ async function initPython(base) {
   return py;
 }
 
-function runLive(py, source, stdin) {
+function runLive(py, source, stdin, echo) {
   py.globals.set("_SRC", source);
   py.globals.set("_STDIN", stdin);
+  py.globals.set("_ECHO", echo !== false);
   try {
-    return py.runPython("live.run(_SRC, _STDIN)");
+    return py.runPython("live.run(_SRC, _STDIN, _ECHO)");
   } catch (err) {
     return JSON.stringify({ recording: { version: 1, status: "error", steps: [], stdout: "",
       error: { type: "RunnerError", message: String((err && err.message) || err).slice(0, 200), line: null } }, lines: [], refs: {} });

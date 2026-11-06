@@ -12,7 +12,7 @@ from .db import get_db, utcnow
 from .deps import Principal, get_current
 from .entitlements import entitled_edition
 from .errors import ApiError
-from .models import ContentLesson, ProgressEvent
+from .models import ContentLesson, ExerciseAttempt, ProgressEvent
 from .content.importer import current_release
 
 router = APIRouter(prefix="/v1/progress", tags=["progress"])
@@ -82,7 +82,9 @@ def get_progress(edition: str | None = Query(default=None, max_length=40), p: Pr
         nxt = next((l for l in lessons if l.lesson_id not in completed and l.ord > top), None) or next((l for l in lessons if l.lesson_id not in completed), None)
         if nxt:
             resume, reason = nxt, ("next" if completed else "start")
-    return {"edition_id": ed, "content_version": rel.version, "total_lessons": len(lessons),
+    exercises_passed = sorted(set(db.scalars(select(ExerciseAttempt.exercise_id).where(
+        ExerciseAttempt.user_id == p.user.id, ExerciseAttempt.edition_id == ed, ExerciseAttempt.passed.is_(True)))))
+    return {"edition_id": ed, "content_version": rel.version, "total_lessons": len(lessons), "exercises_passed": exercises_passed,
             "completed": [l.lesson_id for l in lessons if l.lesson_id in completed], "finished": resume is None,
             "resume": None if resume is None else {"lesson_id": resume.lesson_id, "title": resume.title, "unit_id": resume.unit_id,
                                                    "topic_id": resume.topic_id, "reason": reason}}

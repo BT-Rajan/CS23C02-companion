@@ -243,3 +243,9 @@ def test_committed_demo_recordings_match_the_recorder():
     sys.path.insert(0, str(ROOT / "demos"))
     import build_demos
     assert build_demos.ASSET.read_text() == build_demos.build(), "run python runtime/demos/build_demos.py"
+
+
+def test_input_echo_can_be_turned_off_for_grading():
+    src = "n = int(input())\nprint(n * 2)\n"
+    assert rec(src, stdin="4")["stdout"] == "4\n8\n"                      # stepper: reads like a terminal
+    assert rec(src, stdin="4", echo_input=False)["stdout"] == "8\n"        # grading/Run: exactly what was printed

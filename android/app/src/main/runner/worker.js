@@ -6,5 +6,5 @@ const ready = initPython("./").then(
   (err) => { postMessage({ type: "failed", message: String((err && err.message) || err) }); throw err; });
 onmessage = async (e) => {
   const py = await ready;
-  postMessage({ type: "result", id: e.data.id, json: runLive(py, e.data.source, e.data.stdin) });
+  postMessage({ type: "result", id: e.data.id, json: runLive(py, e.data.source, e.data.stdin, e.data.echo) });
 };

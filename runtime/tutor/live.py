@@ -13,11 +13,11 @@ import stepper
 _REGISTRY = None
 
 
-def run(source: str, stdin: str = "") -> str:
+def run(source: str, stdin: str = "", echo: bool = True) -> str:
     global _REGISTRY
     if _REGISTRY is None:
         _REGISTRY = explain.load_registry()
-    rec = stepper.record(source, stdin)
+    rec = stepper.record(source, stdin, echo_input=echo)
     try:
         tutor = explain.explain_program(source, _REGISTRY)
     except SyntaxError:

@@ -89,11 +89,36 @@ def validate(book, nav, lessons, items, exrs, asms) -> list[str]:
     return errs
 
 
-def build(src: pathlib.Path, out: pathlib.Path, private_key: Ed25519PrivateKey, signed_at: str = "") -> dict:
+def check_solutions(src: pathlib.Path) -> list[str]:
+    """K13: every exercise's reference_solution must pass ALL of its tests (public and hidden) in the real sandbox, so the
+    app can never mark a correct answer wrong. Needs the sandbox (bubblewrap + python3.12); returns problems found."""
+    root = pathlib.Path(__file__).resolve().parents[2] / "sandbox"
+    if str(root) not in sys.path:
+        sys.path.insert(0, str(root))
+    from sandbox import grader, runner  # noqa: PLC0415
+    if not runner.available():
+        raise BuildError("--check-solutions needs the sandbox (bubblewrap and python3.12)")
+    errs = []
+    for eid, e in sorted(_load(src / "exercises").items()):
+        tests = [{"stdin": t["stdin"], "expect": t["expect"]} for t in e.get("tests", [])]
+        if not tests:
+            continue
+        g = grader.grade(e["reference_solution"], tests)
+        for i, (t, r) in enumerate(zip(e["tests"], g["tests"])):
+            if not r["passed"]:
+                errs.append(f"{eid}: reference solution fails {t.get('visibility', '?')} test {i + 1} "
+                            f"({r['status']}{': ' + r['error'] if r['error'] else ''})")
+    return errs
+
+
+def build(src: pathlib.Path, out: pathlib.Path, private_key: Ed25519PrivateKey, signed_at: str = "",
+          check_reference_solutions: bool = False) -> dict:
     book = json.loads((src / "book.json").read_text())
     nav = json.loads((src / "nav.json").read_text())
     lessons, items, exrs, asms = (_load(src / d) for d in ("lessons", "items", "exercises", "assessments"))
     errs = validate(book, nav, lessons, items, exrs, asms)
+    if not errs and check_reference_solutions:
+        errs = check_solutions(src)
     if errs:
         raise BuildError("Release validation failed:\n  " + "\n  ".join(errs))
 
@@ -157,6 +182,7 @@ def main(argv=None):
     sub.add_parser("keygen", help="print a new signing keypair (keep the private key secret)")
     b = sub.add_parser("build")
     b.add_argument("src"); b.add_argument("out"); b.add_argument("--key-file", required=True, help="file holding the base64 private key")
+    b.add_argument("--check-solutions", action="store_true", help="run every reference solution against its tests in the sandbox")
     a = p.parse_args(argv)
     if a.cmd == "keygen":
         priv, pub = new_keypair()
@@ -164,7 +190,8 @@ def main(argv=None):
         print("PUBLIC  (CONTENT_SIGNING_PUBKEY):", pub)
         return
     try:
-        m = build(pathlib.Path(a.src), pathlib.Path(a.out), load_private(pathlib.Path(a.key_file).read_text().strip()))
+        m = build(pathlib.Path(a.src), pathlib.Path(a.out), load_private(pathlib.Path(a.key_file).read_text().strip()),
+                  check_reference_solutions=a.check_solutions)
     except BuildError as e:
         sys.exit(str(e))
     print(f"built {m['book']['id']} {m['book']['version']}: {len(m['files'])} public files -> {a.out}/public (protected set: {a.out}/protected.json — never publish)")

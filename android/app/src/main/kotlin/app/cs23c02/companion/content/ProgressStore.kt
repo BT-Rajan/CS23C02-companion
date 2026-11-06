@@ -17,6 +17,8 @@ data class LocalProgress(
     val lastOpened: String? = null,
     /** Scroll position per lesson, so Continue opens exactly where the student stopped (journey J2). Local only. */
     val positions: Map<String, Int> = emptyMap(),
+    /** The student's latest code per exercise, so closing the app never loses work. Local only. */
+    val drafts: Map<String, String> = emptyMap(),
 )
 
 /**
@@ -53,6 +55,11 @@ class ProgressStore(private val file: File, private val clock: () -> Instant = I
         val s = state
         if (lessonId in s.completed) return
         save(s.copy(completed = s.completed + lessonId, pending = (s.pending + event("lesson_completed", lessonId)).takeLast(MAX_PENDING)))
+    }
+
+    @Synchronized fun draft(exerciseId: String, code: String) {
+        if (state.drafts[exerciseId] == code || code.length > 20000) return
+        save(state.copy(drafts = state.drafts + (exerciseId to code)))
     }
 
     @Synchronized fun position(lessonId: String, scroll: Int) {
@@ -100,7 +107,15 @@ class ReaderRepository(
     /** Debug-only SAMPLE package bundled in the APK; when set, nothing is sent to or fetched from the server. */
     private val samplePackage: (suspend () -> Pair<ByteArray, Map<String, ByteArray>>)? = null,
     private val sampleChecker: SamplePracticeChecker? = null,
+    private val sampleExercises: SampleExerciseGrader? = null,
 ) {
+    /** One graded Check: the server sandbox (or, for debug SAMPLE exercises only, on-device Python with the same policy). */
+    suspend fun submitExercise(ex: Exercise, code: String, edition: String?): app.cs23c02.companion.api.ExerciseResult =
+        sampleExercises?.submit(ex, code) ?: api.submitExercise(ex.id, code, edition)
+
+    suspend fun exerciseHelp(ex: Exercise, edition: String?): app.cs23c02.companion.api.ExerciseHelp =
+        sampleExercises?.help(ex) ?: api.exerciseHelp(ex.id, edition)
+
     /** One practice answer: checked by the server (or, for debug SAMPLE questions only, locally). Never recorded as progress. */
     suspend fun checkPractice(itemId: String, option: String, edition: String?): app.cs23c02.companion.api.PracticeVerdict =
         sampleChecker?.check(itemId, option) ?: api.answerPractice(itemId, option, edition)

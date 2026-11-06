@@ -92,6 +92,18 @@ class ApiClient(
         return json.decodeFromString(PracticeVerdict.serializer(), authed("POST", "/v1/practice/items/$itemId/answer", body))
     }
 
+    suspend fun submitExercise(exerciseId: String, code: String, edition: String?): ExerciseResult {
+        require(Regex("^EXR-\\d{4,6}$").matches(exerciseId))
+        val body = buildJsonObject { put("code", JsonPrimitive(code)); edition?.let { put("edition", JsonPrimitive(it)) } }
+        return json.decodeFromString(ExerciseResult.serializer(), authed("POST", "/v1/exercises/$exerciseId/submissions", body))
+    }
+
+    suspend fun exerciseHelp(exerciseId: String, edition: String?): ExerciseHelp {
+        require(Regex("^EXR-\\d{4,6}$").matches(exerciseId))
+        val q = edition?.let { "?edition=" + java.net.URLEncoder.encode(it, "UTF-8") } ?: ""
+        return json.decodeFromString(ExerciseHelp.serializer(), authed("GET", "/v1/exercises/$exerciseId/help$q", null))
+    }
+
     suspend fun progress(edition: String?): ProgressSummary {
         val q = edition?.let { "?edition=" + java.net.URLEncoder.encode(it, "UTF-8") } ?: ""
         return json.decodeFromString(ProgressSummary.serializer(), authed("GET", "/v1/progress$q", null))

@@ -37,13 +37,19 @@ CODE=$(tail -n 1 "$WORK/codes.csv" | cut -d, -f2)
 KEYS=$(cd "$ROOT/content-tools" && "$ROOT/backend/$PY" -m cs23c02_content.build keygen)
 echo "$KEYS" | sed -n 's/^PRIVATE[^:]*: //p' > "$WORK/private.key"
 export CONTENT_SIGNING_PUBKEY=$(echo "$KEYS" | sed -n 's/^PUBLIC[^:]*: //p')
-(cd "$ROOT/content-tools" && "$ROOT/backend/$PY" -m cs23c02_content.build build fixtures/cs23c02-fixture "$WORK/pkg" --key-file "$WORK/private.key" >/dev/null)
+(cd "$ROOT/content-tools" && "$ROOT/backend/$PY" -m cs23c02_content.build build fixtures/cs23c02-fixture "$WORK/pkg" --key-file "$WORK/private.key" --check-solutions >/dev/null)
 rm -f "$WORK/private.key"
 $PY -m app.cli import-content --edition it-edition --public "$WORK/pkg/public" --protected "$WORK/pkg/protected.json" --publish >/dev/null
 
+# The sandbox as its own service (ADR 0006): the backend reaches it over HTTP with signed requests and verifies its signed answers.
+export SANDBOX_KEY=$(openssl rand -hex 32) SANDBOX_MODE=http SANDBOX_URL="http://127.0.0.1:$((PORT + 1))"
+(cd "$ROOT/sandbox" && "$ROOT/backend/$PY" -m uvicorn sandbox.service:app --host 127.0.0.1 --port $((PORT + 1)) > "$WORK/sandbox.log" 2>&1) &
+SANDBOX=$!
+
 PYTHONUNBUFFERED=1 $PY -m uvicorn app.main:app --host 127.0.0.1 --port "$PORT" > "$WORK/server.log" 2>&1 &
 SERVER=$!
-trap 'kill $SERVER 2>/dev/null; rm -rf "$WORK"' EXIT
+trap 'kill $SERVER $SANDBOX 2>/dev/null; pkill -f "sandbox.service:app" 2>/dev/null; rm -rf "$WORK"' EXIT
+for _ in $(seq 50); do curl -fsS "$SANDBOX_URL/healthz" >/dev/null 2>&1 && break; sleep 0.2; done
 for _ in $(seq 50); do curl -fsS "http://127.0.0.1:$PORT/healthz" >/dev/null 2>&1 && break; sleep 0.2; done
 
 cd "$ROOT/android"

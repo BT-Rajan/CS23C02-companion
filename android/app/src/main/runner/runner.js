@@ -45,7 +45,7 @@
   function pageEngineStart(reason) {
     bridge.onState("fallback: " + reason);
     const e = { ready: false, kind: "page", py: null };
-    e.send = (req) => setTimeout(() => bridge.onResult(String(req.id), runLive(e.py, req.source, req.stdin)), 0);
+    e.send = (req) => setTimeout(() => bridge.onResult(String(req.id), runLive(e.py, req.source, req.stdin, req.echo)), 0);
     e.stop = () => {};
     engine = e;
     const s = document.createElement("script");
@@ -68,9 +68,9 @@
     try { engine = workerEngine(); } catch (err) { pageEngineStart("worker threw"); }
   }
 
-  // Called by the app: window.runPython(id, source, stdin, timeoutMs)
-  window.runPython = function (id, source, stdin, timeoutMs) {
-    const req = { id: id, source: String(source), stdin: String(stdin || ""), timeoutMs: timeoutMs || 8000 };
+  // Called by the app: window.runPython(id, source, stdin, timeoutMs, echo)
+  window.runPython = function (id, source, stdin, timeoutMs, echo) {
+    const req = { id: id, source: String(source), stdin: String(stdin || ""), timeoutMs: timeoutMs || 8000, echo: echo !== false };
     if (engine && engine.ready) engine.send(req); else queue.push(req);
   };
 

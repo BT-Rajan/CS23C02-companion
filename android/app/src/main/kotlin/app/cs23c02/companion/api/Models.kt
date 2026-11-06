@@ -39,6 +39,8 @@ data class ProgressSummary(
     val completed: List<String> = emptyList(),
     val finished: Boolean = false,
     val resume: ResumePoint? = null,
+    /** Exercises passed in the server sandbox (server-verified, ADR 0009). */
+    @SerialName("exercises_passed") val exercisesPassed: List<String> = emptyList(),
 )
 
 /** Only what the server accepts from a client: an id it can dedupe on, a low-stakes kind, the lesson, and a timestamp. */
@@ -62,4 +64,44 @@ data class PracticeVerdict(
     val revealed: Boolean = false,
     val answer: String? = null,
     val explanation: String? = null,
+)
+
+@Serializable
+data class TestOutcome(val stdin: String, val expect: String, val got: String = "", val passed: Boolean,
+                       val status: String = "ok", val error: String? = null)
+
+@Serializable
+data class HiddenSummary(val passed: Int, val total: Int, @SerialName("first_failure") val firstFailure: String? = null)
+
+/** Where the hint/solution policy stands for one exercise (backend/app/exercises.py). */
+@Serializable
+data class HelpState(
+    @SerialName("failed_checks") val failedChecks: Int = 0,
+    val passed: Boolean = false,
+    @SerialName("hints_unlocked") val hintsUnlocked: Int = 0,
+    @SerialName("hints_total") val hintsTotal: Int = 0,
+    @SerialName("next_hint_in") val nextHintIn: Int? = null,
+    @SerialName("solution_unlocked") val solutionUnlocked: Boolean = false,
+    @SerialName("solution_in") val solutionIn: Int? = null,
+)
+
+@Serializable
+data class ExerciseResult(@SerialName("exercise_id") val exerciseId: String, val passed: Boolean,
+                          val public: List<TestOutcome> = emptyList(), val hidden: HiddenSummary = HiddenSummary(0, 0),
+                          val help: HelpState = HelpState())
+
+@Serializable
+data class Solution(val approach: String = "", val code: String = "")
+
+@Serializable
+data class ExerciseHelp(
+    @SerialName("failed_checks") val failedChecks: Int = 0,
+    val passed: Boolean = false,
+    @SerialName("hints_unlocked") val hintsUnlocked: Int = 0,
+    @SerialName("hints_total") val hintsTotal: Int = 0,
+    @SerialName("next_hint_in") val nextHintIn: Int? = null,
+    @SerialName("solution_unlocked") val solutionUnlocked: Boolean = false,
+    @SerialName("solution_in") val solutionIn: Int? = null,
+    val hints: List<String> = emptyList(),
+    val solution: Solution? = null,
 )

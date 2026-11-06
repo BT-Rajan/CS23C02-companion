@@ -37,6 +37,8 @@ sealed interface Screen {
     data class LessonPage(val lessonId: String, val back: Screen) : Screen
     /** Practice for one lesson, one question at a time (screens 9-10). */
     data class PracticePage(val lessonId: String, val index: Int, val back: Screen) : Screen
+    /** Screen 11: one programming exercise. */
+    data class ExercisePage(val exerciseId: String, val lessonId: String, val back: Screen) : Screen
     /** [start]: step to open at; [live]: recorded on the phone just now (so input can be supplied and re-run). */
     data class Stepper(val program: StepProgram, val back: Screen, val start: Int = 0, val live: Boolean = false) : Screen
     /** Free coding with live explanations (needs on-device Python). */
@@ -64,6 +66,16 @@ data class ReaderUi(
 data class PracticeUi(val verdicts: Map<String, app.cs23c02.companion.api.PracticeVerdict> = emptyMap(),
                       val checking: Boolean = false, val error: String? = null)
 
+/** Exercise screen state: last graded result, released help, and the last local Run, per exercise. */
+data class ExerciseUi(
+    val results: Map<String, app.cs23c02.companion.api.ExerciseResult> = emptyMap(),
+    val help: Map<String, app.cs23c02.companion.api.ExerciseHelp> = emptyMap(),
+    val runs: Map<String, app.cs23c02.companion.runner.LiveResult> = emptyMap(),
+    val checking: Boolean = false,
+    val running: Boolean = false,
+    val error: String? = null,
+)
+
 data class UiState(
     val screen: Screen = Screen.Loading,
     val busy: Boolean = false,
@@ -89,6 +101,8 @@ class AppViewModel(
     /** Lessons + progress (A2). [readerFor] (true) gives the debug SAMPLE package, (false) the account's own. */
     private val readerFor: ((sample: Boolean) -> ReaderRepository)? = null,
 ) : ViewModel() {
+    private val _exercise = MutableStateFlow(ExerciseUi())
+    val exercise: StateFlow<ExerciseUi> = _exercise.asStateFlow()
     private val _practice = MutableStateFlow(PracticeUi())
     val practice: StateFlow<PracticeUi> = _practice.asStateFlow()
     private val _reader = MutableStateFlow(ReaderUi())
@@ -168,6 +182,7 @@ class AppViewModel(
             is Screen.UnitPage -> s.back
             is Screen.LessonPage -> s.back
             is Screen.PracticePage -> s.back
+            is Screen.ExercisePage -> s.back
             is Screen.Stepper -> s.back
             is Screen.Playground -> s.back
             is Screen.Tutor -> s.back
@@ -220,6 +235,70 @@ class AppViewModel(
             } catch (e: app.cs23c02.companion.content.ContentError) {
                 _practice.update { it.copy(checking = false, error = e.message) }
             }
+        }
+    }
+
+    fun openExercise(exerciseId: String, lessonId: String) {
+        runner?.warmUp()
+        _exercise.update { it.copy(error = null) }
+        go(Screen.ExercisePage(exerciseId, lessonId, _state.value.screen))
+    }
+
+    fun saveDraft(exerciseId: String, code: String) = repo?.progress?.draft(exerciseId, code)
+
+    fun draftFor(exerciseId: String): String? = repo?.progress?.state?.drafts?.get(exerciseId)
+
+    private fun exerciseError(e: Exception): String = when {
+        e is ApiError && e.isNetwork -> "Checking needs a connection. Run and Step through work offline."
+        e is ApiError && e.code == "check_in_progress" -> "Your previous check is still running. Wait a moment."
+        e is ApiError && e.status == 429 -> "That's a lot of checks in a short time. Take a break and come back to it."
+        e is ApiError -> e.message
+        else -> e.message ?: "Checking failed."
+    }
+
+    /** Check: graded on the server against public and hidden tests. */
+    fun checkExercise(ex: app.cs23c02.companion.content.Exercise, code: String) {
+        val r = repo ?: return
+        if (_exercise.value.checking) return
+        saveDraft(ex.id, code)
+        _exercise.update { it.copy(checking = true, error = null) }
+        viewModelScope.launch {
+            try {
+                val res = r.submitExercise(ex, code, edition)
+                _exercise.update { it.copy(checking = false, results = it.results + (ex.id to res)) }
+                if (res.help.hintsUnlocked > 0 || res.help.solutionUnlocked) loadHelp(ex)
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                _exercise.update { it.copy(checking = false, error = exerciseError(e)) }
+            }
+        }
+    }
+
+    fun loadHelp(ex: app.cs23c02.companion.content.Exercise) {
+        val r = repo ?: return
+        viewModelScope.launch {
+            try {
+                val h = r.exerciseHelp(ex, edition)
+                _exercise.update { it.copy(help = it.help + (ex.id to h)) }
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                _exercise.update { it.copy(error = exerciseError(e)) }
+            }
+        }
+    }
+
+    /** Run: on the phone with the first example's input. Never graded, never sent anywhere. */
+    fun runExercise(ex: app.cs23c02.companion.content.Exercise, code: String) {
+        val rr = runner ?: return
+        if (_exercise.value.running) return
+        saveDraft(ex.id, code)
+        _exercise.update { it.copy(running = true, error = null) }
+        viewModelScope.launch {
+            val out = try { rr.run(code, ex.tests.firstOrNull()?.stdin.orEmpty(), echo = false) } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                _exercise.update { it.copy(running = false, error = "Python is not ready yet. Try again in a moment.") }; return@launch
+            }
+            _exercise.update { it.copy(running = false, runs = it.runs + (ex.id to out)) }
         }
     }
 
@@ -287,6 +366,7 @@ class AppViewModel(
             is Screen.UnitPage -> go(s.back)
             is Screen.LessonPage -> go(s.back)
             is Screen.PracticePage -> go(s.back)
+            is Screen.ExercisePage -> go(s.back)
             is Screen.TypeIt -> go(s.back)
             else -> return false
         }

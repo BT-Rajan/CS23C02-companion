@@ -56,10 +56,10 @@ const check = (ok, what) => { console.log((ok ? "PASS " : "FAIL ") + what); if (
   check(readyMs > 0, `runner ready (load + warm-up) in ${readyMs} ms on this machine`);
 
   let next = 1;
-  async function run(src, stdin = "", timeoutMs = 8000) {
+  async function run(src, stdin = "", timeoutMs = 8000, echo = true) {
     const id = next++;
     const t0 = Date.now();
-    await page.evaluate(([id, src, stdin, t]) => window.runPython(id, src, stdin, t), [id, src, stdin, timeoutMs]);
+    await page.evaluate(([id, src, stdin, t, e]) => window.runPython(id, src, stdin, t, e), [id, src, stdin, timeoutMs, echo]);
     await waitFor(page, (id) => window.__results[id] !== undefined, id, timeoutMs + 120000);
     const r = await page.evaluate((id) => window.__results[id], id);
     r.ms = Date.now() - t0;
@@ -80,6 +80,8 @@ const check = (ok, what) => { console.log((ok ? "PASS " : "FAIL ") + what); if (
   check(r.recording.status === "needs_input", "input() pauses for input");
   r = await run("n = int(input('n? '))\nprint(n * 2)\n", "21");
   check(r.recording.stdout === "n? 21\n42\n", "re-run with input continues");
+  r = await run("n = int(input())\nprint(n * 2)\n", "4", 8000, false);
+  check(r.recording.stdout === "8\n", "without echo the output is exactly what the program printed (grading)");
 
   r = await run("while True:\n    try:\n        x = 1\n    except:\n        pass\n");
   check(r.recording.status === "step_limit", `runaway loop stops at the step limit (${r.ms} ms)`);

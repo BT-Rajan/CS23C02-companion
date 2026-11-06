@@ -50,7 +50,7 @@ def main():
     priv, pub = build.new_keypair()
     with tempfile.TemporaryDirectory() as tmp:
         out = pathlib.Path(tmp) / "out"
-        m = build.build(SRC, out, build.load_private(priv), signed_at="sample")
+        m = build.build(SRC, out, build.load_private(priv), signed_at="sample", check_reference_solutions=True)
         if ASSETS.exists():
             shutil.rmtree(ASSETS)
         shutil.copytree(out / "public", ASSETS)
@@ -58,7 +58,7 @@ def main():
         # signed package (which stays leak-free); release builds have no such file and always ask the server.
         prot = json.loads((out / "protected.json").read_text())
         KEYS.write_text(json.dumps({"_note": "DEBUG SAMPLE ONLY - answers to sample questions, never book content",
-                                    "items": prot["items"]}, indent=1, ensure_ascii=False) + "\n")
+                                    "items": prot["items"], "exercises": prot["exercises"]}, indent=1, ensure_ascii=False) + "\n")
     KOTLIN.parent.mkdir(parents=True, exist_ok=True)
     KOTLIN.write_text(f'''package app.cs23c02.companion
 

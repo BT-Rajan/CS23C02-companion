@@ -66,3 +66,12 @@ fun Nav.place(lessonId: String): LessonPlace? {
 }
 
 fun Nav.next(lessonId: String): String? = lessonIds().let { ids -> ids.getOrNull(ids.indexOf(lessonId) + 1) }
+
+/** A programming exercise as shipped publicly: only its PUBLIC tests (hidden tests, hints and solutions stay on the server). */
+@Serializable
+data class Exercise(val id: String, val title: String, val statement: String, @SerialName("io_spec") val ioSpec: String = "",
+                    val starter: String = "", val python: String = "3.12", @SerialName("timeout_s") val timeoutS: Int = 2,
+                    val tests: List<PublicTest> = emptyList())
+
+@Serializable
+data class PublicTest(val stdin: String, val expect: String)

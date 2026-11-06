@@ -34,7 +34,8 @@ interface PythonRunner {
     val state: StateFlow<RunnerState>
     /** Start loading in the background (ADR 0006 warm-up trigger); safe to call repeatedly. */
     fun warmUp()
-    suspend fun run(source: String, stdin: String = ""): LiveResult
+    /** [echo]: show typed input in the output like a terminal (stepper); false = exactly what the program printed. */
+    suspend fun run(source: String, stdin: String = "", echo: Boolean = true): LiveResult
     /** Free the runtime (about 100 MB on a phone) when no screen needs it. */
     fun close() {}
 }

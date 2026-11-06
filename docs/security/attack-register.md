@@ -35,14 +35,14 @@
 | D6 | Share answers by option position | Assessment | Per-attempt shuffle | Statistical test | Not tested | Low |
 | D7 | Repeated practice calls to learn keys | Practice | One question per call; answer revealed only after a right answer or 2 wrong tries; 300/h per account, 30/h per question; anomaly alerts not built | Enumeration test | Pass for limits and reveal policy (A5) – `test_practice.py` (mutation-checked) | **Medium** (inherent to immediate feedback; practice keys are not assessment keys) |
 | D8 | Forge progress events | Progress | Only low-stakes events accepted from client; verified events server-derived | Event fuzz | Partial pass (Phase 3) – see test-evidence.md | Low |
-| E1 | Infinite loop | Sandbox | Wall/CPU limits, kill | Hostile suite | Not tested | None |
-| E2 | Memory bomb | Sandbox | cgroup limit | Hostile suite | Not tested | None |
-| E3 | Output flood | Sandbox/app | Output cap, truncation | Hostile suite | Not tested | None |
-| E4 | File access/write | Sandbox | Read-only root, tmpfs, no secrets mounted | Hostile suite | Not tested | None |
-| E5 | Network access | Sandbox | No network namespace | Hostile suite | Not tested | None |
-| E6 | Fork bomb / subprocess | Sandbox | pids limit, seccomp | Hostile suite | Not tested | None |
-| E7 | Malicious imports (`os`, `ctypes`, …) | Sandbox | Allow-list + isolation as defence in depth | Hostile suite | Not tested | None |
-| E8 | Sandbox escape | Sandbox | gVisor/nsjail, non-root, no shared state, fresh per job, host patching | Third-party review before release | Not tested | **Low–Medium** |
+| E1 | Infinite loop | Sandbox | Wall/CPU limits, kill | Hostile suite | Pass (A6) – infinite loop and sleep stopped – see test-evidence.md | None |
+| E2 | Memory bomb | Sandbox | cgroup limit | Hostile suite | Pass (A6) – see test-evidence.md | None |
+| E3 | Output flood | Sandbox/app | Output cap, truncation | Hostile suite | Pass (A6) – output capped at 64 KB – see test-evidence.md | None |
+| E4 | File access/write | Sandbox | Read-only root, tmpfs, no secrets mounted | Hostile suite | Pass (A6) – host files invisible, /usr and code read-only, 4 MB scratch – see test-evidence.md | None |
+| E5 | Network access | Sandbox | No network namespace | Hostile suite | Pass (A6) – no network or DNS – see test-evidence.md | None |
+| E6 | Fork bomb / subprocess | Sandbox | pids limit, seccomp | Hostile suite | Pass (A6) – contained per job; does not starve parallel jobs – see test-evidence.md | None |
+| E7 | Malicious imports (`os`, `ctypes`, …) | Sandbox | Allow-list + isolation as defence in depth | Hostile suite | Pass (A6) – allow-list plus OS layers that hold when it is bypassed – see test-evidence.md | None |
+| E8 | Sandbox escape | Sandbox | gVisor/nsjail, non-root, no shared state, fresh per job, host patching | Third-party review before release | Partial (A6) – namespaces, per-job UID, no-new-privs; no seccomp, no third-party review – see test-evidence.md | **Low–Medium** |
 | E9 | Flood Submit to exhaust workers | Sandbox | Queue, per-user concurrency 1, limits, circuit breaker | Load test | Not tested | Low |
 | E10 | Tamper local run result to look passed | Practice | Local results never recorded as pass | Tamper test | Not tested | None |
 | F1 | Unauthorised API calls | API | Auth dependency + route inventory test | ZAP/API suite | Not tested | None |

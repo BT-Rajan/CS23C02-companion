@@ -127,3 +127,27 @@ def test_trace_item_without_code_fails_release_validation(tmp_path, keys):
     (src / "items" / "ITM-0004.json").write_text(json.dumps(it))
     with pytest.raises(B.BuildError, match="trace item needs the code"):
         B.build(src, tmp_path / "out", B.load_private(keys[0]))
+
+
+def _sandbox_ok():
+    sys_path = pathlib.Path(__file__).resolve().parents[2] / "sandbox"
+    import sys
+    sys.path.insert(0, str(sys_path))
+    from sandbox import runner
+    return runner.available()
+
+
+@pytest.mark.skipif(not _sandbox_ok(), reason="sandbox not available")
+def test_reference_solutions_pass_all_their_tests_in_the_sandbox(tmp_path, keys):
+    B.build(FIX, tmp_path / "out", B.load_private(keys[0]), check_reference_solutions=True)
+
+
+@pytest.mark.skipif(not _sandbox_ok(), reason="sandbox not available")
+def test_a_wrong_reference_solution_fails_the_build(tmp_path, keys):
+    src = tmp_path / "src"
+    shutil.copytree(FIX, src)
+    e = json.loads((src / "exercises" / "EXR-0001.json").read_text())
+    e["reference_solution"] = "n = int(input())\nprint(abs(n) * 2)\n"   # right for the public test, wrong for -3
+    (src / "exercises" / "EXR-0001.json").write_text(json.dumps(e))
+    with pytest.raises(B.BuildError, match="EXR-0001: reference solution fails hidden test 2"):
+        B.build(src, tmp_path / "out", B.load_private(keys[0]), check_reference_solutions=True)

@@ -2,7 +2,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import BigInteger, CHAR, CheckConstraint, ForeignKey, Index, Integer, String, UniqueConstraint
+from sqlalchemy import BigInteger, Boolean, CHAR, CheckConstraint, ForeignKey, Index, Integer, String, UniqueConstraint
 from sqlalchemy import JSON
 from sqlalchemy.dialects.mysql import DATETIME, MEDIUMBLOB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -179,3 +179,19 @@ class ProgressEvent(Base):
     server_ts: Mapped[datetime] = mapped_column(DT)
     __table_args__ = (UniqueConstraint("user_id", "event_uuid", name="uq_progress_user_event"),
                       Index("ix_progress_user_edition_kind", "user_id", "edition_id", "kind"))
+
+
+class ExerciseAttempt(Base):
+    """One graded Check of an exercise (server-verified, ADR 0009). Drives the hint/solution policy and exercise completion."""
+    __tablename__ = "exercise_attempts"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(CHAR(36), ForeignKey("users.id"))
+    edition_id: Mapped[str] = mapped_column(String(40), ForeignKey("editions.id"))
+    release_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("content_releases.id"))
+    exercise_id: Mapped[str] = mapped_column(String(16))
+    passed: Mapped[bool] = mapped_column(Boolean)
+    tests_passed: Mapped[int] = mapped_column(Integer)
+    tests_total: Mapped[int] = mapped_column(Integer)
+    code_sha256: Mapped[str] = mapped_column(CHAR(64))
+    created_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6))
+    __table_args__ = (Index("ix_attempts_user_exercise", "user_id", "edition_id", "exercise_id"),)

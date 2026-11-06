@@ -94,7 +94,8 @@ class _Output(io.StringIO):
 
 
 class _Recorder:
-    def __init__(self, stdin_lines: list[str], max_steps: int, max_seconds: float):
+    def __init__(self, stdin_lines: list[str], max_steps: int, max_seconds: float, echo: bool = True):
+        self.echo = echo
         self.steps: list[dict] = []
         self.stdin = list(stdin_lines)
         self.max_steps, self.max_seconds = max_steps, max_seconds
@@ -185,7 +186,8 @@ class _Recorder:
             self.stopping = "needs_input"
             raise _Stop("needs_input")
         line = self.stdin.pop(0)
-        self.out.write(line + "\n")  # echo like a terminal, so the output pane reads naturally
+        if self.echo:
+            self.out.write(line + "\n")  # echo like a terminal, so the stepper's output pane reads naturally
         return line
 
     def print(self, *args, sep=" ", end="\n", file=None, flush=False):
@@ -199,9 +201,11 @@ class _Recorder:
 
 
 def record(source: str, stdin: str = "", *, max_steps: int = DEFAULT_MAX_STEPS,
-           max_seconds: float = DEFAULT_MAX_SECONDS, seed: int = 0) -> dict:
+           max_seconds: float = DEFAULT_MAX_SECONDS, seed: int = 0, echo_input: bool = True) -> dict:
     """Run `source` and return the recording. stdin is newline-separated input lines. `seed` makes random repeatable,
-    so re-running with one more input line (status needs_input) replays the same program up to that point."""
+    so re-running with one more input line (status needs_input) replays the same program up to that point.
+    `echo_input` shows typed input in the output like a terminal (stepper); turn it off to get exactly what the program printed
+    (exercise Run and grading, which must match the sandbox)."""
     result = {"version": VERSION, "status": "ok", "steps": [], "stdout": "", "error": None}
     try:
         code = compile(source, FILENAME, "exec")
@@ -210,7 +214,7 @@ def record(source: str, stdin: str = "", *, max_steps: int = DEFAULT_MAX_STEPS,
                                                        "column": e.offset})
         return result
 
-    rec = _Recorder(stdin.splitlines() if stdin else [], max_steps, max_seconds)
+    rec = _Recorder(stdin.splitlines() if stdin else [], max_steps, max_seconds, echo_input)
     safe_builtins = dict(vars(builtins))
     safe_builtins.update(input=rec.input, print=rec.print, __import__=rec.importer)
     for name in ("open", "exec", "eval", "compile", "breakpoint", "exit", "quit", "help"):

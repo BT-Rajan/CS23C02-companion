@@ -23,3 +23,8 @@ def test_input_round_trip():
     src = "n = int(input('n? '))\nprint(n * 2)\n"
     assert json.loads(live.run(src))["recording"]["status"] == "needs_input"
     assert json.loads(live.run(src, "21"))["recording"]["stdout"] == "n? 21\n42\n"
+
+
+def test_live_run_without_echo_matches_what_the_sandbox_would_see():
+    out = json.loads(live.run("n = int(input())\nprint(n * 2)\n", "4", echo=False))
+    assert out["recording"]["stdout"] == "8\n"

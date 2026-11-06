@@ -39,6 +39,7 @@ import app.cs23c02.companion.content.ReaderRepository
 import app.cs23c02.companion.content.next
 import app.cs23c02.companion.ui.screens.LessonScreen
 import app.cs23c02.companion.ui.screens.PracticeScreen
+import app.cs23c02.companion.ui.screens.ExerciseScreen
 import app.cs23c02.companion.ui.screens.UnitScreen
 import java.io.File
 import app.cs23c02.companion.ui.screens.TutorScreen
@@ -59,25 +60,6 @@ object ApiConfig {
 
 class MainActivity : ComponentActivity() {
     /** Lessons live in no-backup app storage; the account's copy is wiped on sign-out (attack C5). */
-    private fun reader(api: ApiClient, sample: Boolean): ReaderRepository {
-        val base = File(noBackupFilesDir, if (sample) "sample" else "content")
-        val key = if (sample) SampleContent.PUBLIC_KEY else BuildConfig.CONTENT_SIGNING_PUBKEY
-        val store = ContentStore(File(base, "package"), key, BuildConfig.VERSION_NAME)
-        val progress = ProgressStore(File(base, "progress.json"))
-        val loader: (suspend () -> Pair<ByteArray, Map<String, ByteArray>>)? = if (!sample) null else ({
-            val dir = SampleContent.ASSET_DIR
-            val manifest = assets.open("$dir/manifest.json").use { it.readBytes() }
-            val sig = assets.open("$dir/manifest.sig").use { it.readBytes() }.decodeToString().trim()
-            // Paths come from the (not yet verified) manifest only to know what to read; install() verifies everything.
-            val paths = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
-                .decodeFromString(app.cs23c02.companion.content.Manifest.serializer(), manifest.decodeToString()).files.map { it.path }
-            (sig + "\n").toByteArray() + manifest to paths.associateWith { p -> assets.open("$dir/$p").use { it.readBytes() } }
-        })
-        val checker = if (!sample) null else app.cs23c02.companion.content.SamplePracticeChecker.parse(
-            assets.open(SampleContent.PRACTICE_KEYS).use { it.readBytes() }.decodeToString())
-        return ReaderRepository(api, store, progress, loader, checker)
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
@@ -89,8 +71,11 @@ class MainActivity : ComponentActivity() {
                 val demos = runCatching {
                     Recordings.parsePrograms(assets.open("stepper/demos.json").bufferedReader().use { it.readText() })
                 }.getOrDefault(emptyList())
+                // Only the application context goes into the ViewModel: it outlives this Activity (e.g. on rotation).
+                val appCtx = applicationContext
+                val runner = PyodideRunner(appCtx)
                 return AppViewModel(api, "${Build.MANUFACTURER} ${Build.MODEL}".take(80), demos, previewTutor = BuildConfig.DEBUG,
-                    runner = PyodideRunner(applicationContext), readerFor = { sample -> reader(api, sample) }) as T
+                    runner = runner, readerFor = { sample -> buildReader(appCtx, api, sample, runner) }) as T
             }
         }
         setContent {
@@ -100,10 +85,11 @@ class MainActivity : ComponentActivity() {
                     val s by vm.state.collectAsStateWithLifecycle()
                     val reader by vm.reader.collectAsStateWithLifecycle()
                     val practice by vm.practice.collectAsStateWithLifecycle()
+                    val exercise by vm.exercise.collectAsStateWithLifecycle()
                     val canGoBack = s.screen is Screen.CreateAccount || s.screen is Screen.SignIn || s.screen is Screen.VerifyEmail ||
                         s.screen is Screen.Forgot || s.screen is Screen.Reset || s.screen is Screen.Stepper ||
                         s.screen is Screen.Tutor || s.screen is Screen.TypeIt || s.screen is Screen.Playground ||
-                        s.screen is Screen.UnitPage || s.screen is Screen.LessonPage || s.screen is Screen.PracticePage
+                        s.screen is Screen.UnitPage || s.screen is Screen.LessonPage || s.screen is Screen.PracticePage || s.screen is Screen.ExercisePage
                     BackHandler(enabled = canGoBack) { vm.back() }
                     Surface(Modifier.fillMaxSize().safeDrawingPadding(), color = MaterialTheme.colorScheme.background) {
                         when (val sc = s.screen) {
@@ -127,7 +113,17 @@ class MainActivity : ComponentActivity() {
                                     onTryIt = vm.runner?.let { { c: String -> vm.openPlayground(c) } },
                                     onPosition = { vm.saveLessonPosition(sc.lessonId, it) }, onDone = { vm.completeLesson(sc.lessonId) },
                                     onClose = { vm.back() }, isLast = pkg.manifest.nav.next(sc.lessonId) == null,
-                                    onPractise = { vm.openPractice(sc.lessonId) })
+                                    onPractise = { vm.openPractice(sc.lessonId) },
+                                    onExercise = { id -> vm.openExercise(id, sc.lessonId) })
+                            }
+                            is Screen.ExercisePage -> reader.pkg?.let { pkg ->
+                                val ex = runCatching { pkg.exercise(sc.exerciseId) }.getOrNull()
+                                ExerciseScreen(ex, vm.draftFor(sc.exerciseId), exercise.results[sc.exerciseId], exercise.help[sc.exerciseId],
+                                    exercise.runs[sc.exerciseId], exercise.checking, exercise.running, exercise.error, canRun = vm.runner != null,
+                                    onRun = { code -> ex?.let { vm.runExercise(it, code) } },
+                                    onStep = vm.runner?.let { { code: String -> vm.stepThroughCode(ex?.title ?: "Your code", code, ex?.tests?.firstOrNull()?.stdin.orEmpty()) } },
+                                    onCheck = { code -> ex?.let { vm.checkExercise(it, code) } }, onHelp = { ex?.let { vm.loadHelp(it) } },
+                                    onDraft = { code -> vm.saveDraft(sc.exerciseId, code) }, onClose = { vm.back() })
                             }
                             is Screen.PracticePage -> reader.pkg?.let { pkg ->
                                 val lesson = runCatching { pkg.lesson(sc.lessonId) }.getOrNull()

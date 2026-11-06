@@ -104,6 +104,22 @@ class LiveBackendContractTest {
             catch (e: ApiError) { assertEquals(404, e.status); assertEquals("not_found", e.code) }
             assertTrue(api.progress(ent.editionId).completed == listOf("LSN-0001"))  // practice never counts as progress
 
+            // A6: exercises are graded by the separate sandbox service, reached by the backend over signed HTTP.
+            val exr = pkg.exercise("EXR-0001")!!
+            assertEquals(listOf(app.cs23c02.companion.content.PublicTest("4\n", "8\n")), exr.tests)   // hidden tests never shipped
+            val bad = r.submitExercise(exr, "n = int(input())\nprint(n + 4)\n", ent.editionId)
+            assertTrue(!bad.passed && bad.public.single().passed && bad.hidden.passed == 0 && bad.hidden.total == 2)
+            assertEquals("wrong output", bad.hidden.firstFailure)
+            assertEquals(1, bad.help.hintsUnlocked)
+            val h1 = r.exerciseHelp(exr, ent.editionId)
+            assertTrue(h1.hints.single().startsWith("FIXTURE-HINT-1") && h1.solution == null)
+            val good = r.submitExercise(exr, "n = int(input())\nprint(n * 2)\n", ent.editionId)
+            assertTrue(good.passed && good.hidden.passed == 2 && good.help.solutionUnlocked)
+            assertTrue(r.exerciseHelp(exr, ent.editionId).solution!!.code.contains("FIXTURE-REFERENCE-SOLUTION-1"))
+            val runaway = r.submitExercise(exr, "while True:\n    pass\n", ent.editionId)
+            assertEquals("timeout", runaway.public.single().status)
+            assertEquals(listOf("EXR-0001"), api.progress(ent.editionId).exercisesPassed)
+
             tmp.resolve("p.json").delete()                       // "reinstall": local progress gone
             val fresh = repo()
             fresh.sync(ent.editionId)

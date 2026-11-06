@@ -168,6 +168,7 @@ fun LessonScreen(
     onStep: ((title: String, code: String) -> Unit)?, onTryIt: ((String) -> Unit)?,
     onPosition: (Int) -> Unit, onDone: () -> Unit, onClose: () -> Unit, isLast: Boolean,
     onPractise: (() -> Unit)? = null,
+    onExercise: ((String) -> Unit)? = null,
 ) {
     val lesson: Lesson? = runCatching { pkg.lesson(lessonId) }.getOrNull()
     val place = pkg.manifest.nav.place(lessonId)
@@ -206,6 +207,18 @@ fun LessonScreen(
                             Text("$n question${if (n == 1) "" else "s"}. You see straight away whether you are right, and why.",
                                 style = MaterialTheme.typography.bodyLarge)
                             OutlinedButton(onClick = onPractise, modifier = Modifier.heightIn(min = 48.dp)) { Text("Practise") }
+                        }
+                    }
+                }
+                if (lesson.practice.exercises.isNotEmpty() && onExercise != null) item {
+                    Surface(color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f), shape = MaterialTheme.shapes.medium,
+                        modifier = Modifier.fillMaxWidth()) {
+                        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text("Write a program", style = MaterialTheme.typography.titleMedium)
+                            lesson.practice.exercises.forEach { id ->
+                                val title = runCatching { pkg.exercise(id)?.title }.getOrNull() ?: id
+                                OutlinedButton(onClick = { onExercise(id) }, modifier = Modifier.heightIn(min = 48.dp)) { Text(title) }
+                            }
                         }
                     }
                 }

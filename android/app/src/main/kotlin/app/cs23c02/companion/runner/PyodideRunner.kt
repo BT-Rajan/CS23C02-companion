@@ -54,7 +54,7 @@ class PyodideRunner(context: Context) : PythonRunner {
         main.post { web?.destroy(); web = null; _state.value = RunnerState.Starting }
     }
 
-    override suspend fun run(source: String, stdin: String): LiveResult {
+    override suspend fun run(source: String, stdin: String, echo: Boolean): LiveResult {
         warmUp()
         val ready = withTimeout(READY_TIMEOUT_MS) { state.first { it is RunnerState.Ready || it is RunnerState.Failed } }
         if (ready is RunnerState.Failed) return failure("Python could not start on this phone: ${ready.reason}")
@@ -63,7 +63,7 @@ class PyodideRunner(context: Context) : PythonRunner {
         pending[id] = answer
         val t0 = SystemClock.elapsedRealtime()
         withContext(Dispatchers.Main) {
-            web?.evaluateJavascript("window.runPython($id, ${JsonPrimitive(source)}, ${JsonPrimitive(stdin)}, $RUN_TIMEOUT_MS)", null)
+            web?.evaluateJavascript("window.runPython($id, ${JsonPrimitive(source)}, ${JsonPrimitive(stdin)}, $RUN_TIMEOUT_MS, $echo)", null)
         }
         val text = try {
             withTimeout(RUN_TIMEOUT_MS + APP_GRACE_MS) { answer.await() }

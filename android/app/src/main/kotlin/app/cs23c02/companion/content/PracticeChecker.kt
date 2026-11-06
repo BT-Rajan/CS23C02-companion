@@ -10,13 +10,18 @@ data class SampleKey(val answer: String, val explanation: String,
                      @SerialName("option_explanations") val optionExplanations: Map<String, String> = emptyMap())
 
 @Serializable
-data class SampleKeys(val items: Map<String, SampleKey>)
+data class SampleExerciseKey(@SerialName("hidden_tests") val hiddenTests: List<app.cs23c02.companion.content.PublicTest> = emptyList(),
+                             val hints: List<String> = emptyList(), @SerialName("solution_approach") val solutionApproach: String = "",
+                             @SerialName("reference_solution") val referenceSolution: String = "")
+
+@Serializable
+data class SampleKeys(val items: Map<String, SampleKey>, val exercises: Map<String, SampleExerciseKey> = emptyMap())
 
 /**
  * Debug-only stand-in for POST /v1/practice/items/{id}/answer, with the SAME policy as backend/app/practice.py
  * (reveal after 2 wrong attempts or a right one), so the screens behave identically. Never used for book content.
  */
-class SamplePracticeChecker(private val keys: Map<String, SampleKey>) {
+class SamplePracticeChecker(private val keys: Map<String, SampleKey>, val exercises: Map<String, SampleExerciseKey> = emptyMap()) {
     private val wrong = HashMap<String, Int>()
 
     fun check(itemId: String, option: String): PracticeVerdict {
@@ -31,6 +36,6 @@ class SamplePracticeChecker(private val keys: Map<String, SampleKey>) {
 
     companion object {
         const val REVEAL_AFTER = 2
-        fun parse(text: String) = SamplePracticeChecker(ContentJson.decodeFromString(SampleKeys.serializer(), text).items)
+        fun parse(text: String) = ContentJson.decodeFromString(SampleKeys.serializer(), text).let { SamplePracticeChecker(it.items, it.exercises) }
     }
 }

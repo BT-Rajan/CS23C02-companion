@@ -138,3 +138,24 @@ match the file); it is now in place together with "release builds need CONTENT_S
 | **Real backend:** wrong → why only; 2nd wrong → answer + explanation; trace correct; assessment item 404; progress unchanged | `LiveBackendContractTest` |
 | Sample trace questions: the right option equals what the recorder prints | `android/scripts/make-sample-content.py` |
 **Not built:** anomaly alerts for unusual practice patterns (D7), per-option analytics, offline practice (by design, ADR 0009).
+
+# Roadmap A6 — exercises and the server sandbox
+| Area | Evidence |
+|---|---|
+| E1 infinite loop (CPU limit), sleeping forever (wall clock) | `sandbox/tests/test_runner.py` |
+| E2 memory bomb → `memory` | same |
+| E3 output flood capped at 64 KB | same |
+| E4 host files invisible (`/etc`, `/home`, `/root`, `/var`); `/usr` and the code read-only; scratch space ≤ 4 MB; PID 1 is the sandbox's own reaper with an empty environment | same |
+| E5 no network, no DNS | same |
+| E6 fork bomb contained (≤ 32 processes) and **does not starve a parallel job** (per-job UIDs; an earlier version failed this under parallel load and was redesigned) | same |
+| E7 dangerous imports refused — and the OS layers hold even when the allow-list is bypassed on purpose | same |
+| E8 runs as UID 65534 inside, sees only its own processes, no environment | same |
+| Signed API↔sandbox: unsigned, wrongly signed, stale, tampered and replayed requests refused; forged answers refused by the API | `sandbox/tests/test_service.py`, `backend/tests/test_exercises.py` |
+| Hidden tests never returned (their inputs and outputs are absent from every response) | `test_hidden_tests_never_reveal_their_data` (mutation: leaking them fails 2 tests) |
+| Hints/solution exactly per approved policy #3 (mutation: unlocking one check early fails) | `test_hints_and_solution_follow_the_approved_policy` |
+| One check at a time per student; 20/h per exercise; sandbox down → clear 503, not counted as a failure | `test_exercises.py` |
+| Production refuses `SANDBOX_MODE=local` and weak sandbox keys | `test_policy.py` |
+| Reference solutions pass all their tests in the sandbox, else the build fails (K13) | `content-tools/tests/test_build.py` |
+| **Real services:** app client → backend → sandbox service over signed HTTP: wrong/right/runaway submissions, hint release, solution after pass, pass in progress | `LiveBackendContractTest` |
+| On-device Run/grading prints exactly what the program printed (input echo off) — found while testing: the stepper's terminal-style echo would have marked correct sample answers wrong | `ExerciseTest`, runner test |
+**Not evidenced:** seccomp (not applied), sandbox under load, a separate sandbox host and mutual TLS (deployment, A8), third-party review.

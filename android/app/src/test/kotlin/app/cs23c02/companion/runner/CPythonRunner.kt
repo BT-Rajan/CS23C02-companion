@@ -17,12 +17,12 @@ class CPythonRunner(private val python: String = System.getenv("PYTHON") ?: "pyt
     var runs = 0
     override fun warmUp() {}
 
-    override suspend fun run(source: String, stdin: String): LiveResult {
+    override suspend fun run(source: String, stdin: String, echo: Boolean): LiveResult {
         runs++
         val script = "import sys, json; sys.path[:0] = ['${runtime}/stepper', '${runtime}/tutor']; import live; " +
-            "d = json.load(sys.stdin); print(live.run(d['source'], d['stdin']))"
+            "d = json.load(sys.stdin); print(live.run(d['source'], d['stdin'], d['echo']))"
         val p = ProcessBuilder(python, "-I", "-c", script).redirectErrorStream(false).start()
-        p.outputStream.use { it.write(buildJsonObject { put("source", source); put("stdin", stdin) }.toString().toByteArray()) }
+        p.outputStream.use { it.write(buildJsonObject { put("source", source); put("stdin", stdin); put("echo", echo) }.toString().toByteArray()) }
         val out = p.inputStream.bufferedReader().readText()
         check(p.waitFor() == 0) { p.errorStream.bufferedReader().readText() }
         return LiveResult.parse(out.trim())

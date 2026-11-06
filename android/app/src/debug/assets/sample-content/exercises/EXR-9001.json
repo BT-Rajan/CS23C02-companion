@@ -1,0 +1,1 @@
+{"id":"EXR-9001","io_spec":"Input: one whole number on one line. Output: that number multiplied by 2.","python":"3.12","starter":"n = int(input())\n# print twice n\n","statement":"Read a whole number and print twice its value.","tests":[{"expect":"8\n","stdin":"4\n"}],"timeout_s":2,"title":"Double it"}
