@@ -88,8 +88,8 @@ fun StepperScreenAt(program: StepProgram, start: Int, onClose: () -> Unit = {}) 
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
                 )
+                s.currentLine?.let { n -> LineTutorCard(program.lineInfo(n)?.explain, s.note, program.refsFor(n)) }
                 VariablesPanel(s.frames, s.changed, s.step?.value?.let { "${s.frames.lastOrNull()?.name} returns ${it.r}" })
-                s.note?.let { NoteCard(it) }
                 OutputPanel(s.outputSoFar)
             }
             Surface(tonalElevation = 3.dp, modifier = Modifier.fillMaxWidth()) {
@@ -138,12 +138,25 @@ private fun CodeView(source: String, current: Int?, previous: Int?) {
     }
 }
 
+/** ADR 0014: what the line does (from the code), the author's note, and where the book teaches it. */
 @Composable
-private fun NoteCard(text: String) {
+fun LineTutorCard(explain: String?, note: String?, refs: List<app.cs23c02.companion.stepper.BookRef>, title: String = "What this line does") {
+    if (explain == null && note == null && refs.isEmpty()) return
     Surface(color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f), shape = MaterialTheme.shapes.medium,
         modifier = Modifier.fillMaxWidth()) {
-        Text("Note: $text", Modifier.padding(12.dp), style = MaterialTheme.typography.bodyLarge)
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(title, style = MaterialTheme.typography.labelLarge)
+            explain?.let { Text(it, style = MaterialTheme.typography.bodyLarge) }
+            note?.let { Text("Note: $it", style = MaterialTheme.typography.bodyLarge) }
+            refs.forEach { BookRefRow(it) }
+        }
     }
+}
+
+@Composable
+fun BookRefRow(ref: app.cs23c02.companion.stepper.BookRef) {
+    Text("📖 ${ref.label}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.semantics { contentDescription = "Read in the book: ${ref.label}" })
 }
 
 @Composable

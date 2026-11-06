@@ -27,6 +27,9 @@ sealed interface Screen {
     data object Activate : Screen
     data class Home(val me: Me) : Screen
     data class Stepper(val program: StepProgram, val back: Screen) : Screen
+    /** ADR 0014: ask for a program, then "Show me" or "I'll type it". */
+    data class Tutor(val back: Screen) : Screen
+    data class TypeIt(val program: StepProgram, val back: Screen) : Screen
 }
 
 data class UiState(
@@ -70,6 +73,11 @@ class AppViewModel(
         val p = demos.firstOrNull { it.id == id } ?: return
         go(Screen.Stepper(p, _state.value.screen))
     }
+    fun openTutor() = go(Screen.Tutor(_state.value.screen))
+    fun openTypeIt(id: String) {
+        val p = demos.firstOrNull { it.id == id } ?: return
+        go(Screen.TypeIt(p, _state.value.screen))
+    }
 
     /** System back. Returns false when the app should close. */
     fun back(): Boolean {
@@ -81,6 +89,8 @@ class AppViewModel(
             is Screen.Forgot -> go(Screen.SignIn)
             is Screen.Reset -> go(Screen.Forgot(s.email))
             is Screen.Stepper -> go(s.back)
+            is Screen.Tutor -> go(s.back)
+            is Screen.TypeIt -> go(s.back)
             else -> return false
         }
         return true

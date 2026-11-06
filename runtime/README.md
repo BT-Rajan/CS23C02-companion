@@ -49,3 +49,9 @@ Phone numbers come from the Pyodide performance gate (A3 slice 3).
 `python -m pytest runtime/tests` (28 tests): loops, functions, recursion, errors, syntax errors, input and re-run, determinism,
 allow-list, missing dangerous builtins, output/step/time limits, programs that try to swallow the stop, value capping, JSON shape,
 and the CLI check used by the book build.
+
+# runtime/tutor — line explainer (ADR 0014)
+`tutor/explain.py` turns a program into per-line tutor data: *what this line does* (plain English from the `ast`), the constructs it
+uses (`CON` IDs), a *shape* hint (`for _ in _:`), and book references from the construct registry. `demos/build_demos.py` runs it
+with the recorder and writes the app asset. `constructs.sample.json` is a **placeholder** registry (every entry `sample: true`)
+until the book's `registry/constructs.yaml` and the print build's page map exist (book decision X4).

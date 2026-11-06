@@ -1,0 +1,23 @@
+{
+  "_comment": "SAMPLE construct registry (book spec section 8). The book has no chapters yet, so unit/section/topic values are placeholders and every entry is marked sample:true. Replace with the book's registry/constructs.yaml export when it exists.",
+  "CON-0001": {"name": "assignment", "unit": "Unit 1", "section": "1.3", "topic": "TOP-0005", "title": "Variables and assignment", "sample": true},
+  "CON-0002": {"name": "augmented assignment", "unit": "Unit 1", "section": "1.3", "topic": "TOP-0006", "title": "Updating a variable", "sample": true},
+  "CON-0003": {"name": "print", "unit": "Unit 1", "section": "1.2", "topic": "TOP-0003", "title": "Showing output with print", "sample": true},
+  "CON-0004": {"name": "input", "unit": "Unit 1", "section": "1.4", "topic": "TOP-0008", "title": "Reading input", "sample": true},
+  "CON-0005": {"name": "type conversion", "unit": "Unit 1", "section": "1.4", "topic": "TOP-0009", "title": "Converting between types", "sample": true},
+  "CON-0006": {"name": "arithmetic operators", "unit": "Unit 1", "section": "1.5", "topic": "TOP-0010", "title": "Arithmetic expressions", "sample": true},
+  "CON-0007": {"name": "comparison", "unit": "Unit 2", "section": "2.1", "topic": "TOP-0014", "title": "Comparing values", "sample": true},
+  "CON-0008": {"name": "if / elif / else", "unit": "Unit 2", "section": "2.2", "topic": "TOP-0015", "title": "Making decisions with if", "sample": true},
+  "CON-0009": {"name": "while loop", "unit": "Unit 2", "section": "2.3", "topic": "TOP-0018", "title": "Repeating with while", "sample": true},
+  "CON-0010": {"name": "for loop", "unit": "Unit 2", "section": "2.4", "topic": "TOP-0020", "title": "Repeating with for", "sample": true},
+  "CON-0011": {"name": "range", "unit": "Unit 2", "section": "2.4", "topic": "TOP-0021", "title": "Counting with range", "sample": true},
+  "CON-0012": {"name": "lists", "unit": "Unit 3", "section": "3.1", "topic": "TOP-0025", "title": "Lists", "sample": true},
+  "CON-0013": {"name": "len", "unit": "Unit 3", "section": "3.1", "topic": "TOP-0026", "title": "Length of a list or string", "sample": true},
+  "CON-0014": {"name": "defining a function", "unit": "Unit 4", "section": "4.1", "topic": "TOP-0031", "title": "Defining functions", "sample": true},
+  "CON-0015": {"name": "return", "unit": "Unit 4", "section": "4.2", "topic": "TOP-0032", "title": "Returning a value", "sample": true},
+  "CON-0016": {"name": "calling a function", "unit": "Unit 4", "section": "4.1", "topic": "TOP-0031", "title": "Defining functions", "sample": true},
+  "CON-0017": {"name": "recursion", "unit": "Unit 4", "section": "4.5", "topic": "TOP-0036", "title": "Recursion", "sample": true},
+  "CON-0018": {"name": "import", "unit": "Unit 4", "section": "4.6", "topic": "TOP-0037", "title": "Using modules", "sample": true},
+  "CON-0019": {"name": "boolean operators", "unit": "Unit 2", "section": "2.1", "topic": "TOP-0014", "title": "Comparing values", "sample": true},
+  "CON-0020": {"name": "break / continue", "unit": "Unit 2", "section": "2.5", "topic": "TOP-0023", "title": "Leaving a loop early", "sample": true}
+}

@@ -12,7 +12,7 @@ class StepperStateTest {
     private fun program(id: String) = programs.single { it.id == id }
 
     @Test fun allDemosParseAndFinish() {
-        assertEquals(listOf("running-total", "function-call", "recursion"), programs.map { it.id })
+        assertEquals(listOf("running-total", "function-call", "recursion", "even-or-odd"), programs.map { it.id })
         programs.forEach { assertEquals("ok", it.recording.status) }
     }
 

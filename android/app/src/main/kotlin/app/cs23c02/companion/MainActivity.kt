@@ -31,6 +31,8 @@ import app.cs23c02.companion.ui.screens.SignInScreen
 import app.cs23c02.companion.ui.screens.VerifyEmailScreen
 import app.cs23c02.companion.ui.screens.WelcomeScreen
 import app.cs23c02.companion.ui.screens.StepperScreen
+import app.cs23c02.companion.ui.screens.TutorScreen
+import app.cs23c02.companion.ui.screens.TypeItScreen
 import app.cs23c02.companion.stepper.Recordings
 import app.cs23c02.companion.ui.theme.CompanionTheme
 
@@ -66,7 +68,8 @@ class MainActivity : ComponentActivity() {
                     val vm: AppViewModel = viewModel(factory = factory)
                     val s by vm.state.collectAsStateWithLifecycle()
                     val canGoBack = s.screen is Screen.CreateAccount || s.screen is Screen.SignIn || s.screen is Screen.VerifyEmail ||
-                        s.screen is Screen.Forgot || s.screen is Screen.Reset || s.screen is Screen.Stepper
+                        s.screen is Screen.Forgot || s.screen is Screen.Reset || s.screen is Screen.Stepper ||
+                        s.screen is Screen.Tutor || s.screen is Screen.TypeIt
                     BackHandler(enabled = canGoBack) { vm.back() }
                     Surface(Modifier.fillMaxSize().safeDrawingPadding(), color = MaterialTheme.colorScheme.background) {
                         when (val sc = s.screen) {
@@ -81,6 +84,8 @@ class MainActivity : ComponentActivity() {
                             Screen.Activate -> ActivateScreen(vm, s)
                             is Screen.Home -> HomeScreen(vm, s, sc.me)
                             is Screen.Stepper -> StepperScreen(sc.program) { vm.back() }
+                            is Screen.Tutor -> TutorScreen(vm.demos, onShowMe = vm::openStepper, onTypeIt = vm::openTypeIt, onClose = { vm.back() })
+                            is Screen.TypeIt -> TypeItScreen(sc.program, onStepThrough = { vm.openStepper(sc.program.id) }, onClose = { vm.back() })
                         }
                     }
                 }

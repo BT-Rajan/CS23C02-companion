@@ -80,3 +80,13 @@ certificate pinning against a real certificate (no staging host yet; F9), TalkBa
 | App parses the harness output; forward/back exact; narration, notes, frames, endings | `StepperStateTest` (10), `AppViewModelTest.stepperOpensFromHomeAndBackReturns` |
 **Not evidenced:** recording on the phone (Pyodide), speed on the Redmi, TalkBack walkthrough of the stepper. The recorder is not a
 security boundary; worker/sandbox isolation (E1–E8) is tested in slice 3 and A6.
+
+## A3 — tutor (ADR 0014)
+| Area | Evidence |
+|---|---|
+| Per-line explanations, constructs, shape hints and book references derived from the code | `runtime/tests/test_explain.py` (8) |
+| Guided typing: prefix = still typing; spacing/quote style accepted; indentation, missing colon, `=` vs `==`, unbalanced brackets/quotes, case, small typos, different lines, extra lines, completion; blank lines/comments ignored; tabs = 4 spaces | `GuidedTypingTest` (14) |
+| Asking in the student's own words ("Write a program to find factorial") finds the right program; unknown topics find none | `ProgramSearchTest` (4) |
+| Auto-indent after `:` and inside blocks; pastes untouched | `AutoIndentTest` (6) |
+**Limits:** book references are from `runtime/tutor/constructs.sample.json` (marked "sample reference" in the app) until the book's
+construct registry and page map exist (book decision X4). The tutor checks are practice only and record nothing on the server.

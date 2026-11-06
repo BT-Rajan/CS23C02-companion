@@ -36,16 +36,34 @@ data class Exc(val type: String, val message: String)
 @Serializable
 data class RunError(val type: String, val message: String, val line: Int? = null, val column: Int? = null)
 
-/** A worked example ready to step: code, optional stdin, author notes per line (book decision X2), and its recording. */
+/** Per-line tutor data computed at build time by runtime/tutor/explain.py (ADR 0014). */
+@Serializable
+data class LineInfo(val n: Int, val explain: String, val constructs: List<String> = emptyList(), val shape: String = "")
+
+/** Where the book teaches a construct. [sample] is true until the real book registry replaces the sample file. */
+@Serializable
+data class BookRef(val name: String, val unit: String, val section: String, val topic: String, val title: String,
+                   val sample: Boolean = false, val page: Int? = null) {
+    val label: String get() = "Book ${unit}, ${section} ${title}" + (page?.let { ", page $it" } ?: "") +
+        (if (sample) " (sample reference)" else "")
+}
+
+/** A book program: code, optional stdin, author notes (X2), per-line tutor data, book references, and its recording. */
 @Serializable
 data class StepProgram(
     val id: String,
     val title: String,
     val source: String,
+    val keywords: List<String> = emptyList(),
     val stdin: String = "",
     @kotlinx.serialization.SerialName("step_notes") val stepNotes: Map<String, String> = emptyMap(),
+    val lines: List<LineInfo> = emptyList(),
+    val refs: Map<String, BookRef> = emptyMap(),
     val recording: Recording,
-)
+) {
+    fun lineInfo(n: Int): LineInfo? = lines.firstOrNull { it.n == n }
+    fun refsFor(n: Int): List<BookRef> = lineInfo(n)?.constructs.orEmpty().mapNotNull { refs[it] }.distinctBy { it.topic }
+}
 
 object Recordings {
     const val SUPPORTED_VERSION = 1

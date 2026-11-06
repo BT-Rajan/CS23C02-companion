@@ -34,7 +34,7 @@ on-device Python runtime and its performance gate come before practice items.
 |---|---|---|
 | A1 Android shell | Compose app: welcome, register, verify, sign in/reset, activate (screens 1–5), encrypted token storage, silent refresh, cert pinning hook | Owner signs up and activates a test code on the reference phone |
 | A2 Reader | Home with Continue, Unit, Topic reader (screens 6–8), package download + signature check, offline reading, progress events | Fixture lessons read offline; resume works across reinstall |
-| A3 **Line-by-line stepper** (ADR 0013) | `runtime/stepper` harness (tested on CPython), Pyodide bundled in a locked-down WebView, Step / Step back / Play / slider, variables + call stack + output, stdin box, `step_notes`; **Step through** on every runnable example; Run for free-form code | Performance gate on the Redmi (first step ≤ 3 s after warm-up, ≤ 150 MB); harness tests incl. infinite loop, recursion, exceptions, `input()` |
+| A3 **Line-by-line stepper + tutor** (ADR 0013, 0014) | `runtime/stepper` harness (tested on CPython), Pyodide bundled in a locked-down WebView, Step / Step back / Play / slider, variables + call stack + output, stdin box, `step_notes`; **tutor: ask for a program → Show me / I'll type it**, per-line explanations, hints (purpose → shape → line), typo/indent checks, book references on every line; Run and live tutoring for free-form code | Performance gate on the Redmi (first step ≤ 3 s after warm-up, ≤ 150 MB); harness tests incl. infinite loop, recursion, exceptions, `input()` |
 | A4 Real content | Import the B3 pilot package; build-time recordings in `traces/`; fix schema gaps (K2, K12) | Pilot unit readable and steppable end-to-end |
 | A5 Practice | MCQ check endpoint (verdict + explanation per question), trace questions (predict → commit → step to see why) | Attack C3/D2 tests pass; stepper locked until prediction is committed |
 | A6 Exercises & graded runs | Exercise editor (step your own code), server sandbox for Check with hidden tests, hints/solutions policy, reference solutions run in the build (K13) | Sandbox escape/limit suite passes |
@@ -44,7 +44,7 @@ on-device Python runtime and its performance gate come before practice items.
 
 ## Order of work
 1. **A1 Android shell** — done (CI green).
-2. **A3 stepper** — slices 1 (recorder) and 2 (screen with demos) done; **slice 3 next: Pyodide on the phone + performance gate**; then A2.
+2. **A3 stepper + tutor** — recorder, stepper screen, and tutor (ask / show me / I'll type it, book references) done on 4 sample programs; **next: Pyodide on the phone** (step and tutor the student's own code) + performance gate; then A2.
 3. **B2 tooling** in the book repo (registry, validator, code runner + stepper check from X2, extraction to App Content Package v0).
 4. **B1/B3** as soon as the syllabus (U1) arrives; then A4 → A7 alongside book writing (the long pole).
 

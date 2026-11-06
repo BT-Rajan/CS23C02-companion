@@ -93,5 +93,25 @@ class ScreenshotTest {
         HomeScreen(vmWithDemos, UiState(Screen.Home(me)), me)
     }
 
+    @Test fun tutorSearch() = shot("13-tutor-search") {
+        app.cs23c02.companion.ui.screens.TutorScreen(demos.filter { it.id == "recursion" || it.id == "even-or-odd" }, {}, {}, {})
+    }
+
+    private val total get() = demos.single { it.id == "running-total" }
+
+    @Test fun typeItStart() = shot("14-typeit-next") {
+        app.cs23c02.companion.ui.screens.TypeItScreen(total, {}, {}, initialText = "marks = [72, 85, 64]\ntotal = 0\n")
+    }
+
+    @Test fun typeItIndentProblem() {
+        val t = "marks = [72, 85, 64]\ntotal = 0\nfor m in marks:\ntotal = total + m\n"
+        shot("15-typeit-fix") { app.cs23c02.companion.ui.screens.TypeItScreen(total, {}, {}, initialText = t) }
+        shot("15-typeit-fix-dark", dark = true) { app.cs23c02.companion.ui.screens.TypeItScreen(total, {}, {}, initialText = t) }
+    }
+
+    @Test fun typeItDone() = shot("16-typeit-done") {
+        app.cs23c02.companion.ui.screens.TypeItScreen(total, {}, {}, initialText = total.source)
+    }
+
     @Test @Config(fontScale = 2.0f) fun largeFontSignIn() = shot("08-sign-in-200pct-font") { SignInScreen(vm, UiState(Screen.SignIn, error = "Email or password is incorrect.")) }
 }

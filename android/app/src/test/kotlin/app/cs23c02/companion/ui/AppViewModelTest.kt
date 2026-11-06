@@ -137,6 +137,14 @@ class AppViewModelTest {
         assertEquals(home, vm.state.value.screen)
         vm.openStepper("no-such-demo")
         assertEquals(home, vm.state.value.screen)
+
+        vm.openTutor()
+        val tutor = vm.state.value.screen
+        assertTrue(tutor is Screen.Tutor)
+        vm.openTypeIt("even-or-odd")
+        assertTrue((vm.state.value.screen as Screen.TypeIt).program.id == "even-or-odd")
+        vm.back(); assertEquals(tutor, vm.state.value.screen)
+        vm.back(); assertEquals(home, vm.state.value.screen)
     }
 
     @Test fun signOutClearsTokens() {
