@@ -1,0 +1,24 @@
+name: deploy
+# Builds the staging/production images and runs the whole stack end to end (deploy/local-test.sh): HTTPS through Caddy, sign-up,
+# activation, signed content, a graded run in the sandbox container, an assessment, a backup and a restore drill.
+on:
+  push:
+    paths: ["deploy/**", "web/**", "backend/**", "sandbox/**", "content-tools/**", ".github/workflows/deploy.yml"]
+  pull_request:
+    paths: ["deploy/**", "web/**", "backend/**", "sandbox/**"]
+jobs:
+  stack:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip, cache-dependency-path: backend/requirements.txt }
+      - run: pip install -r backend/requirements.txt
+      - name: Allow user namespaces (bubblewrap in the sandbox container; Ubuntu 24.04 restricts them by default)
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      - name: Shell scripts parse
+        run: for f in deploy/*.sh; do bash -n "$f"; done
+      - name: Stack end to end
+        timeout-minutes: 20
+        run: deploy/local-test.sh

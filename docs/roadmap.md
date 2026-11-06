@@ -44,7 +44,7 @@ on-device Python runtime and its performance gate come before practice items.
 
 ## Order of work
 1. **A1 Android shell** — done (CI green).
-2. **A3 stepper + tutor** — recorder, stepper, tutor and **Python on the phone** (own code, live explanations, input) done; **waiting on the owner's Redmi numbers** (performance gate); A2 (reader), A5 (practice), A6 (exercises + server sandbox) and A7 (unit assessments + Me screen) done; next: anomaly re-verification (K9), then A8 staging (needs hosting/domain) or A4 when the book has chapters.
+2. **A3 stepper + tutor** — recorder, stepper, tutor and **Python on the phone** (own code, live explanations, input) done; **waiting on the owner's Redmi numbers** (performance gate); A2 (reader), A5 (practice), A6 (exercises + server sandbox) and A7 (unit assessments + Me screen) done; A8 staging stack built and tested end to end locally and in CI (`deploy/`); **deploying it needs U2** (host, domain, Gmail). Next: anomaly re-verification (K9), or A4 when the book has chapters.
 3. **B2 tooling** in the book repo (registry, validator, code runner + stepper check from X2, extraction to App Content Package v0).
 4. **B1/B3** as soon as the syllabus (U1) arrives; then A4 → A7 alongside book writing (the long pole).
 

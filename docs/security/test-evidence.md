@@ -176,3 +176,18 @@ match the file); it is now in place together with "release builds need CONTENT_S
 | App: intro/attempt/result/review, autosave with seq, idempotent submit, Me screen; debug sample engine follows the same rules; practice checker cannot see assessment keys | `AssessmentTest` |
 | **Real backend:** start/resume, stale save refused, submit 3/3, idempotent resubmit, cooldown, history, best score in progress | `LiveBackendContractTest` |
 **Not built:** lesson quizzes (`LSN.quiz` → `lesson_quiz`), timed assessments beyond the 3-hour session, anomaly re-verification for account sharing (K9).
+
+# Roadmap A8 — staging stack
+`deploy/local-test.sh` (CI: `.github/workflows/deploy.yml`) builds the images, starts the whole stack with fresh random secrets
+and checks, over real HTTPS through Caddy:
+| Area | Evidence |
+|---|---|
+| Sandbox container starts as root and isolates each job with its own UID (`"isolation": "per-job uid"`) | local-test |
+| Sandbox container reaches neither the internet nor MySQL (internal network holding only api + sandbox) | local-test |
+| Student code inside the sandbox has no network (socket probe submitted as an exercise) | `smoke.py` |
+| Landing page served with CSP `default-src 'none'` and HSTS; template rendered; API docs not exposed (404); only `/v1/*` and `/healthz` proxied | `smoke.py` |
+| Register → verification email → sign in → activation code from the CLI → signed manifest + file → exercise graded with hidden tests → assessment scored on the server → progress | `smoke.py` |
+| Migrations run as the migrator; runtime user gets per-table grants only | `deploy/migrate.sh` (stack starts only if it succeeds) |
+| Backup: consistent dump + content archive with checksums; **restore drill** loads it into a scratch MySQL with no network and matches schema version and row counts of 7 tables; content archive complete | `restore-drill.sh` |
+| Database passwords never on a command line (`MYSQL_PWD`) | scripts |
+**Not evidenced:** a real host, real DNS/Let's Encrypt, real Gmail delivery (K6), off-site backup copy (K40), load.

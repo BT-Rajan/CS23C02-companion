@@ -39,3 +39,7 @@
 | K36 | Lesson quizzes (`LSN.quiz`, purpose `lesson_quiz`) are not shown yet; unit assessments are | Low | Open |
 | K37 | Assessments support MCQ and trace questions only (no exercises inside an assessment) | Low | Open (decide whether units need graded programs in assessments) |
 | K38 | Assessment autosave failures are retried with the next answer or on submit; there is no background retry while the app is closed (answers chosen offline and never followed by a save are lost) | Low | Open |
+| K39 | The sandbox container runs with seccomp/AppArmor unconfined so bubblewrap can create namespaces; compensated by an internal-only network, read-only root, PID and memory caps. ADR 0006 prefers a separate VM | Medium | Open (move to its own VM before production) |
+| K40 | Backups are written on the same VM; copying them off the machine is documented but not automated (destination is the owner's choice) | Medium | Open |
+| K41 | No uptime monitoring or alerting on `/healthz` yet | Low | Open |
+| K42 | The privacy policy page is a DRAFT describing what the software does; needs review before public release | Medium | Open |
