@@ -28,11 +28,12 @@ jobs:
           gradle --no-daemon --console=plain :app:lintDebug :app:testDebugUnitTest :app:assembleDebug 2>&1 | tee /tmp/gradle.log
       - name: Python runner in headless Chromium (asset-only origin, network blocked, watchdog, fallback)
         working-directory: ${{ github.workspace }}
+        timeout-minutes: 10   # a stuck browser install or launch fails fast, with its log, instead of using the job's 30 min
         run: |
           set -o pipefail
           npm install --no-save --no-audit --no-fund playwright@1.63.0 2>&1 | tail -n 2
           npx playwright install --with-deps chromium 2>&1 | tail -n 2
-          node android/runner-test/runner-test.cjs android/app/build/generated/assets/runnerAssets 2>&1 | tee /tmp/runner.log
+          timeout 300 node android/runner-test/runner-test.cjs android/app/build/generated/assets/runnerAssets 2>&1 | tee /tmp/runner.log
       - name: Upload debug APK
         if: success()
         uses: actions/upload-artifact@v4
