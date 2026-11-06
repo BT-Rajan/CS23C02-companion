@@ -1,0 +1,27 @@
+{
+  "id": "ITM-0006",
+  "type": "mcq",
+  "purpose": "assessment",
+  "level": 1,
+  "stem": "FIXTURE assessment-only: which name is valid?",
+  "options": [
+    {
+      "id": "a",
+      "text": "1st"
+    },
+    {
+      "id": "b",
+      "text": "first"
+    },
+    {
+      "id": "c",
+      "text": "fir-st"
+    }
+  ],
+  "answer": "b",
+  "explanation": "FIXTURE-EXPLAIN-6: names start with a letter or _ and contain no hyphen.",
+  "option_explanations": {
+    "a": "Starts with a digit.",
+    "c": "Hyphen."
+  }
+}

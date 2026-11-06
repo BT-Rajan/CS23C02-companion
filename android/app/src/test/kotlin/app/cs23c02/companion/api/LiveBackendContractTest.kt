@@ -120,6 +120,24 @@ class LiveBackendContractTest {
             assertEquals("timeout", runaway.public.single().status)
             assertEquals(listOf("EXR-0001"), api.progress(ent.editionId).exercisesPassed)
 
+            // A7: the unit assessment is a server-owned state machine.
+            val unitAsm = pkg.manifest.nav.units.single().assessment!!
+            assertEquals("ASM-0002", unitAsm)
+            val att = r.startAssessment(unitAsm, ent.editionId)
+            assertEquals(3, att.questions.size)
+            assertTrue(att.review.isEmpty() && att.score == null)                          // nothing about correctness yet
+            assertEquals(att.attemptId, r.startAssessment(unitAsm, ent.editionId).attemptId)   // resume, not a second attempt
+            val key = mapOf("ITM-0005" to "a", "ITM-0006" to "b", "ITM-0007" to "b")
+            r.saveAnswers(att.attemptId, 1, key - "ITM-0007")
+            try { r.saveAnswers(att.attemptId, 1, key); fail() } catch (e: ApiError) { assertEquals("stale_save", e.code) }
+            val rid = java.util.UUID.randomUUID().toString()
+            val done = r.submitAssessment(att.attemptId, rid, 2, key)
+            assertTrue(done.submitted && done.score == 3 && done.maxScore == 3 && done.review.all { it.correct })
+            assertEquals(done.submittedAt, r.submitAssessment(att.attemptId, rid, 3, emptyMap()).submittedAt)   // idempotent
+            try { r.startAssessment(unitAsm, ent.editionId); fail() } catch (e: ApiError) { assertEquals("attempt_cooldown", e.code) }
+            assertTrue(r.assessmentHistory(unitAsm, ent.editionId).nextAttemptAt != null)
+            assertEquals(3, api.progress(ent.editionId).assessments.single().bestScore)
+
             tmp.resolve("p.json").delete()                       // "reinstall": local progress gone
             val fresh = repo()
             fresh.sync(ent.editionId)

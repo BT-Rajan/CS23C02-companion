@@ -37,6 +37,10 @@ sealed interface Screen {
     data class LessonPage(val lessonId: String, val back: Screen) : Screen
     /** Practice for one lesson, one question at a time (screens 9-10). */
     data class PracticePage(val lessonId: String, val index: Int, val back: Screen) : Screen
+    /** Screen 12: a unit assessment (intro, attempt, result/review). */
+    data class AssessmentPage(val assessmentId: String, val unitId: String, val back: Screen) : Screen
+    /** Screen 13: the student's own progress, assessment history and account. */
+    data class MePage(val back: Screen) : Screen
     /** Screen 11: one programming exercise. */
     data class ExercisePage(val exerciseId: String, val lessonId: String, val back: Screen) : Screen
     /** [start]: step to open at; [live]: recorded on the phone just now (so input can be supplied and re-run). */
@@ -65,6 +69,22 @@ data class ReaderUi(
 /** Verdicts received this session, per question. Keys are never stored beyond what the server already revealed. */
 data class PracticeUi(val verdicts: Map<String, app.cs23c02.companion.api.PracticeVerdict> = emptyMap(),
                       val checking: Boolean = false, val error: String? = null)
+
+/** Assessment screen state. [attempt] null = intro; in progress = answering; submitted = result/review. */
+data class AssessmentUi(
+    val history: app.cs23c02.companion.api.AssessmentHistory? = null,
+    val attempt: app.cs23c02.companion.api.AttemptView? = null,
+    val answers: Map<String, String> = emptyMap(),
+    val seq: Int = 0,
+    val index: Int = 0,
+    val requestId: String? = null,
+    val loading: Boolean = false,
+    val submitting: Boolean = false,
+    val unsaved: Boolean = false,
+    val error: String? = null,
+)
+
+data class MeUi(val summary: app.cs23c02.companion.api.ProgressSummary? = null, val loading: Boolean = false, val offline: Boolean = false)
 
 /** Exercise screen state: last graded result, released help, and the last local Run, per exercise. */
 data class ExerciseUi(
@@ -101,6 +121,10 @@ class AppViewModel(
     /** Lessons + progress (A2). [readerFor] (true) gives the debug SAMPLE package, (false) the account's own. */
     private val readerFor: ((sample: Boolean) -> ReaderRepository)? = null,
 ) : ViewModel() {
+    private val _assessment = MutableStateFlow(AssessmentUi())
+    val assessment: StateFlow<AssessmentUi> = _assessment.asStateFlow()
+    private val _me = MutableStateFlow(MeUi())
+    val me: StateFlow<MeUi> = _me.asStateFlow()
     private val _exercise = MutableStateFlow(ExerciseUi())
     val exercise: StateFlow<ExerciseUi> = _exercise.asStateFlow()
     private val _practice = MutableStateFlow(PracticeUi())
@@ -183,6 +207,8 @@ class AppViewModel(
             is Screen.LessonPage -> s.back
             is Screen.PracticePage -> s.back
             is Screen.ExercisePage -> s.back
+            is Screen.AssessmentPage -> s.back
+            is Screen.MePage -> s.back
             is Screen.Stepper -> s.back
             is Screen.Playground -> s.back
             is Screen.Tutor -> s.back
@@ -235,6 +261,112 @@ class AppViewModel(
             } catch (e: app.cs23c02.companion.content.ContentError) {
                 _practice.update { it.copy(checking = false, error = e.message) }
             }
+        }
+    }
+
+    // ---- Unit assessments (A7) ------------------------------------------------------------------------------------
+    private fun asmError(e: Exception): String = when {
+        e is ApiError && e.isNetwork -> "Assessments need a connection. Your saved answers are safe on the server."
+        e is ApiError && e.code == "attempt_cooldown" -> e.message
+        e is ApiError -> e.message
+        else -> e.message ?: "Something went wrong."
+    }
+
+    private fun asmLaunch(block: suspend (ReaderRepository) -> Unit) {
+        val r = repo ?: return
+        viewModelScope.launch {
+            try { block(r) } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                _assessment.update { it.copy(loading = false, submitting = false, error = asmError(e)) }
+            }
+        }
+    }
+
+    fun openAssessment(assessmentId: String, unitId: String) {
+        _assessment.value = AssessmentUi(loading = true)
+        go(Screen.AssessmentPage(assessmentId, unitId, _state.value.screen))
+        asmLaunch { r ->
+            val h = r.assessmentHistory(assessmentId, edition)
+            _assessment.update { it.copy(history = h, loading = false) }
+        }
+    }
+
+    /** Start (or resume the open attempt). The server chooses the questions and their order. */
+    fun startAssessment(assessmentId: String) {
+        if (_assessment.value.loading) return
+        _assessment.update { it.copy(loading = true, error = null) }
+        asmLaunch { r ->
+            val a = r.startAssessment(assessmentId, edition)
+            _assessment.update { it.copy(attempt = a, answers = a.answers, seq = a.seq, index = 0, loading = false,
+                requestId = java.util.UUID.randomUUID().toString(), unsaved = false) }
+        }
+    }
+
+    /** Each choice is saved at once (whole answer map + increasing seq). A failed save is retried with the next one. */
+    fun chooseAnswer(itemId: String, option: String) {
+        val a = _assessment.value.attempt ?: return
+        if (a.submitted) return
+        _assessment.update { it.copy(answers = it.answers + (itemId to option), seq = it.seq + 1) }
+        val snap = _assessment.value
+        asmLaunch { r ->
+            try {
+                r.saveAnswers(a.attemptId, snap.seq, snap.answers)
+                if (_assessment.value.seq == snap.seq) _assessment.update { it.copy(unsaved = false, error = null) }
+            } catch (e: ApiError) {
+                when {
+                    e.code == "stale_save" -> {   // another device saved later: adopt the server's numbering and save ours on top
+                        val cur = r.attempt(a.attemptId)
+                        _assessment.update { it.copy(seq = cur.seq + 1) }
+                        r.saveAnswers(a.attemptId, cur.seq + 1, _assessment.value.answers)
+                        _assessment.update { it.copy(unsaved = false) }
+                    }
+                    e.code == "already_submitted" || e.code == "expired" -> {
+                        val cur = r.attempt(a.attemptId)
+                        _assessment.update { it.copy(attempt = cur, unsaved = false, error = e.message) }
+                    }
+                    else -> _assessment.update { it.copy(unsaved = true) }
+                }
+            }
+        }
+    }
+
+    fun gotoQuestion(i: Int) = _assessment.update { s -> s.copy(index = i.coerceIn(0, (s.attempt?.questions?.size ?: 1) - 1)) }
+
+    /** Submit sends the final answers too; retrying with the same request id is safe (the server answers the same). */
+    fun submitAssessment() {
+        val st = _assessment.value
+        val a = st.attempt ?: return
+        if (st.submitting || a.submitted) return
+        _assessment.update { it.copy(submitting = true, error = null) }
+        asmLaunch { r ->
+            val res = r.submitAssessment(a.attemptId, st.requestId ?: java.util.UUID.randomUUID().toString(), st.seq + 1, st.answers)
+            _assessment.update { it.copy(attempt = res, submitting = false, unsaved = false) }
+            refreshMe()
+        }
+    }
+
+    fun reviewAttempt(attemptId: String) {
+        _assessment.update { it.copy(loading = true, error = null) }
+        asmLaunch { r -> val a = r.attempt(attemptId); _assessment.update { it.copy(attempt = a, loading = false) } }
+    }
+
+    fun backToAssessmentIntro(assessmentId: String) {
+        _assessment.update { it.copy(attempt = null, error = null, loading = true) }
+        asmLaunch { r -> val h = r.assessmentHistory(assessmentId, edition); _assessment.update { it.copy(history = h, loading = false) } }
+    }
+
+    // ---- Me (screen 13) --------------------------------------------------------------------------------------------
+    fun openMe() {
+        go(Screen.MePage(homeScreen()))
+        refreshMe()
+    }
+
+    private fun refreshMe() {
+        val r = repo ?: return
+        _me.update { it.copy(loading = true) }
+        viewModelScope.launch {
+            val s = r.summary(edition)
+            _me.update { MeUi(s ?: it.summary, loading = false, offline = s == null) }
         }
     }
 
@@ -367,6 +499,11 @@ class AppViewModel(
             is Screen.LessonPage -> go(s.back)
             is Screen.PracticePage -> go(s.back)
             is Screen.ExercisePage -> go(s.back)
+            is Screen.AssessmentPage -> {
+                val a = _assessment.value.attempt
+                if (a != null && a.submitted) backToAssessmentIntro(s.assessmentId) else go(s.back)
+            }
+            is Screen.MePage -> go(s.back)
             is Screen.TypeIt -> go(s.back)
             else -> return false
         }

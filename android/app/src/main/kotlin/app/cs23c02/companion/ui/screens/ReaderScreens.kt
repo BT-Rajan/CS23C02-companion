@@ -48,6 +48,7 @@ import kotlinx.coroutines.flow.debounce
 fun HomeScreen(
     me: Me, sample: Boolean, r: ReaderUi, info: String?,
     onContinue: (String) -> Unit, onUnit: (String) -> Unit, onRetry: () -> Unit, onTutor: (() -> Unit)?, onSignOut: () -> Unit,
+    onMe: (() -> Unit)? = null,
 ) {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
         Column(Modifier.widthIn(max = 720.dp).fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp),
@@ -57,7 +58,8 @@ fun HomeScreen(
                     Text(r.pkg?.manifest?.book?.title ?: "Your lessons", style = MaterialTheme.typography.titleLarge)
                     Text(me.email, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                TextButton(onClick = onSignOut) { Text(if (sample) "Leave" else "Sign out") }
+                if (onMe != null) TextButton(onClick = onMe) { Text("Me") }
+                else TextButton(onClick = onSignOut) { Text(if (sample) "Leave" else "Sign out") }
             }
             if (sample) Message("Sample lessons written to try the app. They are not book content.", isError = false)
             if (r.offline && r.pkg != null) Text("Offline: showing the lessons saved on this phone.",
@@ -125,7 +127,8 @@ private fun ContinueCard(pkg: InstalledPackage, r: ReaderUi, onContinue: (String
 
 /** Screen 7: the unit's topics and lessons, each with its state in words (not colour alone). */
 @Composable
-fun UnitScreen(pkg: InstalledPackage, unitId: String, r: ReaderUi, onLesson: (String) -> Unit, onClose: () -> Unit) {
+fun UnitScreen(pkg: InstalledPackage, unitId: String, r: ReaderUi, onLesson: (String) -> Unit, onClose: () -> Unit,
+               onAssessment: ((String) -> Unit)? = null) {
     val units = pkg.manifest.nav.units
     val index = units.indexOfFirst { it.id == unitId }
     val unit = units.getOrNull(index) ?: return
@@ -151,6 +154,17 @@ fun UnitScreen(pkg: InstalledPackage, unitId: String, r: ReaderUi, onLesson: (St
                             minutes?.let { Text("$it min", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                         }
                         Text(state, style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+            }
+            unit.assessment?.let { aid ->
+                val n = runCatching { pkg.assessment(aid)?.items?.size }.getOrNull() ?: 0
+                if (onAssessment != null && n > 0) Surface(color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f),
+                    shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
+                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Unit assessment", style = MaterialTheme.typography.titleMedium)
+                        Text("$n questions. Marked by the server; one attempt per day.", style = MaterialTheme.typography.bodyLarge)
+                        OutlinedButton(onClick = { onAssessment(aid) }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Open") }
                     }
                 }
             }

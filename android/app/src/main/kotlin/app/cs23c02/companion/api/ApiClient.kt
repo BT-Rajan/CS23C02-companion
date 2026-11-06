@@ -104,6 +104,37 @@ class ApiClient(
         return json.decodeFromString(ExerciseHelp.serializer(), authed("GET", "/v1/exercises/$exerciseId/help$q", null))
     }
 
+    // ---- Assessments (A7): the server owns the attempt; the app only shows it and sends choices -------------------
+    private fun asmId(id: String) = id.also { require(Regex("^ASM-\\d{4,6}$").matches(it)) }
+    private fun attId(id: String) = id.also { require(Regex("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$").matches(it)) }
+    private fun ed(edition: String?) = edition?.let { "?edition=" + java.net.URLEncoder.encode(it, "UTF-8") } ?: ""
+
+    suspend fun startAssessment(id: String, edition: String?): AttemptView {
+        val body = buildJsonObject { edition?.let { put("edition", JsonPrimitive(it)) } }
+        return json.decodeFromString(AttemptView.serializer(), authed("POST", "/v1/assessments/${asmId(id)}/attempts", body))
+    }
+
+    suspend fun assessmentHistory(id: String, edition: String?): AssessmentHistory =
+        json.decodeFromString(AssessmentHistory.serializer(), authed("GET", "/v1/assessments/${asmId(id)}/attempts${ed(edition)}", null))
+
+    suspend fun attempt(attemptId: String): AttemptView =
+        json.decodeFromString(AttemptView.serializer(), authed("GET", "/v1/assessments/attempts/${attId(attemptId)}", null))
+
+    suspend fun saveAnswers(attemptId: String, seq: Int, answers: Map<String, String>) {
+        val body = buildJsonObject {
+            put("seq", JsonPrimitive(seq)); put("answers", buildJsonObject { answers.forEach { (k, v) -> put(k, JsonPrimitive(v)) } })
+        }
+        authed("PUT", "/v1/assessments/attempts/${attId(attemptId)}/answers", body)
+    }
+
+    suspend fun submitAssessment(attemptId: String, requestId: String, seq: Int, answers: Map<String, String>): AttemptView {
+        val body = buildJsonObject {
+            put("request_id", JsonPrimitive(requestId)); put("seq", JsonPrimitive(seq))
+            put("answers", buildJsonObject { answers.forEach { (k, v) -> put(k, JsonPrimitive(v)) } })
+        }
+        return json.decodeFromString(AttemptView.serializer(), authed("POST", "/v1/assessments/attempts/${attId(attemptId)}/submit", body))
+    }
+
     suspend fun progress(edition: String?): ProgressSummary {
         val q = edition?.let { "?edition=" + java.net.URLEncoder.encode(it, "UTF-8") } ?: ""
         return json.decodeFromString(ProgressSummary.serializer(), authed("GET", "/v1/progress$q", null))

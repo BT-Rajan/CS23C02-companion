@@ -108,7 +108,30 @@ class ReaderRepository(
     private val samplePackage: (suspend () -> Pair<ByteArray, Map<String, ByteArray>>)? = null,
     private val sampleChecker: SamplePracticeChecker? = null,
     private val sampleExercises: SampleExerciseGrader? = null,
+    /** Built lazily because it needs the installed package. Debug SAMPLE only. */
+    sampleAssessments: ((() -> InstalledPackage?) -> SampleAssessmentEngine)? = null,
 ) {
+    private val sampleAsm: SampleAssessmentEngine? = sampleAssessments?.invoke { content.current() }
+
+    // ---- Unit assessments (A7): the server's state machine, or for debug SAMPLE content a local copy of its rules ----
+    suspend fun startAssessment(id: String, edition: String?) = sampleAsm?.start(id) ?: api.startAssessment(id, edition)
+    suspend fun assessmentHistory(id: String, edition: String?) = sampleAsm?.history(id) ?: api.assessmentHistory(id, edition)
+    suspend fun attempt(id: String) = sampleAsm?.attempt(id) ?: api.attempt(id)
+    suspend fun saveAnswers(id: String, seq: Int, answers: Map<String, String>) {
+        if (sampleAsm != null) sampleAsm.save(id, seq, answers) else api.saveAnswers(id, seq, answers)
+    }
+    suspend fun submitAssessment(id: String, requestId: String, seq: Int, answers: Map<String, String>) =
+        sampleAsm?.submit(id, seq, answers) ?: api.submitAssessment(id, requestId, seq, answers)
+
+    /** For the Me screen: server-verified progress (or the sample's local equivalent). Null when offline. */
+    suspend fun summary(edition: String?): app.cs23c02.companion.api.ProgressSummary? {
+        if (sampleAsm != null || sampleExercises != null) {
+            return app.cs23c02.companion.api.ProgressSummary("sample", completed = progress.state.completed.toList(),
+                exercisesPassed = sampleExercises?.passedIds?.toList().orEmpty(), assessments = sampleAsm?.best().orEmpty())
+        }
+        return try { api.progress(edition) } catch (_: ApiError) { null }
+    }
+
     /** One graded Check: the server sandbox (or, for debug SAMPLE exercises only, on-device Python with the same policy). */
     suspend fun submitExercise(ex: Exercise, code: String, edition: String?): app.cs23c02.companion.api.ExerciseResult =
         sampleExercises?.submit(ex, code) ?: api.submitExercise(ex.id, code, edition)

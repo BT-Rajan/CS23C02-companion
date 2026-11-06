@@ -84,7 +84,9 @@ def get_progress(edition: str | None = Query(default=None, max_length=40), p: Pr
             resume, reason = nxt, ("next" if completed else "start")
     exercises_passed = sorted(set(db.scalars(select(ExerciseAttempt.exercise_id).where(
         ExerciseAttempt.user_id == p.user.id, ExerciseAttempt.edition_id == ed, ExerciseAttempt.passed.is_(True)))))
+    from .assessments import summary as assessment_summary
     return {"edition_id": ed, "content_version": rel.version, "total_lessons": len(lessons), "exercises_passed": exercises_passed,
+            "assessments": assessment_summary(db, p.user.id, ed),
             "completed": [l.lesson_id for l in lessons if l.lesson_id in completed], "finished": resume is None,
             "resume": None if resume is None else {"lesson_id": resume.lesson_id, "title": resume.title, "unit_id": resume.unit_id,
                                                    "topic_id": resume.topic_id, "reason": reason}}

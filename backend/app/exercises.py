@@ -14,7 +14,8 @@ import pathlib
 
 from fastapi import APIRouter, Depends, Path, Request
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import func, select, text
+from sqlalchemy import func, select
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from . import ratelimit, sandbox_client
@@ -25,7 +26,7 @@ from .db import get_db, utcnow
 from .deps import Principal, client_ip_hash, get_current
 from .entitlements import entitled_edition
 from .errors import ApiError
-from .models import ContentFile, ExerciseAttempt, ProtectedContent
+from .models import ContentFile, ExerciseAttempt, ProtectedContent, User
 
 router = APIRouter(prefix="/v1/exercises", tags=["exercises"])
 HINT_AFTER = (1, 3)       # failed checks before hint 1, hint 2; later hints one more each
@@ -92,15 +93,15 @@ def submit(body: SubmissionIn, request: Request, exercise_id: str = Path(pattern
     ratelimit.enforce(f"exr-item:{uid}:{exercise_id}", 20, 3600)
     public = [{"stdin": t["stdin"], "expect": t["expect"]} for t in pub.get("tests", [])]
     hidden = [{"stdin": t["stdin"], "expect": t["expect"]} for t in prot.get("hidden_tests", [])]
-    # One check per student at a time (ADR 0006: per-user concurrency 1). MySQL named lock, released on any exit.
-    lock = f"exr-run:{uid}"
-    got = db.execute(text("SELECT GET_LOCK(:n, 0)"), {"n": lock}).scalar()
-    if got != 1:
-        raise ApiError(429, "Your previous check is still running. Wait for it to finish.", "check_in_progress")
+    # One check per student at a time (ADR 0006: per-user concurrency 1): lock this student's user row for the transaction,
+    # failing at once if another check holds it. A transaction lock is released by commit, rollback or a dropped connection,
+    # so a crashed request can never leave the student locked out.
     try:
-        result = sandbox_client.grade(body.code, public + hidden)
-    finally:
-        db.execute(text("SELECT RELEASE_LOCK(:n)"), {"n": lock})
+        db.scalar(select(User.id).where(User.id == uid).with_for_update(nowait=True))
+    except OperationalError:
+        db.rollback()
+        raise ApiError(429, "Your previous check is still running. Wait for it to finish.", "check_in_progress")
+    result = sandbox_client.grade(body.code, public + hidden)
     runs = result["tests"]
     pub_runs, hid_runs = runs[: len(public)], runs[len(public):]
     passed = result["passed"] == result["total"]

@@ -15,6 +15,7 @@ class SampleExerciseGrader(private val keys: Map<String, SampleExerciseKey>, pri
     data class RunOutput(val status: String, val stdout: String, val error: String?)
     private val failed = HashMap<String, Int>()
     private val passed = HashSet<String>()
+    val passedIds: Set<String> get() = passed
 
     suspend fun submit(ex: Exercise, code: String): ExerciseResult {
         val k = keys[ex.id] ?: throw ContentError("This exercise isn't available.")

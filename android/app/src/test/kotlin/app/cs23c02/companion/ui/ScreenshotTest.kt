@@ -218,6 +218,35 @@ class ScreenshotTest {
             "Checking needs a connection. Run and Step through work offline.", true, {}, { _ -> }, {}, {}, {}, {}) }
     }
 
+    private val asmKeys by lazy {
+        app.cs23c02.companion.content.SamplePracticeChecker.parse(java.io.File("src/debug/assets/sample-practice-keys.json").readText()).assessmentKeys
+    }
+    private val fixedNow = java.time.Instant.parse("2026-11-06T10:00:00Z")
+
+    @Test @Config(qualifiers = "w360dp-h1100dp-xhdpi") fun assessment() {
+        val e = app.cs23c02.companion.content.SampleAssessmentEngine({ samplePkg }, asmKeys) { fixedNow }
+        val a = e.start("ASM-9001")
+        val ui0 = app.cs23c02.companion.ui.AssessmentUi(history = e.history("ASM-9001"))
+        shot("26-assessment-intro") { app.cs23c02.companion.ui.screens.AssessmentScreen("Unit 1 assessment", 3,
+            ui0.copy(history = app.cs23c02.companion.api.AssessmentHistory("ASM-9001")), {}, { _, _ -> }, {}, {}, {}, {}, {}) }
+        val trace = a.questions.indexOfFirst { it.type == "trace" }
+        val ui1 = app.cs23c02.companion.ui.AssessmentUi(attempt = a, answers = mapOf(a.questions[0].itemId to a.questions[0].options[0].id),
+            seq = 1, index = trace)
+        shot("26-assessment-question") { app.cs23c02.companion.ui.screens.AssessmentScreen("Unit 1 assessment", 3, ui1, {}, { _, _ -> }, {}, {},
+            {}, {}, {}, now = { fixedNow.plusSeconds(600) }) }
+        e.save(a.attemptId, 1, mapOf("ITM-9101" to "c", "ITM-9102" to "a", "ITM-9103" to "b"))
+        val done = e.submit(a.attemptId, 1, emptyMap())
+        shot("26-assessment-result") { app.cs23c02.companion.ui.screens.AssessmentScreen("Unit 1 assessment", 3,
+            app.cs23c02.companion.ui.AssessmentUi(attempt = done), {}, { _, _ -> }, {}, {}, {}, {}, {}) }
+        shot("26-assessment-cooldown-dark", dark = true) { app.cs23c02.companion.ui.screens.AssessmentScreen("Unit 1 assessment", 3,
+            app.cs23c02.companion.ui.AssessmentUi(history = e.history("ASM-9001")), {}, { _, _ -> }, {}, {}, {}, {}, {}) }
+        val best = app.cs23c02.companion.api.ProgressSummary("sample", completed = listOf("LSN-9001", "LSN-9002"),
+            exercisesPassed = listOf("EXR-9001"), assessments = e.best())
+        shot("27-me") { app.cs23c02.companion.ui.screens.MeScreen("student@example.com", samplePkg,
+            readerUi(setOf("LSN-9001", "LSN-9002"), null), app.cs23c02.companion.ui.MeUi(best), false, "0.1.0", { _, _ -> }, {}, {}) }
+        shot("21-unit-with-assessment") { app.cs23c02.companion.ui.screens.UnitScreen(samplePkg, "UNT-9001", readerUi(), {}, {}, onAssessment = {}) }
+    }
+
     @Test fun lessonWithPractice() = shot("22-lesson-practise") {
         app.cs23c02.companion.ui.screens.LessonScreen(samplePkg, "LSN-9002", false, 4, { _, _ -> }, {}, {}, {}, {}, false, onPractise = {})
     }

@@ -97,7 +97,7 @@ Database roles: the app role has no DDL rights; a separate migration role runs A
 | `PUT /progress/events` (batch) | access | yes | idempotent by event UUID |
 | `GET /progress` | access | yes | own data only |
 | `POST /practice/items/{id}/answer` | access | yes | practice items only (MCQ and trace); verdict + why for that option; answer + explanation after a right answer or 2 wrong tries; rate-limited (built in A5) |
-| `POST /assessments/{id}/attempts`, `PUT …/answers`, `POST …/submit`, `GET …/result` | access | yes | state machine (ADR 0009) |
+| `POST /assessments/{id}/attempts` (start/resume), `GET /assessments/{id}/attempts` (history), `GET /assessments/attempts/{attempt}`, `PUT …/answers`, `POST …/submit` | access | yes | state machine (ADR 0009); built in A7 |
 | `POST /exercises/{id}/submissions` | access | yes | graded in the sandbox service (public + hidden tests; hidden data never returned; one at a time) (built in A6) |
 | `GET /exercises/{id}/help` | access | yes | hints and solution by policy #3, audited (built in A6) |
 Common: `user_id` is never accepted from the client; object IDs are checked against entitlement of the *object's* edition; request size caps; per-route rate limits; structured error format with support reference.

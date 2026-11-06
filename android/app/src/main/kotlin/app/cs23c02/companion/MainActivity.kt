@@ -40,6 +40,8 @@ import app.cs23c02.companion.content.next
 import app.cs23c02.companion.ui.screens.LessonScreen
 import app.cs23c02.companion.ui.screens.PracticeScreen
 import app.cs23c02.companion.ui.screens.ExerciseScreen
+import app.cs23c02.companion.ui.screens.AssessmentScreen
+import app.cs23c02.companion.ui.screens.MeScreen
 import app.cs23c02.companion.ui.screens.UnitScreen
 import java.io.File
 import app.cs23c02.companion.ui.screens.TutorScreen
@@ -86,10 +88,13 @@ class MainActivity : ComponentActivity() {
                     val reader by vm.reader.collectAsStateWithLifecycle()
                     val practice by vm.practice.collectAsStateWithLifecycle()
                     val exercise by vm.exercise.collectAsStateWithLifecycle()
+                    val assessment by vm.assessment.collectAsStateWithLifecycle()
+                    val me by vm.me.collectAsStateWithLifecycle()
                     val canGoBack = s.screen is Screen.CreateAccount || s.screen is Screen.SignIn || s.screen is Screen.VerifyEmail ||
                         s.screen is Screen.Forgot || s.screen is Screen.Reset || s.screen is Screen.Stepper ||
                         s.screen is Screen.Tutor || s.screen is Screen.TypeIt || s.screen is Screen.Playground ||
-                        s.screen is Screen.UnitPage || s.screen is Screen.LessonPage || s.screen is Screen.PracticePage || s.screen is Screen.ExercisePage
+                        s.screen is Screen.UnitPage || s.screen is Screen.LessonPage || s.screen is Screen.PracticePage || s.screen is Screen.ExercisePage ||
+                        s.screen is Screen.AssessmentPage || s.screen is Screen.MePage
                     BackHandler(enabled = canGoBack) { vm.back() }
                     Surface(Modifier.fillMaxSize().safeDrawingPadding(), color = MaterialTheme.colorScheme.background) {
                         when (val sc = s.screen) {
@@ -105,8 +110,22 @@ class MainActivity : ComponentActivity() {
                             is Screen.Home -> HomeScreen(sc.me, sc.sample, reader, s.info,
                                 onContinue = vm::openLesson, onUnit = vm::openUnit, onRetry = vm::syncReader,
                                 onTutor = if (vm.demos.isNotEmpty()) ({ vm.openTutor() }) else null,
-                                onSignOut = if (sc.sample) vm::leaveSample else vm::signOut)
-                            is Screen.UnitPage -> reader.pkg?.let { UnitScreen(it, sc.unitId, reader, onLesson = vm::openLesson, onClose = { vm.back() }) }
+                                onSignOut = if (sc.sample) vm::leaveSample else vm::signOut, onMe = vm::openMe)
+                            is Screen.UnitPage -> reader.pkg?.let { UnitScreen(it, sc.unitId, reader, onLesson = vm::openLesson, onClose = { vm.back() },
+                                onAssessment = { aid -> vm.openAssessment(aid, sc.unitId) }) }
+                            is Screen.AssessmentPage -> {
+                                val asm = reader.pkg?.let { runCatching { it.assessment(sc.assessmentId) }.getOrNull() }
+                                AssessmentScreen(asm?.title ?: "Unit assessment", asm?.items?.size ?: 0, assessment,
+                                    onStart = { vm.startAssessment(sc.assessmentId) }, onChoose = vm::chooseAnswer, onGoto = vm::gotoQuestion,
+                                    onSubmit = vm::submitAssessment, onReview = vm::reviewAttempt,
+                                    onBackToIntro = { vm.backToAssessmentIntro(sc.assessmentId) }, onClose = { vm.back() })
+                            }
+                            is Screen.MePage -> {
+                                val home = sc.back as? Screen.Home
+                                MeScreen(home?.me?.email.orEmpty(), reader.pkg, reader, me, home?.sample == true, BuildConfig.VERSION_NAME,
+                                    onAssessment = { aid, uid -> vm.openAssessment(aid, uid) },
+                                    onSignOut = if (home?.sample == true) vm::leaveSample else vm::signOut, onClose = { vm.back() })
+                            }
                             is Screen.LessonPage -> reader.pkg?.let { pkg ->
                                 LessonScreen(pkg, sc.lessonId, done = sc.lessonId in reader.completed, startAt = reader.positions[sc.lessonId] ?: 0,
                                     onStep = vm.runner?.let { { t: String, c: String -> vm.stepThroughCode(t, c) } },

@@ -1,0 +1,28 @@
+{
+  "id": "ITM-9105",
+  "type": "trace",
+  "purpose": "assessment",
+  "level": 2,
+  "stem": "What does this program print?",
+  "options": [
+    {
+      "id": "a",
+      "text": "5"
+    },
+    {
+      "id": "b",
+      "text": "6"
+    },
+    {
+      "id": "c",
+      "text": "23"
+    }
+  ],
+  "answer": "a",
+  "explanation": "SAMPLE: add(2, 3) returns 2 + 3, which is 5.",
+  "option_explanations": {
+    "b": "2 + 3 is 5.",
+    "c": "These are numbers, not text."
+  },
+  "code": "def add(a, b):\n    return a + b\n\nprint(add(2, 3))"
+}

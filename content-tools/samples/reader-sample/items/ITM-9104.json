@@ -1,0 +1,27 @@
+{
+  "id": "ITM-9104",
+  "type": "mcq",
+  "purpose": "assessment",
+  "level": 2,
+  "stem": "How many times does the body of `for m in [4, 7, 9]:` run?",
+  "options": [
+    {
+      "id": "a",
+      "text": "1"
+    },
+    {
+      "id": "b",
+      "text": "3"
+    },
+    {
+      "id": "c",
+      "text": "9"
+    }
+  ],
+  "answer": "b",
+  "explanation": "SAMPLE: the loop runs once for each item, and the list has 3 items.",
+  "option_explanations": {
+    "a": "It repeats for every item.",
+    "c": "9 is an item, not a count."
+  }
+}

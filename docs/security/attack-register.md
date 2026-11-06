@@ -27,12 +27,12 @@
 | C5 | Read cache after logout/user switch | Client | Encrypted store keyed per account; wiped on logout | Device test | Backend revocation passes; device cache not built – see test-evidence.md | Low |
 | C6 | Bulk scrape lessons | Content | Volume/rate detection; signed short-lived URLs | Load + alert test | Partial: per-account brake only – see test-evidence.md | **Medium** |
 | C7 | Screenshot/photograph content | Content | None possible | – | Accepted | **High (accepted)** |
-| D1 | Read answers from API/pre-submit | Assessment | No correctness in pre-submit payloads; the practice endpoint refuses assessment items with the same 404 as unknown ones | Response schema test | Partial (A5): practice endpoint cannot be used for assessment items – `test_practice.py`; assessment API not built | None |
+| D1 | Read answers from API/pre-submit | Assessment | No correctness in pre-submit payloads; the practice endpoint refuses assessment items with the same 404 as unknown ones | Response schema test | Pass (A5, A7): practice endpoint refuses assessment items; every assessment payload before submit is free of answers/explanations – `test_practice.py`, `test_assessments.py` | None |
 | D2 | Inspect app resources for keys | Assessment | None shipped | CI package scan | Pass for packages (Phase 3); release APK carries no keys (only the debug build has answers for its SAMPLE questions, outside the signed package) – see test-evidence.md | None |
-| D3 | Submit altered scores/answers | Assessment | Server scores from raw choices | Tamper tests | Not tested | None |
-| D4 | Replay a submission | Assessment | Idempotent request id | Replay test | Not tested | None |
-| D5 | Unlimited retries via local reset | Assessment | Attempt counts server-side | Reset test | Not tested | None |
-| D6 | Share answers by option position | Assessment | Per-attempt shuffle | Statistical test | Not tested | Low |
+| D3 | Submit altered scores/answers | Assessment | Server scores from raw choices | Tamper tests | Pass (A7): score/extra fields rejected, answers outside the attempt rejected – `test_assessments.py` | None |
+| D4 | Replay a submission | Assessment | Idempotent request id | Replay test | Pass (A7): repeated/replayed submit returns the stored result; saving after submit refused; stale autosaves refused – `test_assessments.py`, live contract | None |
+| D5 | Unlimited retries via local reset | Assessment | Attempt counts server-side | Reset test | Pass (A7): one attempt per 24 h enforced by the server (mutation-checked); 8 simultaneous starts create exactly one attempt (found a snapshot-read race during testing, fixed) | None |
+| D6 | Share answers by option position | Assessment | Per-attempt shuffle | Statistical test | Pass (A7): options (and items) shuffled per attempt, stable within it – `test_d6_…` | Low |
 | D7 | Repeated practice calls to learn keys | Practice | One question per call; answer revealed only after a right answer or 2 wrong tries; 300/h per account, 30/h per question; anomaly alerts not built | Enumeration test | Pass for limits and reveal policy (A5) – `test_practice.py` (mutation-checked) | **Medium** (inherent to immediate feedback; practice keys are not assessment keys) |
 | D8 | Forge progress events | Progress | Only low-stakes events accepted from client; verified events server-derived | Event fuzz | Partial pass (Phase 3) – see test-evidence.md | Low |
 | E1 | Infinite loop | Sandbox | Wall/CPU limits, kill | Hostile suite | Pass (A6) – infinite loop and sleep stopped – see test-evidence.md | None |

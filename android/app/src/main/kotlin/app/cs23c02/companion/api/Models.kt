@@ -41,7 +41,52 @@ data class ProgressSummary(
     val resume: ResumePoint? = null,
     /** Exercises passed in the server sandbox (server-verified, ADR 0009). */
     @SerialName("exercises_passed") val exercisesPassed: List<String> = emptyList(),
+    /** Best submitted score per unit assessment. */
+    val assessments: List<AssessmentBest> = emptyList(),
 )
+
+@Serializable
+data class AssessmentBest(@SerialName("assessment_id") val assessmentId: String, @SerialName("best_score") val bestScore: Int,
+                          @SerialName("max_score") val maxScore: Int? = null, val attempts: Int = 0)
+
+@Serializable
+data class AssessmentQuestion(@SerialName("item_id") val itemId: String, val type: String = "mcq", val stem: String,
+                              val code: String? = null, val options: List<app.cs23c02.companion.content.ItemOption> = emptyList())
+
+@Serializable
+data class ReviewItem(@SerialName("item_id") val itemId: String, val type: String = "mcq", val stem: String, val code: String? = null,
+                      val options: List<app.cs23c02.companion.content.ItemOption> = emptyList(), val chosen: String? = null,
+                      val answer: String? = null, val correct: Boolean = false, val explanation: String = "", val why: String? = null)
+
+/** One attempt as the server returns it: questions + saved answers while open, score + review once submitted. */
+@Serializable
+data class AttemptView(
+    @SerialName("attempt_id") val attemptId: String,
+    @SerialName("assessment_id") val assessmentId: String,
+    val title: String = "",
+    val status: String,
+    @SerialName("started_at") val startedAt: String? = null,
+    @SerialName("expires_at") val expiresAt: String? = null,
+    val seq: Int = 0,
+    val answers: Map<String, String> = emptyMap(),
+    val questions: List<AssessmentQuestion> = emptyList(),
+    @SerialName("submitted_at") val submittedAt: String? = null,
+    @SerialName("auto_submitted") val autoSubmitted: Boolean = false,
+    val score: Int? = null,
+    @SerialName("max_score") val maxScore: Int? = null,
+    val review: List<ReviewItem> = emptyList(),
+) { val submitted get() = status == "submitted" }
+
+@Serializable
+data class AttemptSummary(@SerialName("attempt_id") val attemptId: String, val status: String,
+                          @SerialName("started_at") val startedAt: String? = null, @SerialName("submitted_at") val submittedAt: String? = null,
+                          val score: Int? = null, @SerialName("max_score") val maxScore: Int? = null,
+                          @SerialName("auto_submitted") val autoSubmitted: Boolean = false)
+
+@Serializable
+data class AssessmentHistory(@SerialName("assessment_id") val assessmentId: String,
+                             @SerialName("next_attempt_at") val nextAttemptAt: String? = null,
+                             val attempts: List<AttemptSummary> = emptyList())
 
 /** Only what the server accepts from a client: an id it can dedupe on, a low-stakes kind, the lesson, and a timestamp. */
 @Serializable

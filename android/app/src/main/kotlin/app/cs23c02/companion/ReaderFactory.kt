@@ -7,6 +7,7 @@ import app.cs23c02.companion.content.ContentStore
 import app.cs23c02.companion.content.Manifest
 import app.cs23c02.companion.content.ProgressStore
 import app.cs23c02.companion.content.ReaderRepository
+import app.cs23c02.companion.content.SampleAssessmentEngine
 import app.cs23c02.companion.content.SampleExerciseGrader
 import app.cs23c02.companion.content.SamplePracticeChecker
 import app.cs23c02.companion.runner.PythonRunner
@@ -42,5 +43,5 @@ fun buildReader(ctx: Context, api: ApiClient, sample: Boolean, runner: PythonRun
         }
         SampleExerciseGrader.RunOutput(status, r.recording.stdout, r.recording.error?.let { "${it.type}: ${it.message}" })
     }
-    return ReaderRepository(api, store, progress, loader, checker, grader)
+    return ReaderRepository(api, store, progress, loader, checker, grader) { pkg -> SampleAssessmentEngine(pkg, checker.assessmentKeys) }
 }

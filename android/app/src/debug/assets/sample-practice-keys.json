@@ -34,6 +34,48 @@
    }
   }
  },
+ "assessment_items": {
+  "ITM-9101": {
+   "answer": "c",
+   "explanation": "SAMPLE: the right side uses the old value 5, so a becomes 10.",
+   "option_explanations": {
+    "a": "a was given a new value.",
+    "b": "* multiplies; it does not add 2."
+   }
+  },
+  "ITM-9102": {
+   "answer": "b",
+   "explanation": "SAMPLE: = stores the value on the right under the name on the left.",
+   "option_explanations": {
+    "a": "== compares; it stores nothing.",
+    "c": "The name must be on the left."
+   }
+  },
+  "ITM-9103": {
+   "answer": "b",
+   "explanation": "SAMPLE: 3 > 5 is False, so the else branch runs.",
+   "option_explanations": {
+    "a": "3 > 5 is False.",
+    "c": "Only one branch runs."
+   }
+  },
+  "ITM-9104": {
+   "answer": "b",
+   "explanation": "SAMPLE: the loop runs once for each item, and the list has 3 items.",
+   "option_explanations": {
+    "a": "It repeats for every item.",
+    "c": "9 is an item, not a count."
+   }
+  },
+  "ITM-9105": {
+   "answer": "a",
+   "explanation": "SAMPLE: add(2, 3) returns 2 + 3, which is 5.",
+   "option_explanations": {
+    "b": "2 + 3 is 5.",
+    "c": "These are numbers, not text."
+   }
+  }
+ },
  "exercises": {
   "EXR-9001": {
    "hidden_tests": [

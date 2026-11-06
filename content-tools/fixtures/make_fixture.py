@@ -4,7 +4,7 @@ R = pathlib.Path(__file__).parent / "cs23c02-fixture"
 def w(rel, obj): (R/rel).write_text(json.dumps(obj, indent=2, ensure_ascii=False) + "\n")
 w("book.json", {"id": "BOK-0001", "title": "FIXTURE — not book content", "edition": "fixture-1", "version": "0.1.0",
                 "min_app_version": "0.1.0", "python": "3.12", "note": "Test data that follows the textbook's approved ID structures. Not the textbook."})
-w("nav.json", {"units": [{"id": "UNT-0001", "title": "Fixture unit: getting started", "topics": [
+w("nav.json", {"units": [{"id": "UNT-0001", "title": "Fixture unit: getting started", "assessment": "ASM-0002", "topics": [
     {"id": "TOP-0001", "title": "Values and variables", "lessons": ["LSN-0001", "LSN-0002"]},
     {"id": "TOP-0002", "title": "Making decisions", "lessons": ["LSN-0003"]}]}]})
 w("lessons/LSN-0001.json", {"id": "LSN-0001", "title": "What is a variable?", "topic": "TOP-0001", "minutes": 6, "blocks": [
@@ -39,6 +39,14 @@ mcq(4, "What does this program print?", {"a": "even", "b": "odd", "c": "7"}, "b"
     code="n = 7\nif n % 2 == 0:\n    print('even')\nelse:\n    print('odd')")
 mcq(5, "FIXTURE assessment-only question: what is 2 + 3?", {"a": "5", "b": "23"}, "a",
     "FIXTURE-EXPLAIN-5: integer addition.", {}, purpose="assessment")
+mcq(6, "FIXTURE assessment-only: which name is valid?", {"a": "1st", "b": "first", "c": "fir-st"}, "b",
+    "FIXTURE-EXPLAIN-6: names start with a letter or _ and contain no hyphen.", {"a": "Starts with a digit.", "c": "Hyphen."},
+    purpose="assessment")
+mcq(7, "FIXTURE assessment-only: what does this print?", {"a": "3", "b": "4", "c": "12"}, "b",
+    "FIXTURE-EXPLAIN-7: x becomes 3 + 1.", {"a": "x changed on line 2.", "c": "Addition, not concatenation."},
+    type="trace", purpose="assessment", code="x = 3\nx = x + 1\nprint(x)")
+w("assessments/ASM-0002.json", {"id": "ASM-0002", "title": "Unit 1 assessment", "purpose": "unit_assessment",
+                                 "items": ["ITM-0005", "ITM-0006", "ITM-0007"], "rules": {"shuffle_items": True, "shuffle_options": True}})
 w("assessments/ASM-0001.json", {"id": "ASM-0001", "title": "Lesson quiz: variables", "purpose": "lesson_quiz",
                                  "items": ["ITM-0001", "ITM-0002", "ITM-0003"], "rules": {"shuffle": True}})
 def exr(i, title, statement, starter, tests, hints, approach, ref):

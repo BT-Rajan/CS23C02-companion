@@ -1,0 +1,13 @@
+{
+  "id": "ASM-9002",
+  "title": "Unit 2 assessment",
+  "purpose": "unit_assessment",
+  "items": [
+    "ITM-9104",
+    "ITM-9105"
+  ],
+  "rules": {
+    "shuffle_items": true,
+    "shuffle_options": true
+  }
+}

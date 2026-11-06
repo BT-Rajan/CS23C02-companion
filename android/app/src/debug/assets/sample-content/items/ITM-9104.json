@@ -1,0 +1,1 @@
+{"id":"ITM-9104","level":2,"options":[{"id":"a","text":"1"},{"id":"b","text":"3"},{"id":"c","text":"9"}],"purpose":"assessment","stem":"How many times does the body of `for m in [4, 7, 9]:` run?","type":"mcq"}

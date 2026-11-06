@@ -57,8 +57,13 @@ def main():
         # Debug only: answers for the SAMPLE practice questions, so practice can be tried without a server. Kept OUT of the
         # signed package (which stays leak-free); release builds have no such file and always ask the server.
         prot = json.loads((out / "protected.json").read_text())
+        # Practice and assessment keys are kept apart, as on the server: the practice checker can never answer an
+        # assessment question (attack D1).
+        purpose = {f.stem: json.loads(f.read_text())["purpose"] for f in (SRC / "items").glob("*.json")}
         KEYS.write_text(json.dumps({"_note": "DEBUG SAMPLE ONLY - answers to sample questions, never book content",
-                                    "items": prot["items"], "exercises": prot["exercises"]}, indent=1, ensure_ascii=False) + "\n")
+                                    "items": {k: v for k, v in prot["items"].items() if purpose[k] == "practice"},
+                                    "assessment_items": {k: v for k, v in prot["items"].items() if purpose[k] == "assessment"},
+                                    "exercises": prot["exercises"]}, indent=1, ensure_ascii=False) + "\n")
     KOTLIN.parent.mkdir(parents=True, exist_ok=True)
     KOTLIN.write_text(f'''package app.cs23c02.companion
 

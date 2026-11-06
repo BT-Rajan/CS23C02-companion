@@ -86,6 +86,26 @@ def validate(book, nav, lessons, items, exrs, asms) -> list[str]:
         for i in a["items"]:
             if i not in items and i not in exrs:
                 errs.append(f"{aid}: unknown item {i}")
+    # Unit assessments (A7): one per unit at most, assessment-only questions the server can mark, never reused in practice.
+    practice_ids = {i for l in lessons.values() for i in l.get("practice", {}).get("items", [])}
+    for u in nav["units"]:
+        aid = u.get("assessment")
+        if not aid:
+            continue
+        a = asms.get(aid)
+        if a is None:
+            errs.append(f"{u['id']}: unknown assessment {aid}")
+            continue
+        if a.get("purpose") != "unit_assessment":
+            errs.append(f"{aid}: a unit's assessment must have purpose unit_assessment")
+        if not a["items"]:
+            errs.append(f"{aid}: has no questions")
+        for i in a["items"]:
+            it = items.get(i)
+            if it is None or it.get("purpose") != "assessment" or it.get("type") not in ("mcq", "trace"):
+                errs.append(f"{aid}: {i} must be an assessment-only mcq or trace item")
+            if i in practice_ids:
+                errs.append(f"{aid}: {i} is also a practice question, so its answer would be revealed before the assessment")
     return errs
 
 

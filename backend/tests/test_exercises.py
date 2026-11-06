@@ -115,11 +115,11 @@ def test_per_exercise_rate_limit(client):
 def test_one_check_at_a_time_per_student(client):
     import_fixture()
     u, h = owner(client)
-    from sqlalchemy import text
-    with SessionLocal() as db:   # another request of this student is still running (it holds the lock)
-        db.execute(text("SELECT GET_LOCK(:n, 0)"), {"n": f"exr-run:{u.id}"})
+    from app.models import User
+    with SessionLocal() as db:   # another check of this student is still running (its transaction holds the row lock)
+        db.scalar(select(User.id).where(User.id == u.id).with_for_update())
         r = submit(client, h, RIGHT)
-        db.execute(text("SELECT RELEASE_LOCK(:n)"), {"n": f"exr-run:{u.id}"})
+        db.rollback()
     assert r.status_code == 429 and r.json()["error"]["code"] == "check_in_progress"
     assert submit(client, h, RIGHT).status_code == 200
 

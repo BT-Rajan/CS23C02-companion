@@ -195,3 +195,29 @@ class ExerciseAttempt(Base):
     code_sha256: Mapped[str] = mapped_column(CHAR(64))
     created_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6))
     __table_args__ = (Index("ix_attempts_user_exercise", "user_id", "edition_id", "exercise_id"),)
+
+
+class AssessmentAttempt(Base):
+    """One attempt at a unit assessment (ADR 0009). The server owns the state: what was shown (layout), what was saved
+    (answers + a monotonic seq), and, after submit, the score and a snapshot of the results as they were shown."""
+    __tablename__ = "assessment_attempts"
+    id: Mapped[str] = mapped_column(CHAR(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id: Mapped[str] = mapped_column(CHAR(36), ForeignKey("users.id"))
+    edition_id: Mapped[str] = mapped_column(String(40), ForeignKey("editions.id"))
+    release_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("content_releases.id"))
+    assessment_id: Mapped[str] = mapped_column(String(16))
+    status: Mapped[str] = mapped_column(String(12))  # in_progress | submitted
+    seed: Mapped[int] = mapped_column(BigInteger)
+    layout: Mapped[list] = mapped_column(JSON)       # [{"item_id", "options": [ids in shown order]}]
+    answers: Mapped[dict] = mapped_column(JSON)      # {item_id: option_id}
+    seq: Mapped[int] = mapped_column(Integer, default=0)
+    started_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6))
+    expires_at: Mapped[datetime] = mapped_column(DATETIME(fsp=6))
+    submitted_at: Mapped[datetime | None] = mapped_column(DATETIME(fsp=6), nullable=True)
+    submit_request_id: Mapped[str | None] = mapped_column(CHAR(36), nullable=True)
+    auto_submitted: Mapped[bool] = mapped_column(Boolean, default=False)
+    score: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    max_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    result: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    __table_args__ = (CheckConstraint("status IN ('in_progress','submitted')", name="ck_attempt_status"),
+                      Index("ix_asm_attempts_user", "user_id", "edition_id", "assessment_id"))

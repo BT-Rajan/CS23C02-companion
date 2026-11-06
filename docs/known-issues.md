@@ -36,3 +36,6 @@
 | K33 | Sandbox per-job UIDs need the service to start as root on its own VM/container; started without root it serialises runs on one shared UID (development only), where the process limit is the user's existing tasks (threads) + 32 (found on CI: a flat 32, and then a process-only count, failed for the multithreaded CI agent) | Medium | Open (deployment, A8) |
 | K34 | Content-tools tests had never run in CI (only backend tests did); now run in the backend workflow | Low | **Closed** |
 | K35 | Debug SAMPLE exercises are graded on the phone by the stepper's recorder, which stops after 2,000 steps; real exercises are graded in the server sandbox | Info | Accepted (debug only) |
+| K36 | Lesson quizzes (`LSN.quiz`, purpose `lesson_quiz`) are not shown yet; unit assessments are | Low | Open |
+| K37 | Assessments support MCQ and trace questions only (no exercises inside an assessment) | Low | Open (decide whether units need graded programs in assessments) |
+| K38 | Assessment autosave failures are retried with the next answer or on submit; there is no background retry while the app is closed (answers chosen offline and never followed by a save are lost) | Low | Open |

@@ -15,13 +15,15 @@ data class SampleExerciseKey(@SerialName("hidden_tests") val hiddenTests: List<a
                              @SerialName("reference_solution") val referenceSolution: String = "")
 
 @Serializable
-data class SampleKeys(val items: Map<String, SampleKey>, val exercises: Map<String, SampleExerciseKey> = emptyMap())
+data class SampleKeys(val items: Map<String, SampleKey>, val exercises: Map<String, SampleExerciseKey> = emptyMap(),
+                      @SerialName("assessment_items") val assessmentItems: Map<String, SampleKey> = emptyMap())
 
 /**
  * Debug-only stand-in for POST /v1/practice/items/{id}/answer, with the SAME policy as backend/app/practice.py
  * (reveal after 2 wrong attempts or a right one), so the screens behave identically. Never used for book content.
  */
-class SamplePracticeChecker(private val keys: Map<String, SampleKey>, val exercises: Map<String, SampleExerciseKey> = emptyMap()) {
+class SamplePracticeChecker(private val keys: Map<String, SampleKey>, val exercises: Map<String, SampleExerciseKey> = emptyMap(),
+                            val assessmentKeys: Map<String, SampleKey> = emptyMap()) {
     private val wrong = HashMap<String, Int>()
 
     fun check(itemId: String, option: String): PracticeVerdict {
@@ -36,6 +38,7 @@ class SamplePracticeChecker(private val keys: Map<String, SampleKey>, val exerci
 
     companion object {
         const val REVEAL_AFTER = 2
-        fun parse(text: String) = ContentJson.decodeFromString(SampleKeys.serializer(), text).let { SamplePracticeChecker(it.items, it.exercises) }
+        fun parse(text: String) = ContentJson.decodeFromString(SampleKeys.serializer(), text)
+            .let { SamplePracticeChecker(it.items, it.exercises, it.assessmentItems) }
     }
 }

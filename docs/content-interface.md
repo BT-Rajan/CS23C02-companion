@@ -50,3 +50,8 @@ Content versions are immutable; a new version never reuses an ID for different m
 `ITM` items of type `mcq` or `trace` with `purpose: practice` are checked by `POST /v1/practice/items/{id}/answer`. A trace item
 carries `code` (the program it asks about) in the public package; its answer stays in the protected set. The build should verify
 that the correct option of a trace item is exactly what the program prints (known issue K30).
+
+## 7. Unit assessments (A7)
+A unit in `nav.json` may name its assessment: `{"id": "UNT-…", "assessment": "ASM-…"}`. That `ASM` must have `purpose:
+unit_assessment` and only `ITM` items with `purpose: assessment` of type `mcq` or `trace`; none of them may also appear in a lesson's
+practice list (its answer would be revealed before the assessment). `rules` may set `shuffle_items` and `shuffle_options`.

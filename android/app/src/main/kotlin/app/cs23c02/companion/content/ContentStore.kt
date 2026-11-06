@@ -27,6 +27,12 @@ class InstalledPackage(val manifest: Manifest, private val readFile: (FileEntry)
         ContentJson.decodeFromString(Exercise.serializer(), data.decodeToString()).also { exercises[id] = it }
     }
 
+    fun assessment(id: String): Assessment? = byPath["assessments/$id.json"]?.let { e ->
+        val data = readFile(e)
+        PackageVerifier.verifyFile(e, data)
+        ContentJson.decodeFromString(Assessment.serializer(), data.decodeToString())
+    }
+
     /** Lesson titles for lists, without parsing whole lessons repeatedly. */
     fun title(id: String): String = lesson(id)?.title ?: id
 }

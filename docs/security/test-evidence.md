@@ -159,3 +159,20 @@ match the file); it is now in place together with "release builds need CONTENT_S
 | **Real services:** app client → backend → sandbox service over signed HTTP: wrong/right/runaway submissions, hint release, solution after pass, pass in progress | `LiveBackendContractTest` |
 | On-device Run/grading prints exactly what the program printed (input echo off) — found while testing: the stepper's terminal-style echo would have marked correct sample answers wrong | `ExerciseTest`, runner test |
 **Not evidenced:** seccomp (not applied), sandbox under load, a separate sandbox host and mutual TLS (deployment, A8), third-party review.
+
+# Roadmap A7 — unit assessments
+| Area | Evidence |
+|---|---|
+| Server chooses and orders questions; options shuffled per attempt; stable within an attempt (D6) | `backend/tests/test_assessments.py` |
+| Nothing before submit reveals correctness: start, view and saves contain no answers or explanations (D1) | same |
+| Client cannot claim a score or answer outside its attempt (D3) | same |
+| Submit is idempotent; replay with other answers returns the stored result; saving after submit refused; stale autosaves (lower seq) refused (D4) | same, and live contract |
+| One attempt per 24 h after the last one, enforced on the server (D5; mutation: removing the rule fails 2 tests) | same |
+| **8 simultaneous Start requests create exactly one attempt** — found two real bugs while testing: a MySQL named lock released on a different pooled connection after commit, then a REPEATABLE READ snapshot hiding a concurrent attempt; fixed with a row lock and a locking read (mutation: removing the lock fails the test 3/3) | `test_simultaneous_starts_create_exactly_one_attempt` |
+| 3-hour expiry: saved answers are marked automatically | `test_an_expired_attempt_is_scored_from_its_saved_answers` |
+| Another student's attempt id behaves exactly like a missing one (C2) | `test_c2_…` |
+| Assessment questions never checkable as practice; builder refuses practice items in unit assessments and assessment items reused in practice | `test_assessment_items_are_never_checkable_as_practice`, `content-tools/tests/test_build.py` |
+| Exercise checks now use a transaction row lock (NOWAIT) instead of a named lock, so a crash can never leave a student locked out | `test_one_check_at_a_time_per_student` |
+| App: intro/attempt/result/review, autosave with seq, idempotent submit, Me screen; debug sample engine follows the same rules; practice checker cannot see assessment keys | `AssessmentTest` |
+| **Real backend:** start/resume, stale save refused, submit 3/3, idempotent resubmit, cooldown, history, best score in progress | `LiveBackendContractTest` |
+**Not built:** lesson quizzes (`LSN.quiz` → `lesson_quiz`), timed assessments beyond the 3-hour session, anomaly re-verification for account sharing (K9).

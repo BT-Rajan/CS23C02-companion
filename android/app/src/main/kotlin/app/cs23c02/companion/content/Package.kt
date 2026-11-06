@@ -19,7 +19,7 @@ data class BookInfo(val id: String, val title: String, val edition: String, val 
                     @SerialName("min_app_version") val minAppVersion: String, val python: String)
 
 @Serializable data class Nav(val units: List<NavUnit>)
-@Serializable data class NavUnit(val id: String, val title: String, val topics: List<NavTopic>)
+@Serializable data class NavUnit(val id: String, val title: String, val topics: List<NavTopic>, val assessment: String? = null)
 @Serializable data class NavTopic(val id: String, val title: String, val lessons: List<String>)
 @Serializable data class FileEntry(val path: String, val sha256: String, val size: Long)
 
@@ -75,3 +75,7 @@ data class Exercise(val id: String, val title: String, val statement: String, @S
 
 @Serializable
 data class PublicTest(val stdin: String, val expect: String)
+
+/** An assessment as shipped publicly: its ordered question ids and rules. Answers stay on the server. */
+@Serializable
+data class Assessment(val id: String, val title: String, val purpose: String, val items: List<String> = emptyList())
