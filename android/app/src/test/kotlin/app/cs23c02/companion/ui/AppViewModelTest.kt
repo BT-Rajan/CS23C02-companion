@@ -147,6 +147,17 @@ class AppViewModelTest {
         vm.back(); assertEquals(home, vm.state.value.screen)
     }
 
+    @Test fun previewTutorOpensFromWelcomeWithoutSignIn() {
+        val demos = app.cs23c02.companion.stepper.Recordings.parsePrograms(java.io.File("src/main/assets/stepper/demos.json").readText())
+        val vm = AppViewModel(ApiClient(server.url("/").toString(), store, OkHttpClient(), main), "Test phone", demos, previewTutor = true)
+        assertEquals(Screen.Welcome, vm.state.value.screen)
+        vm.openTutor()
+        assertTrue(vm.state.value.screen is Screen.Tutor)
+        vm.back()
+        assertEquals(Screen.Welcome, vm.state.value.screen)
+        assertEquals(0, server.requestCount)
+    }
+
     @Test fun signOutClearsTokens() {
         store.save(Tokens("A", "R", Long.MAX_VALUE))
         server.enqueue(MockResponse().setBody(meActive))

@@ -1,7 +1,7 @@
 name: android
 on:
   push:
-    paths: ["android/**", ".github/workflows/android.yml"]
+    paths: ["android/**", "runtime/**", ".github/workflows/android.yml"]
   workflow_dispatch:
 permissions:
   contents: write   # only to publish a short log tail to the ci-logs branch (ADR 0012)
@@ -26,6 +26,13 @@ jobs:
         run: |
           set -o pipefail
           gradle --no-daemon --console=plain :app:lintDebug :app:testDebugUnitTest :app:assembleDebug 2>&1 | tee /tmp/gradle.log
+      - name: Python runner in headless Chromium (asset-only origin, network blocked, watchdog, fallback)
+        working-directory: ${{ github.workspace }}
+        run: |
+          set -o pipefail
+          npm install --no-save --no-audit --no-fund playwright@1.49.1 2>&1 | tail -n 2
+          npx playwright install --with-deps chromium 2>&1 | tail -n 2
+          node android/runner-test/runner-test.cjs android/app/build/generated/assets/runnerAssets 2>&1 | tee /tmp/runner.log
       - name: Upload debug APK
         if: success()
         uses: actions/upload-artifact@v4

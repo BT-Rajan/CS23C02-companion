@@ -27,3 +27,10 @@ teaches it line by line; (2) when the student types it themselves, the tutor tra
 
 **Consequences.** Book programs need stable titles and optional `keywords`; `step_notes` stay optional. The tutor's checks are
 practice only and never affect progress or scores (ADR 0009).
+
+## Amendment (2026-11-06): the student's own code
+With on-device Python in place, **Write your own code** runs whatever the student types after a short pause and explains the line
+under the cursor (same explainer, same book references), shows plain-language error messages, and opens any version in the stepper,
+including programs that ask for input (the stepper asks, then continues where it paused). "I'll type it" gained **Step through my
+code as it is**, for stepping a half-finished or different attempt. A debug-only **Try the tutor (test build only)** entry on
+Welcome lets the owner try all of this on a phone without a server; release builds do not show it.

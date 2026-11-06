@@ -90,3 +90,17 @@ security boundary; worker/sandbox isolation (E1–E8) is tested in slice 3 and A
 | Auto-indent after `:` and inside blocks; pastes untouched | `AutoIndentTest` (6) |
 **Limits:** book references are from `runtime/tutor/constructs.sample.json` (marked "sample reference" in the app) until the book's
 construct registry and page map exist (book decision X4). The tutor checks are practice only and record nothing on the server.
+
+## A3 slice 3 — Python on the phone
+| Area | Evidence |
+|---|---|
+| Recorder runs unchanged in Pyodide 0.27.8 (CPython 3.12.7), incl. the bare-`except` stop | Node probe; `android/runner-test/runner-test.cjs` |
+| **Phone recording is identical to the build-time recording** (so what the book build verified is what students see) | runner test |
+| Only APK assets are served; no request leaves the app; no CSP violations (F3, F6-adjacent) | runner test (all other hosts refused, count checked) |
+| Python cannot import `js` or `pyodide` (no route to the browser API from student code) (E7) | runner test |
+| C-level hang (`10 ** (10 ** 7)`) is killed by the watchdog and the runner recovers (E1) | runner test |
+| In-page fallback gives the same recording | runner test (`?mode=page`) |
+| Live run → stepper; input → continue from the pause; syntax errors as results; friendly messages | `LiveRunTest` (6, real CPython via `CPythonRunner`) |
+| Checksum pin on the downloaded runtime (supply chain) | `runnerAssets` task fails on mismatch |
+**Not evidenced:** the WebView itself (shouldInterceptRequest for worker requests, blockNetworkLoads) on a real Android device,
+memory use, and speed on the Redmi. The Chromium test emulates the asset loader and the network block.

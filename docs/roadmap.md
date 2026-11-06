@@ -44,7 +44,7 @@ on-device Python runtime and its performance gate come before practice items.
 
 ## Order of work
 1. **A1 Android shell** — done (CI green).
-2. **A3 stepper + tutor** — recorder, stepper screen, and tutor (ask / show me / I'll type it, book references) done on 4 sample programs; **next: Pyodide on the phone** (step and tutor the student's own code) + performance gate; then A2.
+2. **A3 stepper + tutor** — recorder, stepper, tutor and **Python on the phone** (own code, live explanations, input) done; **waiting on the owner's Redmi numbers** (performance gate); then A2 (reader).
 3. **B2 tooling** in the book repo (registry, validator, code runner + stepper check from X2, extraction to App Content Package v0).
 4. **B1/B3** as soon as the syllabus (U1) arrives; then A4 → A7 alongside book writing (the long pole).
 

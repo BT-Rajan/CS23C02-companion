@@ -31,3 +31,15 @@ panel (changed values flash once, honouring reduce-motion), a Call stack row whe
 **Consequences.** The Pyodide runtime and its performance gate move earlier in the roadmap (A3, before practice items).
 The content package gains an optional `traces/` folder for build-time recordings. Trace questions get their stepping data from the
 same harness, so book decision X3's "trace data derived at build time" is satisfied by this ADR.
+
+## Amendment (2026-11-06): on-device runtime as built (slice 3)
+- **Pyodide 0.27.8 = CPython 3.12.7**, the book's pinned Python (A5). Downloaded from npm at build time, verified against a pinned
+  SHA-256 (`android/app/build.gradle.kts`, task `runnerAssets`), never committed. Adds ≈ 8.4 MB to the APK (9.7 → 18.1 MB debug).
+- Host: an invisible WebView; files only from APK assets (`WebViewAssetLoader`), everything else answered 403, `blockNetworkLoads`,
+  no file/content access, no navigation or windows, CSP `default-src 'none'`. One bridge object with three string callbacks.
+- Python runs in a **Web Worker**; a run that exceeds 8 s is stopped by terminating the worker and starting a fresh one. If a WebView
+  cannot start the worker, the page runs Python itself (same answers) and the app rebuilds the WebView when a run hangs.
+- The runtime loads only when a tutor screen opens (warm-up), and is freed when the screen model is cleared.
+- Measured in headless Chromium on the build machine: ready in ≈ 2.1 s (load + warm-up), a book program records in ≈ 20 ms, a
+  2,000-step runaway stops in ≈ 0.35 s, a C-level hang is killed at the 3 s test timeout and the runner is back in ≈ 1.7 s.
+  **The phone numbers (performance gate) are still to be measured on the Redmi.**

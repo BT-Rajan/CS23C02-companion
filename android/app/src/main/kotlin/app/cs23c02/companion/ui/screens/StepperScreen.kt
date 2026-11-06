@@ -55,10 +55,14 @@ private val SPEEDS = listOf(0.5f, 1f, 2f, 4f) // lines per second (ADR 0013)
 @Composable
 fun StepperScreen(program: StepProgram, onClose: () -> Unit) = StepperScreenAt(program, 0, onClose)
 
-/** [start] lets previews and screenshot tests open the stepper at a given step. */
+/**
+ * [start] opens at a given step (after input is supplied, the re-recorded program continues where it paused).
+ * [onInput] is set for programs recorded live on the phone: when the program waits for input(), a box asks for it.
+ */
 @Composable
-fun StepperScreenAt(program: StepProgram, start: Int, onClose: () -> Unit = {}) {
-    var position by rememberSaveable(program.id) { mutableIntStateOf(start) }
+fun StepperScreenAt(program: StepProgram, start: Int, onClose: () -> Unit = {}, onInput: ((String) -> Unit)? = null,
+                    busy: Boolean = false, error: String? = null) {
+    var position by rememberSaveable(program.id, program.stdin, program.recording.steps.size) { mutableIntStateOf(start) }
     var playing by rememberSaveable { mutableStateOf(false) }
     var speedIndex by rememberSaveable { mutableIntStateOf(1) }
     val s = StepperState(program, position)
@@ -88,6 +92,8 @@ fun StepperScreenAt(program: StepProgram, start: Int, onClose: () -> Unit = {}) 
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
                 )
+                if (s.atEnd && program.recording.status == "needs_input" && onInput != null) InputBox(busy, onInput)
+                error?.let { Message(it, isError = true) }
                 s.currentLine?.let { n -> LineTutorCard(program.lineInfo(n)?.explain, s.note, program.refsFor(n)) }
                 VariablesPanel(s.frames, s.changed, s.step?.value?.let { "${s.frames.lastOrNull()?.name} returns ${it.r}" })
                 OutputPanel(s.outputSoFar)
@@ -221,6 +227,16 @@ private fun VariablesPanel(frames: List<Frame>, changed: Set<String>, returning:
             }
         }
         returning?.let { Text(it, fontFamily = CodeFont, color = c.primary) }
+    }
+}
+
+@Composable
+private fun InputBox(busy: Boolean, onInput: (String) -> Unit) {
+    var line by rememberSaveable { mutableStateOf("") }
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        androidx.compose.material3.OutlinedTextField(line, { line = it.replace("\n", "") }, label = { Text("Type what the program asks for") },
+            singleLine = true, modifier = Modifier.fillMaxWidth())
+        PrimaryButton("Send", busy) { onInput(line); line = "" }
     }
 }
 

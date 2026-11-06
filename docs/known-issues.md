@@ -3,7 +3,7 @@
 |---|---|---|---|
 | K1 | Zigora test suite, dependency CVE scan and secret scan not yet run | Info | Open |
 | K2 | Textbook repo has an architecture draft but no chapters or items; several decisions (P1–P9) pending; app package schema unvalidated against real content | High (blocks real-content work in Phases 3–4) | Open |
-| K3 | Pyodide performance on low-end devices unmeasured | Medium | Open (gate in Phase 5) |
+| K3 | Pyodide performance on low-end devices unmeasured (desktop Chromium: ready ≈ 2.1 s, run ≈ 20 ms) | Medium | Open: owner to read the numbers shown on "Write your own code" in the debug build on the Redmi |
 | K4 | Printing/code-handoff process undefined | Medium | Open |
 | K5 | Classic PAT with broad scopes shared in chat | High | Open — owner to rotate |
 | K6 | Gmail SMTP path untested against a real account; consumer Gmail has daily send limits | Medium | Open (needs credentials; ADR 0011) |
@@ -23,3 +23,6 @@
 | K20 | Live-backend contract test runs locally only (needs MySQL); not yet in CI | Low | Open (add a CI job with the MySQL service) |
 | K21 | Activation by camera scan (journey J1) not built; typing and paste only | Low | Open (after A2) |
 | K22 | Certificate pinning is wired but untested against a real certificate (no staging host) | Medium | Open (A8) |
+| K23 | Whether Android WebView routes a Web Worker's requests through the asset loader is unverified; if not, the runner falls back to in-page Python (watchdog then rebuilds the WebView, slower recovery) | Medium | Open: the debug header shows "(worker)" or "(page)" |
+| K24 | APK grows by ≈ 8.4 MB for the Python runtime (18.1 MB debug) | Low | Accepted (offline Python, no server cost); revisit with an app bundle / on-demand delivery |
+| K25 | Book references are sample data until the book's construct registry and page map exist (book X4) | Medium | Open (book side) |

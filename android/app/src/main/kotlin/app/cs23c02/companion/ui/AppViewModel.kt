@@ -26,7 +26,10 @@ sealed interface Screen {
     data class Reset(val email: String) : Screen
     data object Activate : Screen
     data class Home(val me: Me) : Screen
-    data class Stepper(val program: StepProgram, val back: Screen) : Screen
+    /** [start]: step to open at; [live]: recorded on the phone just now (so input can be supplied and re-run). */
+    data class Stepper(val program: StepProgram, val back: Screen, val start: Int = 0, val live: Boolean = false) : Screen
+    /** Free coding with live explanations (needs on-device Python). */
+    data class Playground(val back: Screen) : Screen
     /** ADR 0014: ask for a program, then "Show me" or "I'll type it". */
     data class Tutor(val back: Screen) : Screen
     data class TypeIt(val program: StepProgram, val back: Screen) : Screen
@@ -50,6 +53,10 @@ class AppViewModel(
     private val deviceLabel: String,
     /** Built-in stepper demos (assets/stepper/demos.json) until lesson content arrives (A2/A4). */
     val demos: List<StepProgram> = emptyList(),
+    /** Debug builds only: open the tutor from Welcome so it can be tried on a phone without a server. */
+    val previewTutor: Boolean = false,
+    /** On-device Python (ADR 0013 slice 3); null where unavailable (e.g. JVM tests). */
+    val runner: app.cs23c02.companion.runner.PythonRunner? = null,
 ) : ViewModel() {
     private val _state = MutableStateFlow(UiState())
     val state: StateFlow<UiState> = _state.asStateFlow()
@@ -73,11 +80,45 @@ class AppViewModel(
         val p = demos.firstOrNull { it.id == id } ?: return
         go(Screen.Stepper(p, _state.value.screen))
     }
-    fun openTutor() = go(Screen.Tutor(_state.value.screen))
+    fun openTutor() { runner?.warmUp(); go(Screen.Tutor(_state.value.screen)) }
     fun openTypeIt(id: String) {
         val p = demos.firstOrNull { it.id == id } ?: return
+        runner?.warmUp()
         go(Screen.TypeIt(p, _state.value.screen))
     }
+    fun openPlayground() { runner?.warmUp(); go(Screen.Playground(_state.value.screen)) }
+
+    /** Record the student's own code on the phone and open it in the stepper. */
+    fun stepThroughCode(title: String, source: String, stdin: String = "") {
+        val r = runner ?: return
+        if (_state.value.busy) return
+        val from = _state.value.screen
+        _state.update { it.copy(busy = true, error = null) }
+        viewModelScope.launch {
+            val res = try { r.run(source, stdin) } catch (e: Exception) {
+                _state.update { it.copy(busy = false, error = "Python is not ready yet. Try again in a moment.") }; return@launch
+            }
+            go(Screen.Stepper(res.toProgram(title, source, stdin), from, live = true))
+        }
+    }
+
+    /** The live program stopped at input(): add the student's line and record again, continuing where it paused. */
+    fun provideInput(line: String) {
+        val st = _state.value.screen as? Screen.Stepper ?: return
+        val r = runner ?: return
+        if (!st.live || _state.value.busy) return
+        val p = st.program
+        val stdin = if (p.stdin.isEmpty()) line else p.stdin + "\n" + line
+        _state.update { it.copy(busy = true, error = null) }
+        viewModelScope.launch {
+            val res = try { r.run(p.source, stdin) } catch (e: Exception) {
+                _state.update { it.copy(busy = false, error = "Python is not ready yet. Try again in a moment.") }; return@launch
+            }
+            go(Screen.Stepper(res.toProgram(p.title, p.source, stdin), st.back, start = p.recording.steps.size, live = true))
+        }
+    }
+
+    override fun onCleared() { runner?.close() }
 
     /** System back. Returns false when the app should close. */
     fun back(): Boolean {
@@ -90,6 +131,7 @@ class AppViewModel(
             is Screen.Reset -> go(Screen.Forgot(s.email))
             is Screen.Stepper -> go(s.back)
             is Screen.Tutor -> go(s.back)
+            is Screen.Playground -> go(s.back)
             is Screen.TypeIt -> go(s.back)
             else -> return false
         }

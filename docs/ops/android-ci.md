@@ -24,3 +24,11 @@ and the keyboard behave, and back works. Running the full flow on a phone needs 
 - `android/scripts/contract-test.sh`: the app's API client against a real backend (needs MySQL and `backend/.venv`).
 - `gradle :app:testDebugUnitTest -Pscreenshots --tests '*ScreenshotTest*'`: PNGs in `android/app/build/screens`
   (set `ROBOLECTRIC_REPO` to a Maven Central mirror if Central throttles downloads).
+
+## Trying the tutor and measuring Python on the phone (debug build)
+1. Install the latest `app-debug-apk`. On Welcome tap **Try the tutor (test build only)** (no account or server needed).
+2. **Ask for a program** → pick one → **Show me** (step through) or **I'll type it** (the tutor checks each line).
+3. **Write your own code**: the header first says "Getting Python ready…", then **"Python ready in X s (worker|page) · last run Y ms"**.
+   Please send those numbers, whether it says *worker* or *page*, and how typing and stepping feel. They are the performance gate
+   (ADR 0006: ready ≤ 3 s after warm-up; smooth on a 3 GB phone).
+4. Try a program with `input()`: the stepper asks for the input and continues.

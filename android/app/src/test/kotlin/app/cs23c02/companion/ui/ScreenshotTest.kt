@@ -113,5 +113,32 @@ class ScreenshotTest {
         app.cs23c02.companion.ui.screens.TypeItScreen(total, {}, {}, initialText = total.source)
     }
 
+    private val py = app.cs23c02.companion.runner.CPythonRunner()
+
+    @Test fun playgroundExplainsTheCursorLine() {
+        val src = "marks = [72, 85, 64]\nbest = 0\nfor m in marks:\n    if m > best:\n        best = m\nprint(best)"
+        val live = kotlinx.coroutines.runBlocking { py.run(src, "") }
+        shot("17-playground") {
+            app.cs23c02.companion.ui.screens.PlaygroundScreen(py, { _, _ -> }, {}, initialText = "marks = [72, 85, 64]\nbest = 0\nfor m in marks:\n    if m > best:", initialLive = live)
+        }
+    }
+
+    @Test fun playgroundShowsAFriendlyError() {
+        val src = "total = 0\nfor m in [1, 2]\n    total += m\n"
+        val live = kotlinx.coroutines.runBlocking { py.run(src, "") }
+        shot("18-playground-error") { app.cs23c02.companion.ui.screens.PlaygroundScreen(py, { _, _ -> }, {}, initialText = src, initialLive = live) }
+    }
+
+    @Test fun liveStepperAsksForInput() {
+        val src = "name = input('Your name? ')\nprint('Hello', name)\n"
+        val live = kotlinx.coroutines.runBlocking { py.run(src, "") }
+        val prog = live.toProgram("Your own code", src, "")
+        shot("19-stepper-input") { app.cs23c02.companion.ui.screens.StepperScreenAt(prog, prog.recording.steps.size, onInput = {}) }
+    }
+
+    @Test fun welcomeWithPreviewTutor() = shot("20-welcome-preview") {
+        WelcomeScreen(AppViewModel(ApiClient("https://api.invalid", InMemoryTokenStore()), "test", demos, previewTutor = true))
+    }
+
     @Test @Config(fontScale = 2.0f) fun largeFontSignIn() = shot("08-sign-in-200pct-font") { SignInScreen(vm, UiState(Screen.SignIn, error = "Email or password is incorrect.")) }
 }

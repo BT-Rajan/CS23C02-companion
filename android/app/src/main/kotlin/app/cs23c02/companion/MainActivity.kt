@@ -30,7 +30,9 @@ import app.cs23c02.companion.ui.screens.ResetScreen
 import app.cs23c02.companion.ui.screens.SignInScreen
 import app.cs23c02.companion.ui.screens.VerifyEmailScreen
 import app.cs23c02.companion.ui.screens.WelcomeScreen
-import app.cs23c02.companion.ui.screens.StepperScreen
+import app.cs23c02.companion.ui.screens.StepperScreenAt
+import app.cs23c02.companion.ui.screens.PlaygroundScreen
+import app.cs23c02.companion.runner.PyodideRunner
 import app.cs23c02.companion.ui.screens.TutorScreen
 import app.cs23c02.companion.ui.screens.TypeItScreen
 import app.cs23c02.companion.stepper.Recordings
@@ -59,7 +61,8 @@ class MainActivity : ComponentActivity() {
                 val demos = runCatching {
                     Recordings.parsePrograms(assets.open("stepper/demos.json").bufferedReader().use { it.readText() })
                 }.getOrDefault(emptyList())
-                return AppViewModel(api, "${Build.MANUFACTURER} ${Build.MODEL}".take(80), demos) as T
+                return AppViewModel(api, "${Build.MANUFACTURER} ${Build.MODEL}".take(80), demos, previewTutor = BuildConfig.DEBUG,
+                    runner = PyodideRunner(applicationContext)) as T
             }
         }
         setContent {
@@ -69,7 +72,7 @@ class MainActivity : ComponentActivity() {
                     val s by vm.state.collectAsStateWithLifecycle()
                     val canGoBack = s.screen is Screen.CreateAccount || s.screen is Screen.SignIn || s.screen is Screen.VerifyEmail ||
                         s.screen is Screen.Forgot || s.screen is Screen.Reset || s.screen is Screen.Stepper ||
-                        s.screen is Screen.Tutor || s.screen is Screen.TypeIt
+                        s.screen is Screen.Tutor || s.screen is Screen.TypeIt || s.screen is Screen.Playground
                     BackHandler(enabled = canGoBack) { vm.back() }
                     Surface(Modifier.fillMaxSize().safeDrawingPadding(), color = MaterialTheme.colorScheme.background) {
                         when (val sc = s.screen) {
@@ -83,9 +86,14 @@ class MainActivity : ComponentActivity() {
                             is Screen.Reset -> ResetScreen(vm, s, sc.email)
                             Screen.Activate -> ActivateScreen(vm, s)
                             is Screen.Home -> HomeScreen(vm, s, sc.me)
-                            is Screen.Stepper -> StepperScreen(sc.program) { vm.back() }
-                            is Screen.Tutor -> TutorScreen(vm.demos, onShowMe = vm::openStepper, onTypeIt = vm::openTypeIt, onClose = { vm.back() })
-                            is Screen.TypeIt -> TypeItScreen(sc.program, onStepThrough = { vm.openStepper(sc.program.id) }, onClose = { vm.back() })
+                            is Screen.Stepper -> StepperScreenAt(sc.program, sc.start, onClose = { vm.back() },
+                                onInput = if (sc.live) vm::provideInput else null, busy = s.busy, error = s.error)
+                            is Screen.Tutor -> TutorScreen(vm.demos, onShowMe = vm::openStepper, onTypeIt = vm::openTypeIt, onClose = { vm.back() },
+                                onOwnCode = vm.runner?.let { { vm.openPlayground() } })
+                            is Screen.TypeIt -> TypeItScreen(sc.program, onStepThrough = { vm.openStepper(sc.program.id) }, onClose = { vm.back() },
+                                onRunMine = vm.runner?.let { { src: String -> vm.stepThroughCode("Your version of ${sc.program.title}", src) } }, busy = s.busy)
+                            is Screen.Playground -> PlaygroundScreen(vm.runner!!, onStepThrough = { src, inp -> vm.stepThroughCode("Your own code", src, inp) },
+                                onClose = { vm.back() }, busy = s.busy, showTiming = BuildConfig.DEBUG)
                         }
                     }
                 }

@@ -55,7 +55,8 @@ import app.cs23c02.companion.ui.theme.CodeFont
 
 /** ADR 0014 §1: "Which program do you want?" — the student's own words, matched against the book's programs. */
 @Composable
-fun TutorScreen(programs: List<StepProgram>, onShowMe: (String) -> Unit, onTypeIt: (String) -> Unit, onClose: () -> Unit) {
+fun TutorScreen(programs: List<StepProgram>, onShowMe: (String) -> Unit, onTypeIt: (String) -> Unit, onClose: () -> Unit,
+                onOwnCode: (() -> Unit)? = null) {
     var query by rememberSaveable { mutableStateOf("") }
     val results = ProgramSearch.search(query, programs)
     Box(Modifier.fillMaxSize().imePadding(), contentAlignment = Alignment.TopCenter) {
@@ -72,6 +73,12 @@ fun TutorScreen(programs: List<StepProgram>, onShowMe: (String) -> Unit, onTypeI
                     style = MaterialTheme.typography.bodyLarge)
             }
             (results.ifEmpty { programs }).forEach { p -> ProgramCard(p, onShowMe, onTypeIt) }
+            if (onOwnCode != null) {
+                Text("Or write your own program", style = MaterialTheme.typography.titleMedium)
+                Text("Type any Python. The tutor explains each line, points to the book, and lets you step through it.",
+                    style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                OutlinedButton(onClick = onOwnCode, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Write your own code") }
+            }
         }
     }
 }
@@ -96,14 +103,15 @@ private fun StepProgram.mainRef() = refs.values.maxByOrNull { r ->
     r.section.split('.').mapNotNull { it.toIntOrNull() }.let { (it.getOrElse(0) { 0 }) * 100 + it.getOrElse(1) { 0 } }
 }
 
-private val SYMBOLS = listOf(":", "(", ")", "[", "]", "\"", "=", "+", "#")
+internal val SYMBOLS = listOf(":", "(", ")", "[", "]", "\"", "=", "+", "#")
 
 /**
  * ADR 0014 §3: the student types the book's program; the tutor panel follows every keystroke.
  * Enter keeps the indentation of the line above and adds 4 spaces after a line ending with ':'.
  */
 @Composable
-fun TypeItScreen(program: StepProgram, onStepThrough: () -> Unit, onClose: () -> Unit, initialText: String = "") {
+fun TypeItScreen(program: StepProgram, onStepThrough: () -> Unit, onClose: () -> Unit, initialText: String = "",
+                 onRunMine: ((String) -> Unit)? = null, busy: Boolean = false) {
     val tutor = remember(program.id) { GuidedTyping(program) }
     var text by remember(program.id) { mutableStateOf(TextFieldValue(initialText, TextRange(initialText.length))) }
     var hintFor by rememberSaveable { mutableIntStateOf(-1) }
@@ -139,6 +147,11 @@ fun TypeItScreen(program: StepProgram, onStepThrough: () -> Unit, onClose: () ->
                     },
                     onStepThrough = onStepThrough)
                 Editor(text, g.checks.associate { it.editorLine to it.verdict }) { nv -> text = autoIndent(text, nv) }
+                if (onRunMine != null && text.text.isNotBlank() && g.focus != Focus.Done) {
+                    OutlinedButton(onClick = { onRunMine(text.text) }, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                        Text(if (busy) "Running…" else "Step through my code as it is")
+                    }
+                }
             }
             Surface(tonalElevation = 3.dp, modifier = Modifier.fillMaxWidth()) {
                 Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp, vertical = 4.dp),
@@ -230,7 +243,7 @@ private fun TutorPanel(
 
 /** Monospace editor with a gutter: line number plus ✓ (right), ! (needs attention). Marks are text, not colour alone. */
 @Composable
-private fun Editor(value: TextFieldValue, marks: Map<Int, Verdict>, onChange: (TextFieldValue) -> Unit) {
+internal fun Editor(value: TextFieldValue, marks: Map<Int, Verdict>, onChange: (TextFieldValue) -> Unit) {
     val c = MaterialTheme.colorScheme
     val style = TextStyle(fontFamily = CodeFont, fontSize = 16.sp, lineHeight = 24.sp, color = c.onSurface)
     val count = value.text.count { it == '\n' } + 1

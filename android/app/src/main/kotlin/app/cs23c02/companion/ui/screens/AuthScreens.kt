@@ -58,6 +58,9 @@ fun WelcomeScreen(vm: AppViewModel) {
             Spacer(Modifier.height(8.dp))
             PrimaryButton("Create account", busy = false) { vm.openCreateAccount() }
             OutlinedButton(onClick = { vm.openSignIn() }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Sign in") }
+            if (vm.previewTutor && vm.demos.isNotEmpty()) {
+                QuietButton("Try the tutor (test build only)") { vm.openTutor() }
+            }
         }
     }
 }

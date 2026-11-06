@@ -1,8 +1,67 @@
+import java.net.URI
+import java.security.MessageDigest
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
     id("org.jetbrains.kotlin.plugin.serialization")
+}
+
+// ---- Python runner assets (ADR 0013 slice 3) ------------------------------------------------------------------------------
+// Pyodide is downloaded from npm at build time (never committed) and checked against a pinned SHA-256; any mismatch fails the
+// build. 0.27.x = CPython 3.12, the same Python the book build pins (A5). Our recorder/explainer are copied from runtime/.
+abstract class RunnerAssetsTask : DefaultTask() {
+    @get:Input abstract val pyodideVersion: Property<String>
+    @get:Input abstract val pyodideSha256: Property<String>
+    @get:InputDirectory abstract val webDir: DirectoryProperty
+    @get:InputFiles abstract val pythonFiles: ConfigurableFileCollection
+    @get:Internal abstract val cacheDir: DirectoryProperty
+    @get:OutputDirectory abstract val outputDir: DirectoryProperty
+    @get:Inject abstract val fs: FileSystemOperations
+    @get:Inject abstract val archives: ArchiveOperations
+
+    private fun sha256(f: File): String = MessageDigest.getInstance("SHA-256")
+        .digest(f.readBytes()).joinToString("") { "%02x".format(it) }
+
+    @TaskAction fun build() {
+        val v = pyodideVersion.get()
+        val tgz = cacheDir.get().file("pyodide-$v.tgz").asFile
+        if (!tgz.exists() || sha256(tgz) != pyodideSha256.get()) {
+            tgz.parentFile.mkdirs()
+            val url = System.getenv("PYODIDE_URL") ?: "https://registry.npmjs.org/pyodide/-/pyodide-$v.tgz"
+            logger.lifecycle("Downloading Pyodide $v from $url")
+            URI(url).toURL().openStream().use { i -> tgz.outputStream().use { o -> i.copyTo(o) } }
+            val got = sha256(tgz)
+            if (got != pyodideSha256.get()) { tgz.delete(); throw GradleException("Pyodide $v checksum mismatch: $got") }
+        }
+        val keep = setOf("pyodide.js", "pyodide.asm.js", "pyodide.asm.wasm", "python_stdlib.zip", "pyodide-lock.json")
+        val out = outputDir.get().dir("runner").asFile
+        fs.sync {
+            into(out)
+            from(webDir)
+            from(pythonFiles) { into("py") }
+            from(archives.tarTree(archives.gzip(tgz))) {
+                include { it.isDirectory || it.name in keep }
+                eachFile { path = "pyodide/$name" }
+                includeEmptyDirs = false
+            }
+        }
+    }
+}
+
+val runnerAssets = tasks.register<RunnerAssetsTask>("runnerAssets") {
+    pyodideVersion.set("0.27.8")
+    pyodideSha256.set("2595c4b6800f8fc21d1e9b5222b3b3458b479b5f55fd241fee9ec6be0ad7edae")
+    webDir.set(layout.projectDirectory.dir("src/main/runner"))
+    pythonFiles.from(rootProject.file("../runtime/stepper/stepper.py"), rootProject.file("../runtime/tutor/explain.py"),
+        rootProject.file("../runtime/tutor/live.py"), rootProject.file("../runtime/tutor/constructs.sample.json"))
+    cacheDir.set(layout.buildDirectory.dir("downloads"))
+    outputDir.set(layout.buildDirectory.dir("generated/runnerAssets"))
+}
+
+androidComponents {
+    onVariants { variant -> variant.sources.assets?.addGeneratedSourceDirectory(runnerAssets, RunnerAssetsTask::outputDir) }
 }
 
 // ---- Build-time configuration (ADR 0007 amendment) ------------------------------------------------------------------------
@@ -93,6 +152,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("androidx.webkit:webkit:1.12.1")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
     testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
