@@ -1,4 +1,4 @@
-run: 42213730306  sha: 047dc3e4b3688043e71ac25326f93f4effc3c1fd  job: success
+run: 42216488992  sha: 4673d4fb907f330a731d4971fe3fbb88ef8a09f5  job: success
 
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.10.2/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
 Daemon will be stopped at the end of the build 
@@ -17,8 +17,8 @@ Daemon will be stopped at the end of the build
 > Task :app:parseDebugLocalResources
 > Task :app:processDebugMainManifest
 > Task :app:processDebugManifest
-> Task :app:javaPreCompileDebug
 > Task :app:processDebugManifestForPackage
+> Task :app:javaPreCompileDebug
 > Task :app:preDebugAndroidTestBuild SKIPPED
 > Task :app:generateDebugAndroidTestResValues
 > Task :app:extractProguardFiles
@@ -29,8 +29,8 @@ Daemon will be stopped at the end of the build
 > Task :app:generateDebugAssets UP-TO-DATE
 > Task :app:mergeDebugAssets
 > Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
-> Task :app:compressDebugAssets
 > Task :app:desugarDebugFileDependencies
+> Task :app:compressDebugAssets
 > Task :app:processDebugResources
 > Task :app:checkDebugDuplicateClasses
 > Task :app:packageDebugUnitTestForUnitTest
@@ -79,7 +79,7 @@ Unable to strip the following libraries, packaging them as they are: libandroidx
 Wrote HTML report to file:///home/runner/work/CS23C02-companion/CS23C02-companion/android/app/build/reports/lint-results-debug.html
 
 > Task :app:lintDebug
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1793966122896.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1793967454144.json
 
-BUILD SUCCESSFUL in 1m 42s
+BUILD SUCCESSFUL in 2m 20s
 55 actionable tasks: 55 executed
