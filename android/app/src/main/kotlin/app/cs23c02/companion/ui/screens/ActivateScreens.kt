@@ -23,6 +23,10 @@ import app.cs23c02.companion.core.ActivationCode
 import app.cs23c02.companion.ui.AppViewModel
 import app.cs23c02.companion.ui.UiState
 import app.cs23c02.companion.ui.theme.CodeFont
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.unit.dp
+
+private fun Modifier.heightIn48() = heightIn(min = 48.dp)
 
 /** Screen 5. Accepts paste and any spacing/case; groups as XXXX-XXXX-XXXX-XXXX; flags a typo the moment 16 characters are in. */
 @Composable
@@ -64,10 +68,16 @@ fun ActivateScreen(vm: AppViewModel, s: UiState) {
 fun HomeScreen(vm: AppViewModel, s: UiState, me: app.cs23c02.companion.api.Me) {
     FormPage("You're all set", lead = "Signed in as ${me.email}.", error = s.error, info = s.info) {
         me.entitlements.forEach { Message("Activated: ${it.title}", isError = false) }
-        Text(
-            "Lessons and the line-by-line code stepper arrive in the next updates of this test build.",
-            style = MaterialTheme.typography.bodyLarge,
-        )
+        if (vm.demos.isNotEmpty()) {
+            Text("Watch Python run line by line", style = MaterialTheme.typography.titleMedium)
+            Text("Demo programs (not book lessons). Step through each one and watch the variables change.",
+                style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            vm.demos.forEach { d ->
+                androidx.compose.material3.OutlinedButton(onClick = { vm.openStepper(d.id) },
+                    modifier = Modifier.fillMaxWidth().heightIn48()) { Text(d.title) }
+            }
+        }
+        Text("Lessons arrive in the next update of this test build.", style = MaterialTheme.typography.bodyLarge)
         QuietButton("Sign out", enabled = !s.busy) { vm.signOut() }
     }
 }

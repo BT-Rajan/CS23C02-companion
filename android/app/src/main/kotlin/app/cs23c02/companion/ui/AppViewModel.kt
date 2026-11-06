@@ -7,6 +7,7 @@ import app.cs23c02.companion.api.ApiError
 import app.cs23c02.companion.api.Me
 import app.cs23c02.companion.core.ActivationCode
 import app.cs23c02.companion.core.Validation
+import app.cs23c02.companion.stepper.StepProgram
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,6 +26,7 @@ sealed interface Screen {
     data class Reset(val email: String) : Screen
     data object Activate : Screen
     data class Home(val me: Me) : Screen
+    data class Stepper(val program: StepProgram, val back: Screen) : Screen
 }
 
 data class UiState(
@@ -40,7 +42,12 @@ data class UiState(
     val lastEmail: String = "",
 )
 
-class AppViewModel(private val api: ApiClient, private val deviceLabel: String) : ViewModel() {
+class AppViewModel(
+    private val api: ApiClient,
+    private val deviceLabel: String,
+    /** Built-in stepper demos (assets/stepper/demos.json) until lesson content arrives (A2/A4). */
+    val demos: List<StepProgram> = emptyList(),
+) : ViewModel() {
     private val _state = MutableStateFlow(UiState())
     val state: StateFlow<UiState> = _state.asStateFlow()
 
@@ -59,6 +66,10 @@ class AppViewModel(private val api: ApiClient, private val deviceLabel: String) 
     fun openCreateAccount() = go(Screen.CreateAccount)
     fun openSignIn() = go(Screen.SignIn)
     fun openForgot(email: String) = go(Screen.Forgot(email.trim()))
+    fun openStepper(id: String) {
+        val p = demos.firstOrNull { it.id == id } ?: return
+        go(Screen.Stepper(p, _state.value.screen))
+    }
 
     /** System back. Returns false when the app should close. */
     fun back(): Boolean {
@@ -69,6 +80,7 @@ class AppViewModel(private val api: ApiClient, private val deviceLabel: String) 
             is Screen.VerifyEmail -> { pendingPassword = null; go(Screen.Welcome) }
             is Screen.Forgot -> go(Screen.SignIn)
             is Screen.Reset -> go(Screen.Forgot(s.email))
+            is Screen.Stepper -> go(s.back)
             else -> return false
         }
         return true

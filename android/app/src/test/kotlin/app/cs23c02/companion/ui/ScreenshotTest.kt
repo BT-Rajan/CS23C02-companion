@@ -69,5 +69,29 @@ class ScreenshotTest {
 
     @Test fun home() = shot("07-home") { HomeScreen(vm, UiState(Screen.Home(me)), me) }
 
+    private val demos by lazy {
+        app.cs23c02.companion.stepper.Recordings.parsePrograms(java.io.File("src/main/assets/stepper/demos.json").readText())
+    }
+
+    @Composable
+    private fun StepAt(id: String, position: Int) {
+        // Drive the screen to a position by replaying taps is slow in Robolectric; render the state directly instead.
+        app.cs23c02.companion.ui.screens.StepperScreenAt(demos.single { it.id == id }, position)
+    }
+
+    @Test fun stepperLoop() {
+        shot("09-stepper-loop") { StepAt("running-total", 4) }
+        shot("09-stepper-loop-dark", dark = true) { StepAt("running-total", 9) }
+    }
+
+    @Test fun stepperFunctionCall() = shot("10-stepper-call") { StepAt("function-call", 5) }
+
+    @Test fun stepperRecursion() = shot("11-stepper-recursion") { StepAt("recursion", 12) }
+
+    @Test fun homeWithDemos() = shot("12-home-demos") {
+        val vmWithDemos = AppViewModel(ApiClient("https://api.invalid", InMemoryTokenStore()), "test", demos)
+        HomeScreen(vmWithDemos, UiState(Screen.Home(me)), me)
+    }
+
     @Test @Config(fontScale = 2.0f) fun largeFontSignIn() = shot("08-sign-in-200pct-font") { SignInScreen(vm, UiState(Screen.SignIn, error = "Email or password is incorrect.")) }
 }

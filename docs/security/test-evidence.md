@@ -67,3 +67,16 @@ Result: **35 Android JVM tests** (34 run on every build, plus the live-backend c
 | Screens render in light, dark, 200 % font on 360×640 dp | `ScreenshotTest` (`-Pscreenshots`), images in the CI `screens` artifact |
 **Not evidenced:** behaviour on a real phone (K17), Keystore token encryption on a device (JVM tests use the in-memory store),
 certificate pinning against a real certificate (no staging host yet; F9), TalkBack walkthrough.
+
+# Roadmap A3 — line-by-line stepper, slices 1–2
+| Area | Evidence |
+|---|---|
+| Real execution recorded per line: stack, variables, changed names, output offsets, return values, exceptions | `runtime/tests/test_stepper.py` (29 tests, 3.12 and 3.13) |
+| Runaway programs: infinite loop → `step_limit`; slow loop → `time_limit`; print flood → `output_limit` (E1, E3 at recorder level) | same |
+| **A program cannot swallow the stop** (bare `except:`; "keep asking" input loop) — found during testing: a `sys.settrace` hook is switched off by CPython when it raises, so the recorder was rebuilt on `sys.monitoring` | `test_program_cannot_swallow_the_stop`, `test_bare_except_around_input_cannot_hang` |
+| Imports limited to the ADR 0006 list; `open/eval/exec/compile/breakpoint` absent (E7, convenience only) | `test_import_allow_list`, `test_dangerous_builtins_are_absent` |
+| Determinism (seeded `random`, memory addresses stripped) so the book build can reject nondeterministic examples (X2) | `test_runs_are_deterministic_including_random`, CLI tests |
+| Committed demo recordings always equal the recorder's output | `test_committed_demo_recordings_match_the_recorder` |
+| App parses the harness output; forward/back exact; narration, notes, frames, endings | `StepperStateTest` (10), `AppViewModelTest.stepperOpensFromHomeAndBackReturns` |
+**Not evidenced:** recording on the phone (Pyodide), speed on the Redmi, TalkBack walkthrough of the stepper. The recorder is not a
+security boundary; worker/sandbox isolation (E1–E8) is tested in slice 3 and A6.

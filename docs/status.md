@@ -20,6 +20,8 @@ Legend: **Proposed** (designed, not built) · **Incomplete** · **Implemented** 
 | Assessments, execution | Not started | – |
 | Android build loop (push → GitHub Actions → lint, unit test, debug APK → result read via API / ci-logs branch) | Implemented, **proven** with a hello-world app | run 41913367690 |
 | Android shell (A1): welcome, create account, verify, sign in, forgot/reset, activate, A1 home; Keystore-encrypted tokens; single-flight refresh; OkHttp pinning (2 pins required for release); no backup/transfer | Implemented, Tested (35 JVM tests incl. live-backend contract); **not yet run on a real phone** | `docs/security/test-evidence.md` (A1) |
-| Line-by-line stepper (ADR 0013) | Proposed → next (A3) | – |
+| Stepper slice 1: recorder harness `runtime/stepper` (sys.monitoring; limits; input; determinism; allow-list; book-build CLI check) | Implemented, Tested (29 tests, CPython 3.12 + 3.13; CI `runtime`) | `runtime/README.md` |
+| Stepper slice 2: Android stepper screen (Step / Back / Play / speed / slider, current + previous line markers, narration, call stack, variables with changes, output, author notes) replaying **build-time recordings of 3 demo programs** | Implemented, Tested (10 replay-logic tests on the real asset, screenshots); **not yet on a real phone** | `docs/security/test-evidence.md` (A3) |
+| Stepper slice 3: live recording on the phone (Pyodide in a locked-down WebView), student's own code, `needs_input` prompt, performance gate | Not started (next) | – |
 | Home/reader (A2) | Not started | – |
 | Android build environment | GitHub Actions (ADR 0012), proven; screens rendered to a `screens` artifact on each run | run 41913367690 |

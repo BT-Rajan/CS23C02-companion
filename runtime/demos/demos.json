@@ -1,0 +1,15 @@
+[
+  {"id": "running-total", "file": "01_running_total.py", "title": "Adding up marks",
+   "step_notes": {"2": "total starts at 0 before the loop adds anything.",
+                  "3": "Each time round the loop, m takes the next mark from the list.",
+                  "4": "The right-hand side is worked out first, then stored back in total.",
+                  "5": "len(marks) is 3, so this divides the total by 3."}},
+  {"id": "function-call", "file": "02_function_call.py", "title": "Calling a function",
+   "step_notes": {"1": "def only creates the function. Its body does not run yet.",
+                  "2": "Inside the call, width and height hold the values passed in.",
+                  "3": "return sends the value back to the line that called area.",
+                  "5": "Watch the call stack: area gets its own box of variables."}},
+  {"id": "recursion", "file": "03_recursion.py", "title": "A function that calls itself",
+   "step_notes": {"2": "The base case: when n is 1 the calls stop.",
+                  "4": "factorial waits here while a smaller factorial is worked out."}}
+]

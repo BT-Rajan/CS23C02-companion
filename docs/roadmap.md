@@ -43,8 +43,8 @@ on-device Python runtime and its performance gate come before practice items.
 | A9 Hardening & release | Restore drill, full attack-register re-test, usability test, key rotation (K14), Play listing + release build | Play internal → closed → production |
 
 ## Order of work
-1. **A1 Android shell** — in progress.
-2. **A3 stepper harness** (`runtime/stepper`, pure Python, testable now) in parallel with A2.
+1. **A1 Android shell** — done (CI green).
+2. **A3 stepper** — slices 1 (recorder) and 2 (screen with demos) done; **slice 3 next: Pyodide on the phone + performance gate**; then A2.
 3. **B2 tooling** in the book repo (registry, validator, code runner + stepper check from X2, extraction to App Content Package v0).
 4. **B1/B3** as soon as the syllabus (U1) arrives; then A4 → A7 alongside book writing (the long pole).
 

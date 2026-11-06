@@ -30,6 +30,8 @@ import app.cs23c02.companion.ui.screens.ResetScreen
 import app.cs23c02.companion.ui.screens.SignInScreen
 import app.cs23c02.companion.ui.screens.VerifyEmailScreen
 import app.cs23c02.companion.ui.screens.WelcomeScreen
+import app.cs23c02.companion.ui.screens.StepperScreen
+import app.cs23c02.companion.stepper.Recordings
 import app.cs23c02.companion.ui.theme.CompanionTheme
 
 object AppInfo {
@@ -52,7 +54,10 @@ class MainActivity : ComponentActivity() {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 val api = ApiClient(ApiConfig.BASE_URL, KeystoreTokenStore(applicationContext),
                     ApiClient.defaultHttp(ApiConfig.BASE_URL, ApiConfig.CERT_PINS))
-                return AppViewModel(api, "${Build.MANUFACTURER} ${Build.MODEL}".take(80)) as T
+                val demos = runCatching {
+                    Recordings.parsePrograms(assets.open("stepper/demos.json").bufferedReader().use { it.readText() })
+                }.getOrDefault(emptyList())
+                return AppViewModel(api, "${Build.MANUFACTURER} ${Build.MODEL}".take(80), demos) as T
             }
         }
         setContent {
@@ -61,7 +66,7 @@ class MainActivity : ComponentActivity() {
                     val vm: AppViewModel = viewModel(factory = factory)
                     val s by vm.state.collectAsStateWithLifecycle()
                     val canGoBack = s.screen is Screen.CreateAccount || s.screen is Screen.SignIn || s.screen is Screen.VerifyEmail ||
-                        s.screen is Screen.Forgot || s.screen is Screen.Reset
+                        s.screen is Screen.Forgot || s.screen is Screen.Reset || s.screen is Screen.Stepper
                     BackHandler(enabled = canGoBack) { vm.back() }
                     Surface(Modifier.fillMaxSize().safeDrawingPadding(), color = MaterialTheme.colorScheme.background) {
                         when (val sc = s.screen) {
@@ -75,6 +80,7 @@ class MainActivity : ComponentActivity() {
                             is Screen.Reset -> ResetScreen(vm, s, sc.email)
                             Screen.Activate -> ActivateScreen(vm, s)
                             is Screen.Home -> HomeScreen(vm, s, sc.me)
+                            is Screen.Stepper -> StepperScreen(sc.program) { vm.back() }
                         }
                     }
                 }

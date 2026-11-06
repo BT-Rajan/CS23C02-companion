@@ -124,6 +124,21 @@ class AppViewModelTest {
         assertTrue(vm.state.value.screen is Screen.Home)
     }
 
+    @Test fun stepperOpensFromHomeAndBackReturns() {
+        store.save(Tokens("A", "R", Long.MAX_VALUE))
+        server.enqueue(MockResponse().setBody(meActive))
+        val demos = app.cs23c02.companion.stepper.Recordings.parsePrograms(java.io.File("src/main/assets/stepper/demos.json").readText())
+        val vm = AppViewModel(ApiClient(server.url("/").toString(), store, OkHttpClient(), main), "Test phone", demos)
+        val home = vm.state.value.screen
+        vm.openStepper("recursion")
+        val st = vm.state.value.screen
+        assertTrue(st is Screen.Stepper && st.program.id == "recursion")
+        assertTrue(vm.back())
+        assertEquals(home, vm.state.value.screen)
+        vm.openStepper("no-such-demo")
+        assertEquals(home, vm.state.value.screen)
+    }
+
     @Test fun signOutClearsTokens() {
         store.save(Tokens("A", "R", Long.MAX_VALUE))
         server.enqueue(MockResponse().setBody(meActive))

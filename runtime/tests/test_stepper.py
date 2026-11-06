@@ -237,3 +237,9 @@ def test_cli_check_for_the_book_build(tmp_path, src, code):
     f.write_text(src)
     p = subprocess.run([sys.executable, str(ROOT / "stepper" / "stepper.py"), str(f)], capture_output=True, text=True)
     assert p.returncode == code, p.stderr
+
+
+def test_committed_demo_recordings_match_the_recorder():
+    sys.path.insert(0, str(ROOT / "demos"))
+    import build_demos
+    assert build_demos.ASSET.read_text() == build_demos.build(), "run python runtime/demos/build_demos.py"
