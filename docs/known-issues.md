@@ -33,6 +33,6 @@
 | K30 | The book build must check every trace item's answer against the recorder (the sample script already does); not yet in content-tools' Release validation because the book tooling (B2) is not built | Medium | Open (B2) |
 | K31 | Practice reveal counts use the rate-event table (7-day window); the daily purge job keeps 2 days, so after a purge a student may need 2 more wrong tries before the answer is revealed | Low | Open (store attempts in their own table if this matters) |
 | K32 | Sandbox: no seccomp filter yet and no gVisor/nsjail comparison; namespaces + per-job UID + limits are the boundary | Medium | Open (before release) |
-| K33 | Sandbox per-job UIDs need the service to start as root on its own VM/container; started without root it serialises runs on one shared UID (development only) | Medium | Open (deployment, A8) |
+| K33 | Sandbox per-job UIDs need the service to start as root on its own VM/container; started without root it serialises runs on one shared UID (development only), where the process limit is the user's existing processes + 32 (found on CI: a flat 32 made every run fail for a busy non-root user) | Medium | Open (deployment, A8) |
 | K34 | Content-tools tests had never run in CI (only backend tests did); now run in the backend workflow | Low | **Closed** |
 | K35 | Debug SAMPLE exercises are graded on the phone by the stepper's recorder, which stops after 2,000 steps; real exercises are graded in the server sandbox | Info | Accepted (debug only) |
