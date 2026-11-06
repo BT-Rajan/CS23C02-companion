@@ -78,6 +78,10 @@ fun cfg(name: String): String? = (System.getenv(name)?.takeIf { it.isNotBlank() 
 val placeholderBaseUrl = "https://api.invalid"   // debug-only fallback; release builds refuse it
 val apiBaseUrl: String = cfg("API_BASE_URL") ?: placeholderBaseUrl
 val apiCertPins: String = cfg("API_CERT_PINS") ?: ""   // comma-separated sha256/<base64> SPKI pins, used by OkHttp's CertificatePinner
+val contentSigningPubkey: String = cfg("CONTENT_SIGNING_PUBKEY") ?: ""  // base64 Ed25519 public key; verifies content packages
+if (contentSigningPubkey.isNotEmpty() && !Regex("^[A-Za-z0-9+/]{43}=$").matches(contentSigningPubkey)) {
+    throw GradleException("CONTENT_SIGNING_PUBKEY must be a base64 Ed25519 public key (44 characters).")
+}
 val pinList = apiCertPins.split(",").map { it.trim() }.filter { it.isNotEmpty() }
 val pinShape = Regex("^sha256/[A-Za-z0-9+/]{43}=$")
 pinList.firstOrNull { !pinShape.matches(it) }?.let { throw GradleException("API_CERT_PINS entry is not a sha256/<base64> SPKI pin: '$it'") }
@@ -89,6 +93,12 @@ gradle.taskGraph.whenReady {
     if (releasing && apiBaseUrl == placeholderBaseUrl) {
         throw GradleException("A release build needs a real API_BASE_URL (set it in android/.env or the environment).")
     }
+    if (releasing && pinList.size < 2) {
+        throw GradleException("A release build needs at least two API_CERT_PINS (primary + backup), ADR 0007.")
+    }
+    if (releasing && contentSigningPubkey.isEmpty()) {
+        throw GradleException("A release build needs CONTENT_SIGNING_PUBKEY (the public key that signs content packages).")
+    }
 }
 
 android {
@@ -99,10 +109,11 @@ android {
         applicationId = "app.cs23c02.companion"
         minSdk = 26          // ADR 0007: covers far more older phones than Zigora's minSdk 33
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.0.1"
+        versionCode = 2
+        versionName = "0.1.0"
         buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
         buildConfigField("String", "API_CERT_PINS", "\"$apiCertPins\"")
+        buildConfigField("String", "CONTENT_SIGNING_PUBKEY", "\"$contentSigningPubkey\"")
     }
     buildTypes {
         release {
@@ -153,6 +164,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("androidx.webkit:webkit:1.12.1")
+    implementation("com.google.crypto.tink:tink-android:1.15.0")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
     testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")

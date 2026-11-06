@@ -8,6 +8,12 @@ import app.cs23c02.companion.api.Me
 import app.cs23c02.companion.core.ActivationCode
 import app.cs23c02.companion.core.Validation
 import app.cs23c02.companion.stepper.StepProgram
+import app.cs23c02.companion.content.InstalledPackage
+import app.cs23c02.companion.content.ProgressStore
+import app.cs23c02.companion.content.ReaderRepository
+import app.cs23c02.companion.content.lessonIds
+import app.cs23c02.companion.content.next
+import app.cs23c02.companion.content.place
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,14 +31,31 @@ sealed interface Screen {
     data class Forgot(val email: String) : Screen
     data class Reset(val email: String) : Screen
     data object Activate : Screen
-    data class Home(val me: Me) : Screen
+    /** [sample]: debug-only SAMPLE lessons bundled in the APK, no account. */
+    data class Home(val me: Me, val sample: Boolean = false) : Screen
+    data class UnitPage(val unitId: String, val back: Screen) : Screen
+    data class LessonPage(val lessonId: String, val back: Screen) : Screen
     /** [start]: step to open at; [live]: recorded on the phone just now (so input can be supplied and re-run). */
     data class Stepper(val program: StepProgram, val back: Screen, val start: Int = 0, val live: Boolean = false) : Screen
     /** Free coding with live explanations (needs on-device Python). */
-    data class Playground(val back: Screen) : Screen
+    data class Playground(val back: Screen, val initial: String = "") : Screen
     /** ADR 0014: ask for a program, then "Show me" or "I'll type it". */
     data class Tutor(val back: Screen) : Screen
     data class TypeIt(val program: StepProgram, val back: Screen) : Screen
+}
+
+/** What the reader screens show. [pkg] null = nothing installed yet. */
+data class ReaderUi(
+    val pkg: InstalledPackage? = null,
+    val completed: Set<String> = emptySet(),
+    val lastOpened: String? = null,
+    val positions: Map<String, Int> = emptyMap(),
+    val syncing: Boolean = false,
+    val offline: Boolean = false,
+    val problem: String? = null,
+    val sample: Boolean = false,
+) {
+    val resume: String? get() = pkg?.let { ProgressStore.resume(it.manifest.nav.lessonIds(), completed, lastOpened) }
 }
 
 data class UiState(
@@ -57,7 +80,13 @@ class AppViewModel(
     val previewTutor: Boolean = false,
     /** On-device Python (ADR 0013 slice 3); null where unavailable (e.g. JVM tests). */
     val runner: app.cs23c02.companion.runner.PythonRunner? = null,
+    /** Lessons + progress (A2). [readerFor] (true) gives the debug SAMPLE package, (false) the account's own. */
+    private val readerFor: ((sample: Boolean) -> ReaderRepository)? = null,
 ) : ViewModel() {
+    private val _reader = MutableStateFlow(ReaderUi())
+    val reader: StateFlow<ReaderUi> = _reader.asStateFlow()
+    private var repo: ReaderRepository? = null
+    private var edition: String? = null
     private val _state = MutableStateFlow(UiState())
     val state: StateFlow<UiState> = _state.asStateFlow()
 
@@ -86,7 +115,86 @@ class AppViewModel(
         runner?.warmUp()
         go(Screen.TypeIt(p, _state.value.screen))
     }
-    fun openPlayground() { runner?.warmUp(); go(Screen.Playground(_state.value.screen)) }
+    fun openPlayground(initial: String = "") { runner?.warmUp(); go(Screen.Playground(_state.value.screen, initial)) }
+
+    // ---- Reader (A2) ---------------------------------------------------------------------------------------------
+    private fun startReader(sample: Boolean, editionId: String?) {
+        val factory = readerFor ?: return
+        if (repo == null || repo!!.isSample != sample) repo = factory(sample)
+        edition = editionId
+        publishReader(syncing = true)
+        syncReader()
+    }
+
+    fun syncReader() {
+        val r = repo ?: return
+        viewModelScope.launch {
+            _reader.update { it.copy(syncing = true, problem = null) }
+            val out = r.sync(edition)
+            publishReader(syncing = false,
+                offline = out is ReaderRepository.SyncOutcome.Offline,
+                problem = (out as? ReaderRepository.SyncOutcome.Failed)?.message
+                    ?: (if (out is ReaderRepository.SyncOutcome.Offline && !out.hasContent) "You're offline. Connect once to download your lessons." else null))
+        }
+    }
+
+    private fun publishReader(syncing: Boolean = _reader.value.syncing, offline: Boolean = _reader.value.offline, problem: String? = _reader.value.problem) {
+        val r = repo ?: return
+        val p = r.progress.state
+        _reader.value = ReaderUi(r.content.current(), p.completed, p.lastOpened, p.positions, syncing, offline, problem, r.isSample)
+    }
+
+    /** Debug builds only: the bundled SAMPLE lessons, without an account or a server. */
+    fun openSampleReader() {
+        startReader(sample = true, editionId = null)
+        go(Screen.Home(Me("Sample content (test build)", emptyList()), sample = true))
+    }
+
+    /** Leaves the sample lessons (no account to sign out of). */
+    fun leaveSample() { repo = null; _reader.value = ReaderUi(); go(Screen.Welcome) }
+
+    private fun homeScreen(): Screen {
+        var s = _state.value.screen
+        while (true) s = when (s) {
+            is Screen.Home -> return s
+            is Screen.UnitPage -> s.back
+            is Screen.LessonPage -> s.back
+            is Screen.Stepper -> s.back
+            is Screen.Playground -> s.back
+            is Screen.Tutor -> s.back
+            is Screen.TypeIt -> s.back
+            else -> return Screen.Welcome
+        }
+    }
+
+    fun openUnit(unitId: String) = go(Screen.UnitPage(unitId, homeScreen()))
+
+    /** Opening a lesson records it (low-stakes, ADR 0009) and remembers it for Continue. Back goes to the lesson's unit. */
+    fun openLesson(lessonId: String) {
+        val r = repo ?: return
+        val nav = _reader.value.pkg?.manifest?.nav ?: return
+        val unit = nav.place(lessonId)?.unit ?: return
+        r.progress.opened(lessonId)
+        publishReader()
+        go(Screen.LessonPage(lessonId, Screen.UnitPage(unit.id, homeScreen())))
+        viewModelScope.launch { r.pushProgress(edition) }
+    }
+
+    fun saveLessonPosition(lessonId: String, scroll: Int) {
+        repo?.progress?.position(lessonId, scroll)
+        publishReader()
+    }
+
+    /** "Done": marks the lesson complete and moves to the next one (or back home after the last). */
+    fun completeLesson(lessonId: String) {
+        val r = repo ?: return
+        val nav = _reader.value.pkg?.manifest?.nav ?: return
+        r.progress.completed(lessonId)
+        publishReader()
+        viewModelScope.launch { r.pushProgress(edition) }
+        val next = nav.next(lessonId)
+        if (next != null) openLesson(next) else go(homeScreen(), info = "You have finished every lesson. Well done.")
+    }
 
     /** Record the student's own code on the phone and open it in the stepper. */
     fun stepThroughCode(title: String, source: String, stdin: String = "") {
@@ -132,6 +240,8 @@ class AppViewModel(
             is Screen.Stepper -> go(s.back)
             is Screen.Tutor -> go(s.back)
             is Screen.Playground -> go(s.back)
+            is Screen.UnitPage -> go(s.back)
+            is Screen.LessonPage -> go(s.back)
             is Screen.TypeIt -> go(s.back)
             else -> return false
         }
@@ -224,6 +334,9 @@ class AppViewModel(
         viewModelScope.launch {
             _state.update { it.copy(busy = true) }
             api.logout()
+            repo?.let { if (!it.isSample) it.clear() }
+            repo = null
+            _reader.value = ReaderUi()
             go(Screen.Welcome)
         }
     }
@@ -233,7 +346,9 @@ class AppViewModel(
     // ---- Helpers ----------------------------------------------------------------------------------------------
     private suspend fun routeAfterSignIn() {
         val me = api.me()
-        go(if (me.entitlements.isEmpty()) Screen.Activate else Screen.Home(me))
+        if (me.entitlements.isEmpty()) { go(Screen.Activate); return }
+        go(Screen.Home(me))
+        startReader(sample = false, editionId = me.entitlements.first().editionId)
     }
 
     private suspend fun safeRoute() = try { routeAfterSignIn() } catch (e: ApiError) { fail(e) }

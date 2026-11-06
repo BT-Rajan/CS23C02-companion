@@ -72,15 +72,42 @@ class ApiClient(
 
     fun hasSession(): Boolean = tokens.load() != null
 
+    // ---- Content and progress (A2) ------------------------------------------------------------------------------
+    /** The exact signed manifest bytes plus the signature header; the caller verifies before trusting anything. */
+    suspend fun manifest(edition: String?): SignedManifest {
+        val q = edition?.let { "?edition=" + java.net.URLEncoder.encode(it, "UTF-8") } ?: ""
+        val r = authedRaw("GET", "/v1/content/manifest$q", null)
+        val sig = r.headers["X-Manifest-Signature"] ?: throw ApiError(0, "bad_manifest", "The lessons could not be verified.")
+        return SignedManifest(r.bytes, sig, r.headers["X-Content-Version"].orEmpty())
+    }
+
+    suspend fun contentFile(sha256: String): ByteArray {
+        require(Regex("^[0-9a-f]{64}$").matches(sha256))
+        return authedRaw("GET", "/v1/content/files/$sha256", null).bytes
+    }
+
+    suspend fun progress(edition: String?): ProgressSummary {
+        val q = edition?.let { "?edition=" + java.net.URLEncoder.encode(it, "UTF-8") } ?: ""
+        return json.decodeFromString(ProgressSummary.serializer(), authed("GET", "/v1/progress$q", null))
+    }
+
+    suspend fun putProgress(edition: String?, events: List<ProgressEventOut>): List<EventResult> {
+        val body = json.encodeToJsonElement(ProgressBatch.serializer(), ProgressBatch(edition, events))
+        return json.decodeFromString(EventResults.serializer(), authedRaw("PUT", "/v1/progress/events", body).bytes.decodeToString()).results
+    }
+
     // ---- Plumbing -----------------------------------------------------------------------------------------------
-    private suspend fun authed(method: String, path: String, body: JsonObject?): String {
+    private suspend fun authed(method: String, path: String, body: JsonObject?): String =
+        authedRaw(method, path, body).bytes.decodeToString()
+
+    private suspend fun authedRaw(method: String, path: String, body: kotlinx.serialization.json.JsonElement?): Raw {
         var current = tokens.load() ?: throw ApiError.signedOut()
         if (clock() >= current.accessExpiresAtMs) current = refresh(current)
         return try {
-            call(method, path, body, current.access)
+            exchange(method, path, body, current.access)
         } catch (e: ApiError) {
             if (!e.isUnauthenticated) throw e
-            call(method, path, body, refresh(current).access)
+            exchange(method, path, body, refresh(current).access)
         }
     }
 
@@ -103,7 +130,12 @@ class ApiClient(
         tokens.save(Tokens(t.accessToken, t.refreshToken, clock() + (t.expiresIn - 30).coerceAtLeast(0) * 1000))
     }
 
-    private suspend fun call(method: String, path: String, body: JsonObject?, bearer: String? = null): String = withContext(io) {
+    private class Raw(val bytes: ByteArray, val headers: okhttp3.Headers)
+
+    private suspend fun call(method: String, path: String, body: JsonObject?, bearer: String? = null): String =
+        exchange(method, path, body, bearer).bytes.decodeToString()
+
+    private suspend fun exchange(method: String, path: String, body: kotlinx.serialization.json.JsonElement?, bearer: String? = null): Raw = withContext(io) {
         val rb = when {
             body != null -> body.toString().toRequestBody(JSON)
             method == "GET" -> null
@@ -115,9 +147,9 @@ class ApiClient(
             .build()
         try {
             http.newCall(req).execute().use { resp ->
-                val text = resp.body?.string().orEmpty()
-                if (resp.isSuccessful) return@withContext text
-                throw parseError(resp.code, text, resp.header("Retry-After"))
+                val bytes = resp.body?.bytes() ?: ByteArray(0)
+                if (resp.isSuccessful) return@withContext Raw(bytes, resp.headers)
+                throw parseError(resp.code, bytes.decodeToString(), resp.header("Retry-After"))
             }
         } catch (e: IOException) {
             throw ApiError.network()

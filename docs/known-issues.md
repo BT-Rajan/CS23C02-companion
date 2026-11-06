@@ -26,3 +26,7 @@
 | K23 | Whether Android WebView routes a Web Worker's requests through the asset loader is unverified; if not, the runner falls back to in-page Python (watchdog then rebuilds the WebView, slower recovery) | Medium | Open: the debug header shows "(worker)" or "(page)" |
 | K24 | APK grows by ≈ 8.4 MB for the Python runtime (18.1 MB debug) | Low | Accepted (offline Python, no server cost); revisit with an app bundle / on-demand delivery |
 | K25 | Book references are sample data until the book's construct registry and page map exist (book X4) | Medium | Open (book side) |
+| K26 | Offline lesson copy is in app-private, no-backup storage and wiped on sign-out, but not encrypted and has no offline-entitlement expiry yet (architecture §6) | Medium | Open (before release; C5) |
+| K27 | Progress queue and lesson store use small JSON files instead of Room; sync runs on Home and after each event instead of WorkManager | Low | Accepted for now (ADR 0007 amendment); revisit if data grows |
+| K28 | A1 claimed release builds required two certificate pins; the Gradle check had not been applied. Found and fixed in A2 | Medium | **Closed** |
+| K29 | Practice items and exercises listed in lessons (`practice`) are not shown yet: they arrive with A5/A6, so the reader omits them rather than showing placeholders | Info | Open (A5) |

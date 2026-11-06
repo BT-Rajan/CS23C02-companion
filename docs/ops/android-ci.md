@@ -32,3 +32,8 @@ and the keyboard behave, and back works. Running the full flow on a phone needs 
    Please send those numbers, whether it says *worker* or *page*, and how typing and stepping feel. They are the performance gate
    (ADR 0006: ready ≤ 3 s after warm-up; smooth on a 3 GB phone).
 4. Try a program with `input()`: the stepper asks for the input and continues.
+
+## Trying the reader (debug build)
+On Welcome tap **Try the sample lessons (test build only)**: five short SAMPLE lessons (not book content) open with Continue,
+units, lesson pages, **Step through** and **Try it yourself** on every code example, and **Done · next lesson**. Close and reopen
+the app: Continue should bring you back to the same lesson and place. Sample progress stays on the phone.

@@ -60,21 +60,3 @@ fun ActivateScreen(vm: AppViewModel, s: UiState) {
     }
 }
 
-/**
- * Screen 6, A1 version. It only confirms the account and activation. The real Home (Continue card, units) is roadmap A2,
- * and the text says so plainly rather than pretending lessons exist.
- */
-@Composable
-fun HomeScreen(vm: AppViewModel, s: UiState, me: app.cs23c02.companion.api.Me) {
-    FormPage("You're all set", lead = "Signed in as ${me.email}.", error = s.error, info = s.info) {
-        me.entitlements.forEach { Message("Activated: ${it.title}", isError = false) }
-        if (vm.demos.isNotEmpty()) {
-            Text("Learn a program line by line", style = MaterialTheme.typography.titleMedium)
-            Text("Ask for a program. Watch it run, or type it yourself with the tutor beside you.",
-                style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            PrimaryButton("Ask for a program", busy = false) { vm.openTutor() }
-        }
-        Text("Lessons arrive in the next update of this test build.", style = MaterialTheme.typography.bodyLarge)
-        QuietButton("Sign out", enabled = !s.busy) { vm.signOut() }
-    }
-}

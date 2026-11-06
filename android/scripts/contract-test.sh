@@ -33,12 +33,20 @@ BATCH=$($PY -m app.cli create-batch --edition it-edition --count 1 --label it --
 $PY -m app.cli release-batch --batch "$BATCH" >/dev/null
 CODE=$(tail -n 1 "$WORK/codes.csv" | cut -d, -f2)
 
+# A signed content package (the clearly-marked backend fixture) imported and published for that edition (A2).
+KEYS=$(cd "$ROOT/content-tools" && "$ROOT/backend/$PY" -m cs23c02_content.build keygen)
+echo "$KEYS" | sed -n 's/^PRIVATE[^:]*: //p' > "$WORK/private.key"
+export CONTENT_SIGNING_PUBKEY=$(echo "$KEYS" | sed -n 's/^PUBLIC[^:]*: //p')
+(cd "$ROOT/content-tools" && "$ROOT/backend/$PY" -m cs23c02_content.build build fixtures/cs23c02-fixture "$WORK/pkg" --key-file "$WORK/private.key" >/dev/null)
+rm -f "$WORK/private.key"
+$PY -m app.cli import-content --edition it-edition --public "$WORK/pkg/public" --protected "$WORK/pkg/protected.json" --publish >/dev/null
+
 PYTHONUNBUFFERED=1 $PY -m uvicorn app.main:app --host 127.0.0.1 --port "$PORT" > "$WORK/server.log" 2>&1 &
 SERVER=$!
 trap 'kill $SERVER 2>/dev/null; rm -rf "$WORK"' EXIT
 for _ in $(seq 50); do curl -fsS "http://127.0.0.1:$PORT/healthz" >/dev/null 2>&1 && break; sleep 0.2; done
 
 cd "$ROOT/android"
-API_IT_URL="http://127.0.0.1:$PORT" API_IT_MAILLOG="$WORK/server.log" API_IT_CODE="$CODE" \
+API_IT_URL="http://127.0.0.1:$PORT" API_IT_MAILLOG="$WORK/server.log" API_IT_CODE="$CODE" API_IT_CONTENT_PUBKEY="$CONTENT_SIGNING_PUBKEY" \
   $GRADLE --no-daemon --console=plain :app:testDebugUnitTest --tests 'app.cs23c02.companion.api.LiveBackendContractTest' --rerun-tasks
 echo "contract test passed"

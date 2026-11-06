@@ -63,6 +63,43 @@ class LiveBackendContractTest {
         api.me()
         assertNotEquals(before, store.load()!!.refresh)
 
+        // A2: download, verify and read the signed package; progress round-trips and survives a "reinstall".
+        val contentKey = System.getenv("API_IT_CONTENT_PUBKEY")
+        check(!contentKey.isNullOrBlank()) { "API_IT_CONTENT_PUBKEY not set: run android/scripts/contract-test.sh" }
+        run {
+            val tmp = java.nio.file.Files.createTempDirectory("it").toFile()
+            fun repo() = app.cs23c02.companion.content.ReaderRepository(api,
+                app.cs23c02.companion.content.ContentStore(java.io.File(tmp, "pkg"), contentKey, "0.1.0"),
+                app.cs23c02.companion.content.ProgressStore(java.io.File(tmp, "p.json")))
+            val r = repo()
+            assertEquals(app.cs23c02.companion.content.ReaderRepository.SyncOutcome.Updated, r.sync(ent.editionId))
+            val pkg = r.content.current()!!
+            assertEquals(listOf("LSN-0001", "LSN-0002", "LSN-0003"), pkg.manifest.nav.units.flatMap { u -> u.topics.flatMap { it.lessons } })
+            assertEquals("What is a variable?", pkg.lesson("LSN-0001")!!.title)
+            assertEquals(app.cs23c02.companion.content.ReaderRepository.SyncOutcome.UpToDate, r.sync(ent.editionId))
+
+            r.progress.opened("LSN-0001"); r.progress.completed("LSN-0001"); r.progress.opened("LSN-0002")
+            val sent = r.progress.state.pending.toList()
+            r.pushProgress(ent.editionId)
+            assertTrue(r.progress.state.pending.isEmpty())
+            val server = api.progress(ent.editionId)
+            assertEquals(listOf("LSN-0001"), server.completed)
+            assertEquals("LSN-0002", server.resume!!.lessonId)
+            assertEquals("in_progress", server.resume!!.reason)
+            // Replaying the very same events (same UUIDs) is harmless: the server reports them as duplicates.
+            assertTrue(api.putProgress(ent.editionId, sent).all { it.status == "duplicate" })
+            // A lesson id that is not in the published package is reported, not stored.
+            assertEquals("unknown_content", api.putProgress(ent.editionId, listOf(app.cs23c02.companion.api.ProgressEventOut(
+                java.util.UUID.randomUUID().toString(), "lesson_opened", "LSN-9999"))).single().status)
+
+            tmp.resolve("p.json").delete()                       // "reinstall": local progress gone
+            val fresh = repo()
+            fresh.sync(ent.editionId)
+            assertEquals(setOf("LSN-0001"), fresh.progress.state.completed)
+            assertEquals("LSN-0002", fresh.progress.state.lastOpened)
+            tmp.deleteRecursively()
+        }
+
         api.logout()
         assertNull(store.load())
         try { api.login(email, "wrong passphrase!", "IT"); fail() } catch (e: ApiError) { assertEquals("bad_credentials", e.code) }

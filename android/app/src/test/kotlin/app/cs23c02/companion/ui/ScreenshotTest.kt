@@ -13,6 +13,7 @@ import app.cs23c02.companion.auth.InMemoryTokenStore
 import app.cs23c02.companion.ui.screens.ActivateScreen
 import app.cs23c02.companion.ui.screens.CreateAccountScreen
 import app.cs23c02.companion.ui.screens.HomeScreen
+import app.cs23c02.companion.ui.ReaderUi
 import app.cs23c02.companion.ui.screens.ResetScreen
 import app.cs23c02.companion.ui.screens.SignInScreen
 import app.cs23c02.companion.ui.screens.VerifyEmailScreen
@@ -67,7 +68,37 @@ class ScreenshotTest {
         shot("06-activate-dark", dark = true) { ActivateScreen(vm, UiState(Screen.Activate, error = "That code can't be used. Check it and try again, or contact support.")) }
     }
 
-    @Test fun home() = shot("07-home") { HomeScreen(vm, UiState(Screen.Home(me)), me) }
+    private val samplePkg by lazy {
+        val dir = java.nio.file.Files.createTempDirectory("pkg").toFile()
+        val store = app.cs23c02.companion.content.ContentStore(dir, app.cs23c02.companion.content.Sample.KEY, "0.0.1")
+        kotlinx.coroutines.runBlocking { store.install(app.cs23c02.companion.content.Sample.manifest, app.cs23c02.companion.content.Sample.signature) { e ->
+            app.cs23c02.companion.content.Sample.file(e.path) } }
+    }
+    private fun readerUi(done: Set<String> = setOf("LSN-9001"), open: String? = "LSN-9002") =
+        ReaderUi(pkg = samplePkg, completed = done, lastOpened = open)
+
+    @Test fun home() {
+        shot("07-home") { HomeScreen(me, false, readerUi(), null, {}, {}, {}, {}, {}) }
+        shot("07-home-dark", dark = true) { HomeScreen(me, false, readerUi(), null, {}, {}, {}, {}, {}) }
+    }
+
+    @Test fun homeFirstTimeAndSample() = shot("07-home-sample-start") {
+        HomeScreen(Me("Sample content (test build)", emptyList()), true, readerUi(emptySet(), null), null, {}, {}, {}, {}, {})
+    }
+
+    @Test fun homeOfflineWithoutLessons() = shot("07-home-offline") {
+        HomeScreen(me, false, ReaderUi(offline = true, problem = "You're offline. Connect once to download your lessons."), null, {}, {}, {}, null, {})
+    }
+
+    @Test fun unitPage() = shot("21-unit") {
+        app.cs23c02.companion.ui.screens.UnitScreen(samplePkg, "UNT-9001", readerUi(), {}, {})
+    }
+
+    @Test fun lessonPage() {
+        shot("22-lesson-top") { app.cs23c02.companion.ui.screens.LessonScreen(samplePkg, "LSN-9001", false, 0, { _, _ -> }, {}, {}, {}, {}, false) }
+        shot("22-lesson-code") { app.cs23c02.companion.ui.screens.LessonScreen(samplePkg, "LSN-9003", false, 2, { _, _ -> }, {}, {}, {}, {}, false) }
+        shot("22-lesson-end-dark", dark = true) { app.cs23c02.companion.ui.screens.LessonScreen(samplePkg, "LSN-9002", true, 4, { _, _ -> }, {}, {}, {}, {}, false) }
+    }
 
     private val demos by lazy {
         app.cs23c02.companion.stepper.Recordings.parsePrograms(java.io.File("src/main/assets/stepper/demos.json").readText())
@@ -88,10 +119,6 @@ class ScreenshotTest {
 
     @Test fun stepperRecursion() = shot("11-stepper-recursion") { StepAt("recursion", 12) }
 
-    @Test fun homeWithDemos() = shot("12-home-demos") {
-        val vmWithDemos = AppViewModel(ApiClient("https://api.invalid", InMemoryTokenStore()), "test", demos)
-        HomeScreen(vmWithDemos, UiState(Screen.Home(me)), me)
-    }
 
     @Test fun tutorSearch() = shot("13-tutor-search") {
         app.cs23c02.companion.ui.screens.TutorScreen(demos.filter { it.id == "recursion" || it.id == "even-or-odd" }, {}, {}, {})

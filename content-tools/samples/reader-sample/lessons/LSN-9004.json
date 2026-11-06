@@ -1,0 +1,26 @@
+{
+  "id": "LSN-9004",
+  "title": "Adding up a list",
+  "topic": "TOP-9003",
+  "minutes": 7,
+  "blocks": [
+    {
+      "type": "paragraph",
+      "text": "A for loop repeats its indented lines once for each item in a list. Each time round, the loop variable holds the next item."
+    },
+    {
+      "type": "code",
+      "code": "marks = [72, 85, 64]\ntotal = 0\nfor m in marks:\n    total = total + m\nprint(\"Total:\", total)",
+      "expected_output": "Total: 221"
+    },
+    {
+      "type": "paragraph",
+      "text": "Step through it and watch total grow by one mark each time round the loop."
+    }
+  ],
+  "quiz": null,
+  "practice": {
+    "items": [],
+    "exercises": []
+  }
+}

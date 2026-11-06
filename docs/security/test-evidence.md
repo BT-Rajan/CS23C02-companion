@@ -105,3 +105,20 @@ construct registry and page map exist (book decision X4). The tutor checks are p
 | The runner's CSP refuses `eval` of strings (found on GitHub CI: an older Playwright's `waitForFunction` uses `eval` in the page and was blocked; the test now polls via the DevTools protocol) | CI run 42220544047 log |
 **Not evidenced:** the WebView itself (shouldInterceptRequest for worker requests, blockNetworkLoads) on a real Android device,
 memory use, and speed on the Redmi. The Chromium test emulates the asset loader and the network block.
+
+# Roadmap A2 — reader, content and progress on the phone
+| Area | Evidence |
+|---|---|
+| Genuine package verifies; one changed manifest byte, another key, garbage signature, missing key → refused (C3) | `PackageVerifierTest` |
+| Signed but wrong format / too-new `min_app_version` / unsafe or duplicate paths → refused | `PackageVerifierTest` |
+| Each file must match size and SHA-256 | `PackageVerifierTest.fileMustMatchItsHashAndSize` |
+| Manifest altered on disk → package refused on next open; lesson file altered on disk → never shown | `ContentStoreTest` |
+| Failed or wrongly signed update leaves the installed package untouched; nothing downloaded on an unverified manifest | `ContentStoreTest`, `ReaderRepositoryTest` |
+| Offline: installed lessons keep working | `ReaderRepositoryTest.offlineKeepsWhatIsInstalled`, `ReaderFlowTest` |
+| Progress events deduped locally, sent in batches, kept when offline, server history merged by union; resume rule identical to the server's | `ProgressStoreTest` |
+| Read → Done → next lesson → Continue; app restart remembers lesson and scroll position | `ReaderFlowTest` |
+| **Real backend:** signed fixture package imported and published; the app client downloads, verifies and reads it; progress accepted, replay = duplicate, unknown lesson reported, resume correct, restored after a "reinstall" | `LiveBackendContractTest` via `android/scripts/contract-test.sh` (mutation-checked) |
+**Not evidenced:** encryption of the offline copy (ADR architecture §6 offline key expiry): lessons are in app-private, no-backup
+storage and wiped on sign-out, but not encrypted (K26). Behaviour on a real phone.
+**Found and fixed during A2:** the A1 rule "release builds need two certificate pins" had never been applied (an edit that did not
+match the file); it is now in place together with "release builds need CONTENT_SIGNING_PUBKEY", and both were checked to fail a release build.
