@@ -26,7 +26,7 @@ The textbook build (their item 11/13) emits **two outputs** from a Release build
 A CI check fails the build if any protected field name or value appears in the public package (attack C3/D2).
 Content versions are immutable; a new version never reuses an ID for different meaning (consistent with D4). Progress is keyed by ID, so retired IDs map via the registry's `successor`.
 
-## 3. Requests to the textbook side (proposals, not edits)
+## 3. Requests to the textbook side — **accepted 2026-11-06** (book repo decision X3)
 1. **Public vs hidden tests.** `EXR.tests` is one list of `{stdin, expect}`. The app needs `visibility: public | hidden` per test (students see a few examples; the rest grade). Proposed: add the field, default `hidden`.
 2. **Interactive tracing data.** `ITM.type: trace` exists, but stepping data (statements executed, variable state per step) is not defined. Proposed: derive it at build time by running the `COD` under a tracer, so it can never disagree with the code.
 3. **Per-option explanations** on MCQ items (the brief asks for explanations of wrong options). Proposed optional `option_explanations`.
