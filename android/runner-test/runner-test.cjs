@@ -11,6 +11,16 @@ const ORIGIN = "https://appassets.androidplatform.net";
 const TYPES = { ".html": "text/html", ".js": "text/javascript", ".wasm": "application/wasm", ".json": "application/json",
   ".zip": "application/zip", ".py": "text/plain" };
 let failures = 0;
+// Poll with page.evaluate (DevTools protocol) rather than page.waitForFunction: some Playwright versions evaluate the
+// waitForFunction predicate with eval() inside the page, which the runner's CSP correctly refuses.
+async function waitFor(page, fn, arg, timeoutMs) {
+  const until = Date.now() + timeoutMs;
+  for (;;) {
+    if (await page.evaluate(fn, arg)) return;
+    if (Date.now() > until) throw new Error("timed out waiting for " + fn.toString());
+    await new Promise((r) => setTimeout(r, 50));
+  }
+}
 const check = (ok, what) => { console.log((ok ? "PASS " : "FAIL ") + what); if (!ok) failures++; };
 
 (async () => {
@@ -41,7 +51,7 @@ const check = (ok, what) => { console.log((ok ? "PASS " : "FAIL ") + what); if (
     };
   });
   await page.goto(ORIGIN + "/assets/runner/index.html");
-  await page.waitForFunction(() => window.__ready !== null, null, { timeout: 120000 });
+  await waitFor(page, () => window.__ready !== null, null, 120000);
   const readyMs = await page.evaluate(() => window.__ready);
   check(readyMs > 0, `runner ready (load + warm-up) in ${readyMs} ms on this machine`);
 
@@ -50,7 +60,7 @@ const check = (ok, what) => { console.log((ok ? "PASS " : "FAIL ") + what); if (
     const id = next++;
     const t0 = Date.now();
     await page.evaluate(([id, src, stdin, t]) => window.runPython(id, src, stdin, t), [id, src, stdin, timeoutMs]);
-    await page.waitForFunction((id) => window.__results[id] !== undefined, id, { timeout: timeoutMs + 120000 });
+    await waitFor(page, (id) => window.__results[id] !== undefined, id, timeoutMs + 120000);
     const r = await page.evaluate((id) => window.__results[id], id);
     r.ms = Date.now() - t0;
     return r;
@@ -96,10 +106,10 @@ const check = (ok, what) => { console.log((ok ? "PASS " : "FAIL ") + what); if (
       onState: (s) => { window.__states.push(s); } };
   });
   await page2.goto(ORIGIN + "/assets/runner/index.html?mode=page");
-  await page2.waitForFunction(() => window.__ready !== null, null, { timeout: 120000 });
+  await waitFor(page2, () => window.__ready !== null, null, 120000);
   const states = await page2.evaluate(() => window.__states);
   await page2.evaluate((src) => window.runPython(1, src, "", 8000), demo);
-  await page2.waitForFunction(() => window.__results[1] !== undefined, null, { timeout: 60000 });
+  await waitFor(page2, () => window.__results[1] !== undefined, null, 60000);
   const r2 = await page2.evaluate(() => window.__results[1]);
   check(states.includes("mode:page") && JSON.stringify(r2.recording) === JSON.stringify(asset[0].recording),
     "fallback (Python on the page) gives the same recording");

@@ -102,5 +102,6 @@ construct registry and page map exist (book decision X4). The tutor checks are p
 | In-page fallback gives the same recording | runner test (`?mode=page`) |
 | Live run → stepper; input → continue from the pause; syntax errors as results; friendly messages | `LiveRunTest` (6, real CPython via `CPythonRunner`) |
 | Checksum pin on the downloaded runtime (supply chain) | `runnerAssets` task fails on mismatch |
+| The runner's CSP refuses `eval` of strings (found on GitHub CI: an older Playwright's `waitForFunction` uses `eval` in the page and was blocked; the test now polls via the DevTools protocol) | CI run 42220544047 log |
 **Not evidenced:** the WebView itself (shouldInterceptRequest for worker requests, blockNetworkLoads) on a real Android device,
 memory use, and speed on the Redmi. The Chromium test emulates the asset loader and the network block.

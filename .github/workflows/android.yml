@@ -30,7 +30,7 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: |
           set -o pipefail
-          npm install --no-save --no-audit --no-fund playwright@1.49.1 2>&1 | tail -n 2
+          npm install --no-save --no-audit --no-fund playwright@1.63.0 2>&1 | tail -n 2
           npx playwright install --with-deps chromium 2>&1 | tail -n 2
           node android/runner-test/runner-test.cjs android/app/build/generated/assets/runnerAssets 2>&1 | tee /tmp/runner.log
       - name: Upload debug APK
