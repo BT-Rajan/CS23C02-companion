@@ -128,4 +128,4 @@ volumes:
 
 secrets:
   build_ca:
-    file: ${BUILD_CA_FILE:-./empty-ca.pem}   # only for builds behind a TLS-intercepting proxy
+    file: ${BUILD_CA_FILE:-./no-extra-ca.txt}   # only for builds behind a TLS-intercepting proxy
