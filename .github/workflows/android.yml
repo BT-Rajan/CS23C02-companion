@@ -31,8 +31,16 @@ jobs:
         timeout-minutes: 10   # a stuck browser install or launch fails fast, with its log, instead of using the job's 30 min
         run: |
           set -o pipefail
-          npm install --no-save --no-audit --no-fund playwright@1.63.0 2>&1 | tail -n 2
-          npx playwright install --with-deps chromium 2>&1 | tail -n 2
+          echo "::group::playwright"; timeout 120 npm install --no-save --no-audit --no-fund playwright@1.63.0 2>&1 | tail -n 2; echo "::endgroup::"
+          # Use the Chrome that ships on GitHub's Ubuntu image: no browser download and no apt-get (the slow, hang-prone part).
+          CHROME=$(command -v google-chrome || command -v google-chrome-stable || true)
+          if [ -n "$CHROME" ]; then
+            export CHROMIUM="$CHROME"
+          else
+            echo "no preinstalled Chrome; downloading Playwright's"
+            timeout 300 npx playwright install --with-deps chromium 2>&1 | tail -n 2
+          fi
+          echo "browser: ${CHROMIUM:-playwright chromium} $(${CHROMIUM:-true} --version 2>/dev/null || true)"
           timeout 300 node android/runner-test/runner-test.cjs android/app/build/generated/assets/runnerAssets 2>&1 | tee /tmp/runner.log
       - name: Upload debug APK
         if: success()
