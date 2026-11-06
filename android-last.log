@@ -1,4 +1,4 @@
-run: 42218116441  sha: af00211ab49cf2794295bd4f9754aaef07ba1e8b  job: success
+run: 42220544047  sha: 2918410b086d93d35980e25972a5cffb7222fc3a  job: failure
 
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.10.2/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
 Daemon will be stopped at the end of the build 
@@ -17,9 +17,8 @@ Daemon will be stopped at the end of the build
 > Task :app:parseDebugLocalResources
 > Task :app:processDebugMainManifest
 > Task :app:processDebugManifest
-> Task :app:processDebugManifestForPackage
-> Task :app:javaPreCompileDebug
 > Task :app:preDebugAndroidTestBuild SKIPPED
+> Task :app:javaPreCompileDebug
 > Task :app:generateDebugAndroidTestResValues
 > Task :app:extractProguardFiles
 > Task :app:preDebugUnitTestBuild UP-TO-DATE
@@ -27,10 +26,15 @@ Daemon will be stopped at the end of the build
 > Task :app:mergeDebugShaders
 > Task :app:compileDebugShaders NO-SOURCE
 > Task :app:generateDebugAssets UP-TO-DATE
+
+> Task :app:runnerAssets
+Downloading Pyodide 0.27.8 from https://registry.npmjs.org/pyodide/-/pyodide-0.27.8.tgz
+
 > Task :app:mergeDebugAssets
 > Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
-> Task :app:desugarDebugFileDependencies
+> Task :app:processDebugManifestForPackage
 > Task :app:compressDebugAssets
+> Task :app:desugarDebugFileDependencies
 > Task :app:processDebugResources
 > Task :app:checkDebugDuplicateClasses
 > Task :app:packageDebugUnitTestForUnitTest
@@ -72,14 +76,14 @@ Unable to strip the following libraries, packaging them as they are: libandroidx
 > Task :app:packageDebug
 > Task :app:createDebugApkListingFileRedirect
 > Task :app:assembleDebug
-> Task :app:lintAnalyzeDebugUnitTest
 > Task :app:lintAnalyzeDebug
+> Task :app:lintAnalyzeDebugUnitTest
 
 > Task :app:lintReportDebug
 Wrote HTML report to file:///home/runner/work/CS23C02-companion/CS23C02-companion/android/app/build/reports/lint-results-debug.html
 
 > Task :app:lintDebug
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1793968219906.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1793969355779.json
 
-BUILD SUCCESSFUL in 2m 23s
-55 actionable tasks: 55 executed
+BUILD SUCCESSFUL in 2m 39s
+56 actionable tasks: 56 executed
