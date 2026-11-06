@@ -1,4 +1,4 @@
-run: 42221292852  sha: ae4938e6261f6de532db4d21f5a4b9f1799e3724  job: success
+run: 42224529522  sha: 5a378e7cf13b67e8de2d2eb72cfd36183816e947  job: success
 
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.10.2/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
 Daemon will be stopped at the end of the build 
@@ -23,34 +23,30 @@ Daemon will be stopped at the end of the build
 > Task :app:extractProguardFiles
 > Task :app:preDebugUnitTestBuild UP-TO-DATE
 > Task :app:javaPreCompileDebugUnitTest
+> Task :app:processDebugManifestForPackage
 > Task :app:mergeDebugShaders
 > Task :app:compileDebugShaders NO-SOURCE
 > Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:processDebugResources
 
 > Task :app:runnerAssets
 Downloading Pyodide 0.27.8 from https://registry.npmjs.org/pyodide/-/pyodide-0.27.8.tgz
 
 > Task :app:mergeDebugAssets
+> Task :app:packageDebugUnitTestForUnitTest
 > Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:generateDebugUnitTestConfig
 > Task :app:desugarDebugFileDependencies
 > Task :app:compressDebugAssets
-> Task :app:processDebugManifestForPackage
-> Task :app:checkDebugDuplicateClasses
-> Task :app:processDebugResources
-> Task :app:mergeExtDexDebug
-> Task :app:packageDebugUnitTestForUnitTest
-> Task :app:generateDebugUnitTestConfig
 > Task :app:mergeDebugJniLibFolders
-> Task :app:mergeLibDexDebug
+> Task :app:checkDebugDuplicateClasses
 > Task :app:mergeDebugNativeLibs
-> Task :app:validateSigningDebug
-> Task :app:writeDebugAppMetadata
-
-> Task :app:stripDebugDebugSymbols
-Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so.
-
-> Task :app:writeDebugSigningConfigVersions
 > Task :app:compileDebugKotlin
+> Task :app:mergeExtDexDebug
+
+> Task :app:compileDebugKotlin
+w: file:///home/runner/work/CS23C02-companion/CS23C02-companion/android/app/src/main/kotlin/app/cs23c02/companion/MainActivity.kt:71:25 Redundant creation of Json format. Creating instances for each usage can be slow.
+
 > Task :app:compileDebugJavaWithJavac
 > Task :app:bundleDebugClassesToCompileJar
 > Task :app:generateDebugLintReportModel
@@ -71,8 +67,16 @@ w: file:///home/runner/work/CS23C02-companion/CS23C02-companion/android/app/src/
 > Task :app:testDebugUnitTest
 > Task :app:dexBuilderDebug
 > Task :app:mergeDebugGlobalSynthetics
+> Task :app:mergeLibDexDebug
 > Task :app:mergeProjectDexDebug
+
+> Task :app:stripDebugDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so.
+
 > Task :app:mergeDebugJavaResource
+> Task :app:validateSigningDebug
+> Task :app:writeDebugAppMetadata
+> Task :app:writeDebugSigningConfigVersions
 > Task :app:packageDebug
 > Task :app:createDebugApkListingFileRedirect
 > Task :app:assembleDebug
@@ -83,7 +87,7 @@ w: file:///home/runner/work/CS23C02-companion/CS23C02-companion/android/app/src/
 Wrote HTML report to file:///home/runner/work/CS23C02-companion/CS23C02-companion/android/app/build/reports/lint-results-debug.html
 
 > Task :app:lintDebug
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1793969710127.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1793971171697.json
 
-BUILD SUCCESSFUL in 2m 43s
+BUILD SUCCESSFUL in 2m 44s
 56 actionable tasks: 56 executed
