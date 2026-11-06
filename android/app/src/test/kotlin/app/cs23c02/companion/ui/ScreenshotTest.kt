@@ -1,0 +1,73 @@
+package app.cs23c02.companion.ui
+
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import app.cs23c02.companion.api.ApiClient
+import app.cs23c02.companion.api.Entitlement
+import app.cs23c02.companion.api.Me
+import app.cs23c02.companion.auth.InMemoryTokenStore
+import app.cs23c02.companion.ui.screens.ActivateScreen
+import app.cs23c02.companion.ui.screens.CreateAccountScreen
+import app.cs23c02.companion.ui.screens.HomeScreen
+import app.cs23c02.companion.ui.screens.ResetScreen
+import app.cs23c02.companion.ui.screens.SignInScreen
+import app.cs23c02.companion.ui.screens.VerifyEmailScreen
+import app.cs23c02.companion.ui.screens.WelcomeScreen
+import app.cs23c02.companion.ui.theme.CompanionTheme
+import com.github.takahirom.roborazzi.captureRoboImage
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
+
+/**
+ * Renders every A1 screen (light, dark, and 200% font) to PNGs for review: gradle :app:testDebugUnitTest -Pscreenshots.
+ * 360x640 dp is the design system's small-phone target. These are pictures for a human, not pixel assertions.
+ */
+@RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(sdk = [34], qualifiers = "w360dp-h640dp-xhdpi")
+class ScreenshotTest {
+    private val out = System.getProperty("screens.out") ?: "build/screens"
+    private val vm by lazy { AppViewModel(ApiClient("https://api.invalid", InMemoryTokenStore()), "test") }
+    private val me = Me("student@example.com", listOf(Entitlement("ed1", "CS23C02 First Edition", "2026-11-06T00:00:00Z")))
+
+    private fun shot(name: String, dark: Boolean = false, content: @Composable () -> Unit) = captureRoboImage("$out/$name.png") {
+        CompanionTheme(dark = dark) {
+            Surface(Modifier.fillMaxSize().safeDrawingPadding(), color = MaterialTheme.colorScheme.background) { content() }
+        }
+    }
+
+    @Test fun welcome() { shot("01-welcome") { WelcomeScreen(vm) }; shot("01-welcome-dark", dark = true) { WelcomeScreen(vm) } }
+
+    @Test fun createAccountWithErrors() = shot("02-create-account-errors") {
+        CreateAccountScreen(vm, UiState(Screen.CreateAccount, fieldErrors = mapOf(
+            "email" to "That doesn't look like an email address.", "password" to "Use a password of 10 to 128 characters.")))
+    }
+
+    @Test fun verify() = shot("03-verify") {
+        VerifyEmailScreen(vm, UiState(Screen.VerifyEmail("student@example.com"), info = "We sent a 6-digit code to student@example.com."), "student@example.com")
+    }
+
+    @Test fun signInError() {
+        val s = UiState(Screen.SignIn, error = "Email or password is incorrect.")
+        shot("04-sign-in-error") { SignInScreen(vm, s) }
+        shot("04-sign-in-error-dark", dark = true) { SignInScreen(vm, s) }
+    }
+
+    @Test fun reset() = shot("05-reset") { ResetScreen(vm, UiState(Screen.Reset("student@example.com")), "student@example.com") }
+
+    @Test fun activate() {
+        shot("06-activate") { ActivateScreen(vm, UiState(Screen.Activate)) }
+        shot("06-activate-dark", dark = true) { ActivateScreen(vm, UiState(Screen.Activate, error = "That code can't be used. Check it and try again, or contact support.")) }
+    }
+
+    @Test fun home() = shot("07-home") { HomeScreen(vm, UiState(Screen.Home(me)), me) }
+
+    @Test @Config(fontScale = 2.0f) fun largeFontSignIn() = shot("08-sign-in-200pct-font") { SignInScreen(vm, UiState(Screen.SignIn, error = "Email or password is incorrect.")) }
+}

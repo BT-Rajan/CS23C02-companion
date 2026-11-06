@@ -19,3 +19,7 @@
 | K16 | Reference device named as "Redmi A7, 3 GB, Android 14"; exact model unverified | Low | Open (owner to confirm) |
 | K17 | Hello-world APK not yet confirmed to install and open on the reference phone | Medium | Open (owner) |
 | K18 | Gradle wrapper not committed (pinned in the workflow instead); wrapper validation rule not yet applicable | Low | Open (ADR 0012 amendment) |
+| K19 | `backend/.venv` (2,679 files) had been committed despite `.gitignore`; removed from the index on 2026-11-06 (still in history; contains no secrets, only packages) | Low | **Closed** |
+| K20 | Live-backend contract test runs locally only (needs MySQL); not yet in CI | Low | Open (add a CI job with the MySQL service) |
+| K21 | Activation by camera scan (journey J1) not built; typing and paste only | Low | Open (after A2) |
+| K22 | Certificate pinning is wired but untested against a real certificate (no staging host) | Medium | Open (A8) |

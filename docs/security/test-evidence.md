@@ -51,3 +51,19 @@ Not covered: any Android code (not started), real book content (none exists; tes
 | C6 bulk scraping | Partial: 2000 file requests/hour/account brake is implemented; no volume-anomaly alerting yet and the limit itself is untested at its threshold | – |
 
 Findings: none new from Phase 3 testing (first full run passed; the mutation checks above are the evidence that the tests are not vacuous). Two weak assertions in my own tests were found and tightened during review.
+
+# Roadmap A1 — Android shell (screens 1–6)
+Environment: JDK 21, Gradle 8.14.3, AGP 8.7.3, Android SDK 35 (local); backend on MySQL 8.0.46 for the contract test.
+Result: **35 Android JVM tests** (34 run on every build, plus the live-backend contract test), lint clean apart from pinned-version notices.
+| Area | Evidence |
+|---|---|
+| Activation-code check matches the server | `ActivationCodeTest`: server-generated codes accepted; every single-character typo and every adjacent swap rejected |
+| Client password/email checks mirror the server | `ValidationTest`; the contract test confirms the server's `weak_password` on the same input |
+| Error shape, rate-limit `Retry-After`, non-JSON 5xx never shown raw, offline | `ApiClientTest` |
+| Refresh: proactive on expiry, once on 401, **single-flight under 5 parallel calls** (no false refresh-reuse revocation, B5), wiped on failure | `ApiClientTest` |
+| Activation request carries only the code (A6) | `ApiClientTest.activateSendsOnlyTheCode` |
+| Journey J1 (create → verify → activate → home), unverified login, wrong password, reset, offline start, sign-out | `AppViewModelTest` (10 tests) |
+| **App ↔ real backend contract** (paths, fields, status codes, rotation, logout, reset) | `LiveBackendContractTest` via `android/scripts/contract-test.sh`: passed against a real FastAPI + MySQL backend |
+| Screens render in light, dark, 200 % font on 360×640 dp | `ScreenshotTest` (`-Pscreenshots`), images in the CI `screens` artifact |
+**Not evidenced:** behaviour on a real phone (K17), Keystore token encryption on a device (JVM tests use the in-memory store),
+certificate pinning against a real certificate (no staging host yet; F9), TalkBack walkthrough.

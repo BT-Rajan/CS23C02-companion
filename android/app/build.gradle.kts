@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
+    id("org.jetbrains.kotlin.plugin.serialization")
 }
 
 // ---- Build-time configuration (ADR 0007 amendment) ------------------------------------------------------------------------
@@ -17,7 +18,10 @@ fun cfg(name: String): String? = (System.getenv(name)?.takeIf { it.isNotBlank() 
 
 val placeholderBaseUrl = "https://api.invalid"   // debug-only fallback; release builds refuse it
 val apiBaseUrl: String = cfg("API_BASE_URL") ?: placeholderBaseUrl
-val apiCertPins: String = cfg("API_CERT_PINS") ?: ""   // comma-separated sha256/<base64> SPKI pins (used by the API client later)
+val apiCertPins: String = cfg("API_CERT_PINS") ?: ""   // comma-separated sha256/<base64> SPKI pins, used by OkHttp's CertificatePinner
+val pinList = apiCertPins.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+val pinShape = Regex("^sha256/[A-Za-z0-9+/]{43}=$")
+pinList.firstOrNull { !pinShape.matches(it) }?.let { throw GradleException("API_CERT_PINS entry is not a sha256/<base64> SPKI pin: '$it'") }
 if (!Regex("^https://[A-Za-z0-9.-]+(:[0-9]{1,5})?$").matches(apiBaseUrl)) {
     throw GradleException("API_BASE_URL must look like https://host[:port] with no path or trailing slash (got '$apiBaseUrl'). HTTP is never allowed.")
 }
@@ -57,6 +61,20 @@ android {
         compose = true
         buildConfig = true
     }
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+        // Screenshot rendering (Robolectric + Roborazzi) is opt-in: gradle ... -Pscreenshots. Images land in app/build/screens.
+        unitTests.all {
+            if (project.hasProperty("screenshots")) {
+                it.systemProperty("roborazzi.test.record", "true")
+                it.systemProperty("screens.out", layout.buildDirectory.dir("screens").get().asFile.absolutePath)
+                // Optional: where Robolectric downloads its Android runtime (e.g. a Maven Central mirror when Central throttles).
+                System.getenv("ROBOLECTRIC_REPO")?.let { url -> it.systemProperty("robolectric.dependency.repo.url", url) }
+            } else {
+                it.exclude("**/*ScreenshotTest*")
+            }
+        }
+    }
     lint {
         abortOnError = true
         warningsAsErrors = false
@@ -70,5 +88,15 @@ dependencies {
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.activity:activity-compose:1.9.3")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
     testImplementation("junit:junit:4.13.2")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
+    testImplementation("org.robolectric:robolectric:4.14.1")
+    testImplementation("io.github.takahirom.roborazzi:roborazzi:1.39.0")
+    testImplementation("io.github.takahirom.roborazzi:roborazzi-compose:1.39.0")
 }

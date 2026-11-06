@@ -15,3 +15,12 @@ Owner's phone: **Redmi A7, 3 GB RAM, Android 14** (model name to be confirmed; t
 ## Installing from a phone (first time)
 GitHub's artifact download needs you to be signed in to GitHub, so the easiest route is: on a computer, open the run's page, download `app-debug-apk`, unzip, and send `app-debug.apk` to the phone (USB, Drive, email to yourself). The first debug build (run 41913367690) is a hello-world that shows "CS23C02 Companion / Build pipeline OK". Its only purpose is to confirm it installs and opens on the Redmi.
 
+
+## What to check in the A1 build (sign-in and activation)
+The A1 build talks to the server in `API_BASE_URL`. Until a staging server exists (roadmap A8) a phone build cannot sign in;
+use the **screens** artifact to review layout, and check on the phone: it installs, the icon shows, Welcome opens, text fields
+and the keyboard behave, and back works. Running the full flow on a phone needs a reachable HTTPS backend.
+## Local developer checks
+- `android/scripts/contract-test.sh`: the app's API client against a real backend (needs MySQL and `backend/.venv`).
+- `gradle :app:testDebugUnitTest -Pscreenshots --tests '*ScreenshotTest*'`: PNGs in `android/app/build/screens`
+  (set `ROBOLECTRIC_REPO` to a Maven Central mirror if Central throttles downloads).

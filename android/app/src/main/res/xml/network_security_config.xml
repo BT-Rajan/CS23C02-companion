@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <!-- Cleartext HTTP is never allowed (Zigora allowed it globally; we do not). Certificate pinning is added with the API client. -->
+    <!-- Cleartext HTTP is never allowed (Zigora allowed it globally; we do not). Certificate pinning is done in OkHttp (ApiClient.defaultHttp) from API_CERT_PINS; release builds require two pins. -->
     <base-config cleartextTrafficPermitted="false" />
 </network-security-config>
