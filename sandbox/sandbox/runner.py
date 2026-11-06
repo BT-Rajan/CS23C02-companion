@@ -83,17 +83,22 @@ def _bwrap_args(code_dir: str, limits: Limits) -> list[str]:
             PYTHON, "-I", "-S", "-B", "/code/harness.py"]
 
 
-def _processes_of(uid: int) -> int:
+def _tasks_of(uid: int) -> int:
+    """RLIMIT_NPROC counts tasks, i.e. THREADS, of the real UID, not just processes (a CI agent alone has dozens)."""
     n = 0
     for pid in os.listdir("/proc"):
         if pid.isdigit():
             try:
                 with open(f"/proc/{pid}/status") as f:
+                    owner, threads = None, 1
                     for line in f:
                         if line.startswith("Uid:"):
-                            n += int(line.split()[1]) == uid
-                            break
-            except OSError:
+                            owner = int(line.split()[1])
+                        elif line.startswith("Threads:"):
+                            threads = int(line.split()[1])
+                    if owner == uid:
+                        n += threads
+            except (OSError, ValueError):
                 pass
     return n
 
@@ -103,8 +108,8 @@ def _wrapper(uid: int | None, limits: Limits) -> list[str]:
     nothing runs in-process (no preexec_fn, which is unsafe in a threaded server)."""
     mem = limits.memory_mb << 20
     # RLIMIT_NPROC counts every process of the UID. With a per-job UID that is exactly this job. In the shared development
-    # mode the service's own user already has processes (CI agents, shells...), so the job gets that many plus its budget.
-    nproc = limits.nproc if uid is not None else _processes_of(os.getuid()) + limits.nproc
+    # mode the service's own user already has tasks (CI agents, shells, threads...), so the job gets that many plus its budget.
+    nproc = limits.nproc if uid is not None else _tasks_of(os.getuid()) + limits.nproc
     w = []
     if uid is not None:
         w += ["setpriv", f"--reuid={uid}", f"--regid={uid}", "--clear-groups", "--inh-caps=-all", "--bounding-set=-all",

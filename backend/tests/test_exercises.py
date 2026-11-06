@@ -21,7 +21,10 @@ WRONG = "n = int(input())\nprint(n + 2)\n"   # passes the public test (4 -> 8 wo
 
 
 def submit(client, h, code, ex="EXR-0001", **extra):
-    return client.post(f"/v1/exercises/{ex}/submissions", json={"code": code, **extra}, headers=h)
+    r = client.post(f"/v1/exercises/{ex}/submissions", json={"code": code, **extra}, headers=h)
+    if r.status_code == 200 and any(t["status"] == "sandbox_error" for t in r.json()["public"]):
+        pytest.fail("sandbox could not start: " + str(r.json()["public"][0]["error"]))  # say why, not just 'False is True'
+    return r
 
 
 def help_(client, h, ex="EXR-0001"):

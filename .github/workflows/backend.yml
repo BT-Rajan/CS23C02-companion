@@ -36,6 +36,15 @@ jobs:
           sudo apt-get install -y -q bubblewrap > /dev/null
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
           bwrap --version && test -x /usr/bin/python3.12
+      - name: Sandbox smoke run (shows the real error if the sandbox cannot start)
+        working-directory: ${{ github.workspace }}/sandbox
+        run: |
+          python -c "
+          from sandbox import runner
+          r = runner.run('print(6 * 7)')
+          print('isolation:', runner.isolation(), '| status:', r.status, '| stdout:', repr(r.stdout), '| error:', r.error)
+          assert r.status == 'ok' and r.stdout == '42\\n', 'sandbox smoke run failed'
+          "
       - name: Backend tests (graded runs use the sandbox in-process)
         run: python -m pytest
       - name: Sandbox hostile suite, started as root like production (per-job UIDs)
