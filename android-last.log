@@ -1,4 +1,4 @@
-run: 42257788722  sha: 9873bdcd2817af4fd90fed0bfe74172175d0376b  job: success
+run: 42263078852  sha: e8131a8ccb392e306e62b6e0732897b5fe8a24ae  job: success
 
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.10.2/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
 Daemon will be stopped at the end of the build 
@@ -17,9 +17,8 @@ Daemon will be stopped at the end of the build
 > Task :app:parseDebugLocalResources
 > Task :app:processDebugMainManifest
 > Task :app:processDebugManifest
-> Task :app:processDebugManifestForPackage
-> Task :app:javaPreCompileDebug
 > Task :app:preDebugAndroidTestBuild SKIPPED
+> Task :app:javaPreCompileDebug
 > Task :app:generateDebugAndroidTestResValues
 > Task :app:extractProguardFiles
 > Task :app:preDebugUnitTestBuild UP-TO-DATE
@@ -27,25 +26,32 @@ Daemon will be stopped at the end of the build
 > Task :app:mergeDebugShaders
 > Task :app:compileDebugShaders NO-SOURCE
 > Task :app:generateDebugAssets UP-TO-DATE
-> Task :app:processDebugResources
 
 > Task :app:runnerAssets
 Downloading Pyodide 0.27.8 from https://registry.npmjs.org/pyodide/-/pyodide-0.27.8.tgz
 
 > Task :app:mergeDebugAssets
-> Task :app:packageDebugUnitTestForUnitTest
 > Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
-> Task :app:generateDebugUnitTestConfig
 > Task :app:desugarDebugFileDependencies
 > Task :app:compressDebugAssets
 > Task :app:mergeDebugJniLibFolders
+> Task :app:processDebugManifestForPackage
 > Task :app:checkDebugDuplicateClasses
-> Task :app:mergeDebugNativeLibs
-> Task :app:compileDebugKotlin
+> Task :app:processDebugResources
 > Task :app:mergeExtDexDebug
+> Task :app:packageDebugUnitTestForUnitTest
+> Task :app:generateDebugUnitTestConfig
+> Task :app:mergeLibDexDebug
+> Task :app:mergeDebugNativeLibs
+> Task :app:validateSigningDebug
+> Task :app:writeDebugAppMetadata
+> Task :app:writeDebugSigningConfigVersions
+
+> Task :app:stripDebugDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so.
 
 > Task :app:compileDebugKotlin
-w: file:///home/runner/work/CS23C02-companion/CS23C02-companion/android/app/src/main/kotlin/app/cs23c02/companion/ReaderFactory.kt:34:21 Redundant creation of Json format. Creating instances for each usage can be slow.
+w: file:///home/runner/work/CS23C02-companion/CS23C02-companion/android/app/src/main/kotlin/app/cs23c02/companion/ReaderFactory.kt:35:21 Redundant creation of Json format. Creating instances for each usage can be slow.
 
 > Task :app:compileDebugJavaWithJavac
 > Task :app:bundleDebugClassesToCompileJar
@@ -53,6 +59,8 @@ w: file:///home/runner/work/CS23C02-companion/CS23C02-companion/android/app/src/
 > Task :app:generateDebugAndroidTestLintModel
 > Task :app:generateDebugUnitTestLintModel
 > Task :app:bundleDebugClassesToRuntimeJar
+> Task :app:lintAnalyzeDebugAndroidTest
+> Task :app:processDebugJavaRes
 
 > Task :app:compileDebugUnitTestKotlin
 w: file:///home/runner/work/CS23C02-companion/CS23C02-companion/android/app/src/test/kotlin/app/cs23c02/companion/api/LiveBackendContractTest.kt:28:29 Java type mismatch: inferred type is 'kotlin.String?', but 'kotlin.String' was expected.
@@ -60,25 +68,15 @@ w: file:///home/runner/work/CS23C02-companion/CS23C02-companion/android/app/src/
 w: file:///home/runner/work/CS23C02-companion/CS23C02-companion/android/app/src/test/kotlin/app/cs23c02/companion/api/LiveBackendContractTest.kt:55:32 Java type mismatch: inferred type is 'kotlin.String?', but 'kotlin.String' was expected.
 w: file:///home/runner/work/CS23C02-companion/CS23C02-companion/android/app/src/test/kotlin/app/cs23c02/companion/api/LiveBackendContractTest.kt:58:28 Java type mismatch: inferred type is 'kotlin.String?', but 'kotlin.String' was expected.
 
-> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
-> Task :app:processDebugJavaRes
-> Task :app:processDebugUnitTestJavaRes
-> Task :app:lintAnalyzeDebugAndroidTest
-> Task :app:testDebugUnitTest
 > Task :app:dexBuilderDebug
-> Task :app:mergeDebugGlobalSynthetics
-> Task :app:mergeLibDexDebug
-> Task :app:mergeProjectDexDebug
-
-> Task :app:stripDebugDebugSymbols
-Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so.
-
-> Task :app:mergeDebugJavaResource
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processDebugUnitTestJavaRes
 > Task :app:lintAnalyzeDebug
 > Task :app:lintAnalyzeDebugUnitTest
-> Task :app:validateSigningDebug
-> Task :app:writeDebugAppMetadata
-> Task :app:writeDebugSigningConfigVersions
+> Task :app:testDebugUnitTest
+> Task :app:mergeDebugGlobalSynthetics
+> Task :app:mergeProjectDexDebug
+> Task :app:mergeDebugJavaResource
 > Task :app:packageDebug
 > Task :app:createDebugApkListingFileRedirect
 > Task :app:assembleDebug
@@ -87,7 +85,7 @@ Unable to strip the following libraries, packaging them as they are: libandroidx
 Wrote HTML report to file:///home/runner/work/CS23C02-companion/CS23C02-companion/android/app/build/reports/lint-results-debug.html
 
 > Task :app:lintDebug
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1793984522466.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1793986573944.json
 
-BUILD SUCCESSFUL in 3m 2s
+BUILD SUCCESSFUL in 3m 26s
 56 actionable tasks: 56 executed
