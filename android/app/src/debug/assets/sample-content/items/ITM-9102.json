@@ -1,0 +1,1 @@
+{"id":"ITM-9102","level":2,"options":[{"id":"a","text":"greeting == 'Hello'"},{"id":"b","text":"greeting = 'Hello'"},{"id":"c","text":"'Hello' = greeting"}],"purpose":"assessment","stem":"Which line stores the text Hello in the variable greeting?","type":"mcq"}

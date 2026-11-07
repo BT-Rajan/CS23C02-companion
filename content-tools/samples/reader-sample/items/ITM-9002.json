@@ -1,0 +1,27 @@
+{
+  "id": "ITM-9002",
+  "type": "mcq",
+  "purpose": "practice",
+  "level": 1,
+  "stem": "Which of these is a valid variable name?",
+  "options": [
+    {
+      "id": "a",
+      "text": "2nd_place"
+    },
+    {
+      "id": "b",
+      "text": "total_score"
+    },
+    {
+      "id": "c",
+      "text": "my-score"
+    }
+  ],
+  "answer": "b",
+  "explanation": "SAMPLE: names may contain letters, digits and _, but cannot start with a digit; - means subtraction.",
+  "option_explanations": {
+    "a": "A name cannot start with a digit.",
+    "c": "Python reads - as minus."
+  }
+}

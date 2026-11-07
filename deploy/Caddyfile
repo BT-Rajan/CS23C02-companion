@@ -1,0 +1,31 @@
+# TLS is automatic (Let's Encrypt) for a real domain; for local testing DOMAIN=localhost uses Caddy's own CA.
+{$DOMAIN} {
+	encode gzip
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		Referrer-Policy no-referrer
+		-Server
+	}
+	# The API. Only /v1 and /healthz are routed; nothing else of the backend is reachable from outside.
+	@api path /v1/* /healthz
+	handle @api {
+		request_body {
+			max_size 256KB
+		}
+		reverse_proxy api:8000
+	}
+	# The landing page (ADR 0008): static, no cookies, no scripts.
+	handle {
+		header Content-Security-Policy "default-src 'none'; img-src 'self'; style-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+		root * /srv/web
+		templates {
+			mime text/html
+		}
+		file_server
+	}
+	log {
+		output stdout
+		format json
+	}
+}

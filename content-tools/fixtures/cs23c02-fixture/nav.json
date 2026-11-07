@@ -3,6 +3,7 @@
     {
       "id": "UNT-0001",
       "title": "Fixture unit: getting started",
+      "assessment": "ASM-0002",
       "topics": [
         {
           "id": "TOP-0001",

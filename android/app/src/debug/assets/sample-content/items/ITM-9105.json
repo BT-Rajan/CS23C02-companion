@@ -1,0 +1,1 @@
+{"code":"def add(a, b):\n    return a + b\n\nprint(add(2, 3))","id":"ITM-9105","level":2,"options":[{"id":"a","text":"5"},{"id":"b","text":"6"},{"id":"c","text":"23"}],"purpose":"assessment","stem":"What does this program print?","type":"trace"}

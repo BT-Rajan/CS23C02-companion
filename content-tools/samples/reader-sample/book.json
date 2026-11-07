@@ -1,0 +1,9 @@
+{
+  "id": "BOK-0001",
+  "title": "SAMPLE CONTENT — not the book",
+  "edition": "sample-1",
+  "version": "0.1.0",
+  "min_app_version": "0.0.1",
+  "python": "3.12",
+  "note": "Written for trying the app's reader on a phone. It follows the book's ID structures but is not book content."
+}

@@ -1,0 +1,13 @@
+# The sandbox service (ADR 0006). Starts as root ONLY to hand each job its own unprivileged UID (setpriv); student code runs
+# inside bubblewrap as UID 65534 with no network. The container itself sits on an internal network with no route out.
+FROM ubuntu:24.04
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends python3.12 python3-pip python3-venv bubblewrap util-linux \
+    && rm -rf /var/lib/apt/lists/*
+RUN --mount=type=secret,id=build_ca,required=false sh -c '[ -s /run/secrets/build_ca ] && export PIP_CERT=/run/secrets/build_ca; python3.12 -m venv /venv && /venv/bin/pip install --no-cache-dir fastapi==0.162.0 uvicorn==0.54.0 pydantic==2.14.2'
+WORKDIR /srv
+COPY sandbox/sandbox /srv/sandbox
+ENV SANDBOX_PYTHON=/usr/bin/python3.12 SANDBOX_SLOTS=4
+EXPOSE 8090
+HEALTHCHECK --interval=30s --timeout=5s CMD /venv/bin/python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8090/healthz')"
+CMD ["/venv/bin/uvicorn", "sandbox.service:app", "--host", "0.0.0.0", "--port", "8090"]

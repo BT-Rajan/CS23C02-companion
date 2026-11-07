@@ -1,0 +1,117 @@
+{
+ "_note": "DEBUG SAMPLE ONLY - answers to sample questions, never book content",
+ "items": {
+  "ITM-9001": {
+   "answer": "b",
+   "explanation": "SAMPLE: = stores the value on the right under the name on the left. It does not compare and does not print.",
+   "option_explanations": {
+    "a": "Comparing uses ==, not =.",
+    "c": "Nothing is printed until print() is called."
+   }
+  },
+  "ITM-9002": {
+   "answer": "b",
+   "explanation": "SAMPLE: names may contain letters, digits and _, but cannot start with a digit; - means subtraction.",
+   "option_explanations": {
+    "a": "A name cannot start with a digit.",
+    "c": "Python reads - as minus."
+   }
+  },
+  "ITM-9003": {
+   "answer": "b",
+   "explanation": "SAMPLE: the right-hand side score + 5 is worked out first using the old value 10, giving 15, which is stored back in score.",
+   "option_explanations": {
+    "a": "score was given a new value on line 2.",
+    "c": "print shows the value, not the expression."
+   }
+  },
+  "ITM-9004": {
+   "answer": "b",
+   "explanation": "SAMPLE: 4 > 10 is False, so the if block is skipped and the else block runs.",
+   "option_explanations": {
+    "a": "4 > 10 is False.",
+    "c": "Only one of the two blocks runs."
+   }
+  }
+ },
+ "assessment_items": {
+  "ITM-9101": {
+   "answer": "c",
+   "explanation": "SAMPLE: the right side uses the old value 5, so a becomes 10.",
+   "option_explanations": {
+    "a": "a was given a new value.",
+    "b": "* multiplies; it does not add 2."
+   }
+  },
+  "ITM-9102": {
+   "answer": "b",
+   "explanation": "SAMPLE: = stores the value on the right under the name on the left.",
+   "option_explanations": {
+    "a": "== compares; it stores nothing.",
+    "c": "The name must be on the left."
+   }
+  },
+  "ITM-9103": {
+   "answer": "b",
+   "explanation": "SAMPLE: 3 > 5 is False, so the else branch runs.",
+   "option_explanations": {
+    "a": "3 > 5 is False.",
+    "c": "Only one branch runs."
+   }
+  },
+  "ITM-9104": {
+   "answer": "b",
+   "explanation": "SAMPLE: the loop runs once for each item, and the list has 3 items.",
+   "option_explanations": {
+    "a": "It repeats for every item.",
+    "c": "9 is an item, not a count."
+   }
+  },
+  "ITM-9105": {
+   "answer": "a",
+   "explanation": "SAMPLE: add(2, 3) returns 2 + 3, which is 5.",
+   "option_explanations": {
+    "b": "2 + 3 is 5.",
+    "c": "These are numbers, not text."
+   }
+  }
+ },
+ "exercises": {
+  "EXR-9001": {
+   "hidden_tests": [
+    {
+     "expect": "-6\n",
+     "stdin": "-3\n"
+    },
+    {
+     "expect": "0\n",
+     "stdin": "0\n"
+    }
+   ],
+   "hints": [
+    "SAMPLE: input() gives text. int() turns it into a number you can multiply.",
+    "SAMPLE: n * 2 is twice n; print it."
+   ],
+   "reference_solution": "n = int(input())\nprint(n * 2)\n",
+   "solution_approach": "SAMPLE: read the number, multiply by 2, print the result."
+  },
+  "EXR-9002": {
+   "hidden_tests": [
+    {
+     "expect": "even\n",
+     "stdin": "0\n"
+    },
+    {
+     "expect": "odd\n",
+     "stdin": "-5\n"
+    }
+   ],
+   "hints": [
+    "SAMPLE: number % 2 is the remainder after dividing by 2.",
+    "SAMPLE: an even number leaves remainder 0. Use if and else."
+   ],
+   "reference_solution": "number = int(input())\nif number % 2 == 0:\n    print('even')\nelse:\n    print('odd')\n",
+   "solution_approach": "SAMPLE: check number % 2 == 0 with if/else and print the matching word."
+  }
+ }
+}

@@ -6,10 +6,10 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from .. import mail, ratelimit
+from .. import anomaly, mail, ratelimit
 from ..audit import audit
 from ..db import get_db, utcnow
-from ..deps import Principal, client_ip_hash, get_current
+from ..deps import Principal, client_ip_hash, get_current_any
 from ..errors import ApiError
 from ..models import OneTimeCode, User
 from ..security import (hash_password, needs_rehash, sha256_hex, spend_password_time, validate_password, verify_password)
@@ -42,6 +42,10 @@ class LoginIn(Credentials):
 
 class RefreshIn(_In):
     refresh_token: str = Field(min_length=20, max_length=200)
+
+
+class ReverifyIn(_In):
+    code: str = Field(pattern=r"^\d{6}$")
 
 
 class ForgotIn(_In):
@@ -151,7 +155,7 @@ def refresh(body: RefreshIn, request: Request, db: Session = Depends(get_db)):
 
 
 @router.post("/logout", status_code=204)
-def logout(request: Request, p: Principal = Depends(get_current), db: Session = Depends(get_db)):
+def logout(request: Request, p: Principal = Depends(get_current_any), db: Session = Depends(get_db)):
     service.revoke(db, p.session, "logout")
     audit("logout", "success", p.user.id, f"session:{p.session.id}", client_ip_hash(request), db=db)
     db.commit()
@@ -186,5 +190,34 @@ def reset(body: ResetIn, request: Request, db: Session = Depends(get_db)):
     for r in db.scalars(select(OneTimeCode).where(OneTimeCode.email == email, OneTimeCode.used_at.is_(None))):
         r.used_at = now
     audit("password_reset", "success", user.id, None, iph, db=db)
+    db.commit()
+    return {"status": "ok"}
+
+
+# ---- anomaly re-verification (ADR 0004, K9) --------------------------------------------------------------------------
+@router.post("/reverify/send", status_code=202)
+def reverify_send(request: Request, bg: BackgroundTasks, p: Principal = Depends(get_current_any), db: Session = Depends(get_db)):
+    """Emails a code to the ACCOUNT's address (never to an address the client names)."""
+    iph = client_ip_hash(request)
+    ratelimit.enforce(f"reverify-send-ip:{iph}", 30, 3600)
+    if not anomaly.needs_reverify(p.user, p.session):
+        return {"status": "not_needed"}
+    if service.may_send(p.user.email, "reverify"):
+        bg.add_task(mail.reverify_email, p.user.email, service.issue_code(db, p.user.email, "reverify"))
+    return {"status": "code_sent", "email_hint": anomaly.email_hint(p.user.email)}
+
+
+@router.post("/reverify")
+def reverify(body: ReverifyIn, request: Request, p: Principal = Depends(get_current_any), db: Session = Depends(get_db)):
+    """Confirms THIS session only: every other device that must confirm needs its own code."""
+    iph = client_ip_hash(request)
+    ratelimit.enforce(f"reverify-ip:{iph}", 60, 3600)
+    if not anomaly.needs_reverify(p.user, p.session):
+        return {"status": "ok"}
+    if not service.verify_code(db, p.user.email, "reverify", body.code):
+        audit("reverify", "fail", p.user.id, f"session:{p.session.id}", iph)
+        raise ApiError(400, BAD_CODE, "bad_code")
+    p.session.reverified_at = utcnow()
+    audit("reverify", "success", p.user.id, f"session:{p.session.id}", iph, db=db)
     db.commit()
     return {"status": "ok"}

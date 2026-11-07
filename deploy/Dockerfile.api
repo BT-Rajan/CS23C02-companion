@@ -1,0 +1,17 @@
+# The API (FastAPI). No student code ever runs here: graded runs go to the sandbox service (SANDBOX_MODE=http).
+FROM python:3.12-slim-bookworm
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+RUN apt-get update && apt-get install -y --no-install-recommends default-mysql-client && rm -rf /var/lib/apt/lists/* \
+    && useradd --system --uid 10001 --home /app api
+WORKDIR /app
+COPY backend/requirements.txt .
+# build_ca: optional extra CA for builds behind a TLS-intercepting proxy (empty on a normal server; never in the image).
+RUN --mount=type=secret,id=build_ca,required=false sh -c '[ -s /run/secrets/build_ca ] && export PIP_CERT=/run/secrets/build_ca; pip install --no-cache-dir -r requirements.txt'
+COPY backend/ /app/
+COPY content-tools/ /content-tools/
+COPY sandbox/ /sandbox/
+RUN rm -rf /app/.venv /app/tests && mkdir -p /data/content && chown api /data/content
+USER api
+EXPOSE 8000
+HEALTHCHECK --interval=30s --timeout=5s CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz')"
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2", "--proxy-headers", "--forwarded-allow-ips", "*"]

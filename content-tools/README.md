@@ -9,3 +9,5 @@ python -m pytest content-tools                               # from the repo roo
 solutions and goes **only** into the server database. The build fails on Release-validation errors and on any leak.
 `fixtures/` is **test data that follows the textbook's ID structures; it is not book content.** Regenerate with `fixtures/make_fixture.py`.
 Not yet checked here: running each `reference_solution` against its tests in the sandbox (arrives with Phase 5).
+`samples/reader-sample/` is SAMPLE content for trying the app's reader (debug builds only); build it into the app with
+`backend/.venv/bin/python android/scripts/make-sample-content.py` (throwaway signing key, code blocks checked with the recorder).

@@ -1,0 +1,1 @@
+{"code":"x = 3\nif x > 5:\n    print('yes')\nelse:\n    print('no')","id":"ITM-9103","level":2,"options":[{"id":"a","text":"yes"},{"id":"b","text":"no"},{"id":"c","text":"yes and no"}],"purpose":"assessment","stem":"What does this program print?","type":"trace"}

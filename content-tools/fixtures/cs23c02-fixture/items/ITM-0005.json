@@ -1,0 +1,20 @@
+{
+  "id": "ITM-0005",
+  "type": "mcq",
+  "purpose": "assessment",
+  "level": 1,
+  "stem": "FIXTURE assessment-only question: what is 2 + 3?",
+  "options": [
+    {
+      "id": "a",
+      "text": "5"
+    },
+    {
+      "id": "b",
+      "text": "23"
+    }
+  ],
+  "answer": "a",
+  "explanation": "FIXTURE-EXPLAIN-5: integer addition.",
+  "option_explanations": {}
+}

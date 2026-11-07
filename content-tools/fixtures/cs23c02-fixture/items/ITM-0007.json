@@ -1,0 +1,28 @@
+{
+  "id": "ITM-0007",
+  "type": "trace",
+  "purpose": "assessment",
+  "level": 1,
+  "stem": "FIXTURE assessment-only: what does this print?",
+  "options": [
+    {
+      "id": "a",
+      "text": "3"
+    },
+    {
+      "id": "b",
+      "text": "4"
+    },
+    {
+      "id": "c",
+      "text": "12"
+    }
+  ],
+  "answer": "b",
+  "explanation": "FIXTURE-EXPLAIN-7: x becomes 3 + 1.",
+  "option_explanations": {
+    "a": "x changed on line 2.",
+    "c": "Addition, not concatenation."
+  },
+  "code": "x = 3\nx = x + 1\nprint(x)"
+}

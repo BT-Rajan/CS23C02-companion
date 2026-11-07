@@ -24,6 +24,7 @@ See [`docs/status.md`](docs/status.md) for what is implemented, tested, incomple
 | `docs/content-interface.md` | What the app consumes from the textbook repo; App Content Package v0; requests to the textbook side |
 | `docs/security/` | Threat model, attack register, control matrix, residual risks |
 | `docs/ux/` | Journeys, screen map, design system |
+| `docs/roadmap.md` | Plan to finish the book and the app (two tracks) |
 | `docs/open-questions.md` | Decisions awaiting approval |
 | `docs/known-issues.md` | Known-issues register |
 

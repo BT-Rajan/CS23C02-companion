@@ -1,0 +1,20 @@
+name: runtime
+on:
+  push:
+    paths: ["runtime/**", ".github/workflows/runtime.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  stepper:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        python: ["3.12", "3.13"]   # 3.12 = Pyodide's CPython and the book build pin
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "${{ matrix.python }}" }
+      - run: pip install pytest==8.3.3
+      - run: timeout 300 python -m pytest -q runtime/tests

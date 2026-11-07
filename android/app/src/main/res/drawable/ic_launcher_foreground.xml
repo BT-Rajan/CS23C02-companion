@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A code line with a step marker: the app's idea (read code line by line). Kept inside the 66dp safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#FFFFFF" android:pathData="M36,40 L46,46 L36,52 Z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M50,43 h22 a3,3 0 0 1 0,6 h-22 a3,3 0 0 1 0,-6 Z" />
+    <path android:fillColor="#A6CBF2" android:pathData="M50,55 h16 a3,3 0 0 1 0,6 h-16 a3,3 0 0 1 0,-6 Z" />
+    <path android:fillColor="#A6CBF2" android:pathData="M50,67 h20 a3,3 0 0 1 0,6 h-20 a3,3 0 0 1 0,-6 Z" />
+</vector>

@@ -1,0 +1,34 @@
+{
+  "id": "LSN-9003",
+  "title": "if and else",
+  "topic": "TOP-9002",
+  "minutes": 8,
+  "blocks": [
+    {
+      "type": "paragraph",
+      "text": "Sometimes a program must choose what to do. An if statement runs its indented lines only when a condition is True."
+    },
+    {
+      "type": "syntax",
+      "text": "if condition:\n    lines to run when True\nelse:\n    lines to run when False"
+    },
+    {
+      "type": "code",
+      "code": "number = 7\nif number % 2 == 0:\n    print(number, \"is even\")\nelse:\n    print(number, \"is odd\")",
+      "expected_output": "7 is odd"
+    },
+    {
+      "type": "note",
+      "text": "The colon at the end of the if line and the 4-space indentation are required."
+    }
+  ],
+  "quiz": null,
+  "practice": {
+    "items": [
+      "ITM-9004"
+    ],
+    "exercises": [
+      "EXR-9002"
+    ]
+  }
+}

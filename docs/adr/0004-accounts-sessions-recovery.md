@@ -8,3 +8,12 @@
 - Anomalies (many distinct sessions/IPs in a short window) trigger *email re-verification*, never an account lock. Repeated trigger raises a support flag.
 - Login throttling: per account + per IP with exponential delay; failures do not reveal whether the email exists.
 **Consequences.** Credential sharing is deterred and detectable, not prevented. Email access equals account access (standard); loss of email access is handled by support with proof of purchase.
+
+**Amendment 2026-11-06 (built, K9).** Signals come from the sessions table only (no new tracking): new sign-ins in 24 h
+(default 6), distinct sign-in networks in 24 h (keyed address hashes, default 4), device-cap evictions in 7 days (default 4);
+all configurable (`ANOMALY_*`). Any one starts a 7-day window (`REVERIFY_WINDOW_DAYS`); every session that existed then or is
+created during it gets `403 reverify_required` on everything except who-am-I, sign-out and re-verification until it enters a
+6-digit code emailed to the **account's** address (same code rules as verification). Confirmation is **per session**, so the
+owner confirms each of their devices once and a friend needs a freshly forwarded code. No re-trigger while a window is open.
+Three triggers in 30 days set a support flag (`app.cli flagged-accounts`, `clear-flag --note`); people decide, nothing is locked.
+Sign-in, sign-out and password reset always work.

@@ -1,0 +1,37 @@
+{
+  "id": "EXR-9002",
+  "title": "Even or odd",
+  "statement": "Read a whole number. Print even if it is even, otherwise odd.",
+  "io_spec": "Input: one whole number. Output: the word even or odd.",
+  "starter": "number = int(input())\n",
+  "python": "3.12",
+  "timeout_s": 2,
+  "tests": [
+    {
+      "stdin": "10\n",
+      "expect": "even\n",
+      "visibility": "public"
+    },
+    {
+      "stdin": "7\n",
+      "expect": "odd\n",
+      "visibility": "public"
+    },
+    {
+      "stdin": "0\n",
+      "expect": "even\n",
+      "visibility": "hidden"
+    },
+    {
+      "stdin": "-5\n",
+      "expect": "odd\n",
+      "visibility": "hidden"
+    }
+  ],
+  "hints": [
+    "SAMPLE: number % 2 is the remainder after dividing by 2.",
+    "SAMPLE: an even number leaves remainder 0. Use if and else."
+  ],
+  "solution_approach": "SAMPLE: check number % 2 == 0 with if/else and print the matching word.",
+  "reference_solution": "number = int(input())\nif number % 2 == 0:\n    print('even')\nelse:\n    print('odd')\n"
+}

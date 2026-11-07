@@ -1,0 +1,31 @@
+{
+  "id": "LSN-9005",
+  "title": "Defining and calling a function",
+  "topic": "TOP-9004",
+  "minutes": 9,
+  "blocks": [
+    {
+      "type": "paragraph",
+      "text": "A function is a named block of code you can run whenever you need it. def creates the function; calling it runs its body."
+    },
+    {
+      "type": "definition",
+      "term": "parameter",
+      "text": "A name in the function's definition that receives a value when the function is called."
+    },
+    {
+      "type": "code",
+      "code": "def area(width, height):\n    return width * height\n\nprint(area(4, 3))\nprint(area(6, 5))",
+      "expected_output": "12\n30"
+    },
+    {
+      "type": "syntax",
+      "text": "def name(parameters):\n    body\n    return value"
+    }
+  ],
+  "quiz": null,
+  "practice": {
+    "items": [],
+    "exercises": []
+  }
+}

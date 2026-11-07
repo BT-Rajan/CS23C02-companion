@@ -4,7 +4,7 @@ import secrets
 
 # Settings must be in place before the app is imported.
 os.environ.update({
-    "ENV": "test", "EMAIL_BACKEND": "memory", "TRUST_PROXY_HEADERS": "true",
+    "ENV": "test", "EMAIL_BACKEND": "memory", "TRUST_PROXY_HEADERS": "true", "SANDBOX_MODE": "local",
     "ARGON_MEMORY_KB": "8192", "ARGON_TIME_COST": "1", "DB_POOL_SIZE": "40", "DB_MAX_OVERFLOW": "20",
     "JWT_SECRET": secrets.token_hex(32), "CODE_PEPPER": secrets.token_hex(32), "AUX_PEPPER": secrets.token_hex(32),
 })

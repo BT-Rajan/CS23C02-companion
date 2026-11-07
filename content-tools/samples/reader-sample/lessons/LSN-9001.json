@@ -1,0 +1,42 @@
+{
+  "id": "LSN-9001",
+  "title": "What is a variable?",
+  "topic": "TOP-9001",
+  "minutes": 5,
+  "blocks": [
+    {
+      "type": "paragraph",
+      "text": "Programs work with values: numbers, text, lists. A variable is a name you give to a value so you can use it later."
+    },
+    {
+      "type": "definition",
+      "term": "variable",
+      "text": "A name that refers to a value stored in the computer's memory."
+    },
+    {
+      "type": "code",
+      "code": "age = 19\nprint(age)",
+      "expected_output": "19"
+    },
+    {
+      "type": "paragraph",
+      "text": "The = sign does not mean \"equals\" as in mathematics. It means: work out the right-hand side, then store the result under the name on the left."
+    },
+    {
+      "type": "syntax",
+      "text": "name = expression"
+    },
+    {
+      "type": "note",
+      "text": "Names are case-sensitive: age and Age are different variables."
+    }
+  ],
+  "quiz": null,
+  "practice": {
+    "items": [
+      "ITM-9001",
+      "ITM-9002"
+    ],
+    "exercises": []
+  }
+}

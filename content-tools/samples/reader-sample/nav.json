@@ -1,0 +1,47 @@
+{
+  "units": [
+    {
+      "id": "UNT-9001",
+      "title": "Sample unit 1: first programs",
+      "topics": [
+        {
+          "id": "TOP-9001",
+          "title": "Values and variables",
+          "lessons": [
+            "LSN-9001",
+            "LSN-9002"
+          ]
+        },
+        {
+          "id": "TOP-9002",
+          "title": "Making decisions",
+          "lessons": [
+            "LSN-9003"
+          ]
+        }
+      ],
+      "assessment": "ASM-9001"
+    },
+    {
+      "id": "UNT-9002",
+      "title": "Sample unit 2: repetition and functions",
+      "topics": [
+        {
+          "id": "TOP-9003",
+          "title": "Repeating with for",
+          "lessons": [
+            "LSN-9004"
+          ]
+        },
+        {
+          "id": "TOP-9004",
+          "title": "Functions",
+          "lessons": [
+            "LSN-9005"
+          ]
+        }
+      ],
+      "assessment": "ASM-9002"
+    }
+  ]
+}

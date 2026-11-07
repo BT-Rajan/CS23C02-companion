@@ -1,0 +1,38 @@
+{
+  "id": "LSN-9002",
+  "title": "Changing a variable",
+  "topic": "TOP-9001",
+  "minutes": 6,
+  "blocks": [
+    {
+      "type": "paragraph",
+      "text": "A variable can be given a new value at any time. The old value is replaced."
+    },
+    {
+      "type": "code",
+      "code": "score = 10\nscore = score + 5\nprint(score)",
+      "expected_output": "15"
+    },
+    {
+      "type": "paragraph",
+      "text": "Read the second line from right to left: Python first works out score + 5 using the current value (10), then stores 15 back in score."
+    },
+    {
+      "type": "list",
+      "items": [
+        "Right-hand side first.",
+        "Then store the result on the left.",
+        "The old value is gone."
+      ]
+    }
+  ],
+  "quiz": null,
+  "practice": {
+    "items": [
+      "ITM-9003"
+    ],
+    "exercises": [
+      "EXR-9001"
+    ]
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "id": "ITM-9102",
+  "type": "mcq",
+  "purpose": "assessment",
+  "level": 2,
+  "stem": "Which line stores the text Hello in the variable greeting?",
+  "options": [
+    {
+      "id": "a",
+      "text": "greeting == 'Hello'"
+    },
+    {
+      "id": "b",
+      "text": "greeting = 'Hello'"
+    },
+    {
+      "id": "c",
+      "text": "'Hello' = greeting"
+    }
+  ],
+  "answer": "b",
+  "explanation": "SAMPLE: = stores the value on the right under the name on the left.",
+  "option_explanations": {
+    "a": "== compares; it stores nothing.",
+    "c": "The name must be on the left."
+  }
+}

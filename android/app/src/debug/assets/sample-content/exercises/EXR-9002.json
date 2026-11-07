@@ -1,0 +1,1 @@
+{"id":"EXR-9002","io_spec":"Input: one whole number. Output: the word even or odd.","python":"3.12","starter":"number = int(input())\n","statement":"Read a whole number. Print even if it is even, otherwise odd.","tests":[{"expect":"even\n","stdin":"10\n"},{"expect":"odd\n","stdin":"7\n"}],"timeout_s":2,"title":"Even or odd"}

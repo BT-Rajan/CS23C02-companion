@@ -4,3 +4,9 @@
 
 ## Amendment (2026-11-04): server address
 The server address is a **build-time** setting (`API_BASE_URL`, read from `android/.env` locally or a GitHub repository variable in CI), baked into `BuildConfig` and never editable by the student. The build rejects anything but `https://host[:port]`. See `docs/ops/android-config.md`.
+
+## Amendment (2026-11-06): A2 storage and sync
+Lessons and progress are stored as small files in `noBackupFilesDir` (content-addressed package files + one atomically replaced
+`current` file; one progress JSON) instead of Room, and progress syncs when Home opens and after each event instead of WorkManager.
+The data is small and append-only, so this is simpler to verify; Room/WorkManager can replace it behind `ReaderRepository` if needed.
+Release builds also require `CONTENT_SIGNING_PUBKEY` (the Ed25519 public key that verifies packages, via Tink).

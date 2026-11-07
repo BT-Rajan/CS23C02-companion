@@ -17,7 +17,7 @@ from .leakcheck import check as leak_check
 
 FORMAT = "cs23c02-package/0"
 LESSON_FIELDS = ("id", "title", "topic", "minutes", "blocks", "quiz", "practice")
-ITEM_FIELDS = ("id", "type", "purpose", "level", "stem")
+ITEM_FIELDS = ("id", "type", "purpose", "level", "stem", "code")  # code: the program a trace item asks about
 EXR_FIELDS = ("id", "title", "statement", "io_spec", "starter", "python", "timeout_s")
 ASM_FIELDS = ("id", "title", "purpose", "items", "rules")
 VISIBILITIES = {"public", "hidden"}
@@ -68,12 +68,14 @@ def validate(book, nav, lessons, items, exrs, asms) -> list[str]:
                 errs.append(f"{lid}: unknown exercise {e}")
     for iid, it in items.items():
         ids = [o["id"] for o in it.get("options", [])]
-        if it["type"] == "mcq" and (it.get("answer") not in ids or len(ids) != len(set(ids)) or len(ids) < 2):
+        if it["type"] in ("mcq", "trace") and (it.get("answer") not in ids or len(ids) != len(set(ids)) or len(ids) < 2):
             errs.append(f"{iid}: mcq needs unique option ids and exactly one valid answer")
         if not it.get("explanation"):
             errs.append(f"{iid}: missing explanation")
         if it.get("purpose") not in ("practice", "assessment"):
             errs.append(f"{iid}: purpose must be practice or assessment")
+        if it["type"] == "trace" and not it.get("code"):
+            errs.append(f"{iid}: a trace item needs the code it asks about")
     for eid, e in exrs.items():
         vis = [t.get("visibility") for t in e.get("tests", [])]
         if any(v not in VISIBILITIES for v in vis) or "public" not in vis or "hidden" not in vis:
@@ -84,14 +86,59 @@ def validate(book, nav, lessons, items, exrs, asms) -> list[str]:
         for i in a["items"]:
             if i not in items and i not in exrs:
                 errs.append(f"{aid}: unknown item {i}")
+    # Unit assessments (A7): one per unit at most, assessment-only questions the server can mark, never reused in practice.
+    practice_ids = {i for l in lessons.values() for i in l.get("practice", {}).get("items", [])}
+    for u in nav["units"]:
+        aid = u.get("assessment")
+        if not aid:
+            continue
+        a = asms.get(aid)
+        if a is None:
+            errs.append(f"{u['id']}: unknown assessment {aid}")
+            continue
+        if a.get("purpose") != "unit_assessment":
+            errs.append(f"{aid}: a unit's assessment must have purpose unit_assessment")
+        if not a["items"]:
+            errs.append(f"{aid}: has no questions")
+        for i in a["items"]:
+            it = items.get(i)
+            if it is None or it.get("purpose") != "assessment" or it.get("type") not in ("mcq", "trace"):
+                errs.append(f"{aid}: {i} must be an assessment-only mcq or trace item")
+            if i in practice_ids:
+                errs.append(f"{aid}: {i} is also a practice question, so its answer would be revealed before the assessment")
     return errs
 
 
-def build(src: pathlib.Path, out: pathlib.Path, private_key: Ed25519PrivateKey, signed_at: str = "") -> dict:
+def check_solutions(src: pathlib.Path) -> list[str]:
+    """K13: every exercise's reference_solution must pass ALL of its tests (public and hidden) in the real sandbox, so the
+    app can never mark a correct answer wrong. Needs the sandbox (bubblewrap + python3.12); returns problems found."""
+    root = pathlib.Path(__file__).resolve().parents[2] / "sandbox"
+    if str(root) not in sys.path:
+        sys.path.insert(0, str(root))
+    from sandbox import grader, runner  # noqa: PLC0415
+    if not runner.available():
+        raise BuildError("--check-solutions needs the sandbox (bubblewrap and python3.12)")
+    errs = []
+    for eid, e in sorted(_load(src / "exercises").items()):
+        tests = [{"stdin": t["stdin"], "expect": t["expect"]} for t in e.get("tests", [])]
+        if not tests:
+            continue
+        g = grader.grade(e["reference_solution"], tests)
+        for i, (t, r) in enumerate(zip(e["tests"], g["tests"])):
+            if not r["passed"]:
+                errs.append(f"{eid}: reference solution fails {t.get('visibility', '?')} test {i + 1} "
+                            f"({r['status']}{': ' + r['error'] if r['error'] else ''})")
+    return errs
+
+
+def build(src: pathlib.Path, out: pathlib.Path, private_key: Ed25519PrivateKey, signed_at: str = "",
+          check_reference_solutions: bool = False) -> dict:
     book = json.loads((src / "book.json").read_text())
     nav = json.loads((src / "nav.json").read_text())
     lessons, items, exrs, asms = (_load(src / d) for d in ("lessons", "items", "exercises", "assessments"))
     errs = validate(book, nav, lessons, items, exrs, asms)
+    if not errs and check_reference_solutions:
+        errs = check_solutions(src)
     if errs:
         raise BuildError("Release validation failed:\n  " + "\n  ".join(errs))
 
@@ -155,6 +202,7 @@ def main(argv=None):
     sub.add_parser("keygen", help="print a new signing keypair (keep the private key secret)")
     b = sub.add_parser("build")
     b.add_argument("src"); b.add_argument("out"); b.add_argument("--key-file", required=True, help="file holding the base64 private key")
+    b.add_argument("--check-solutions", action="store_true", help="run every reference solution against its tests in the sandbox")
     a = p.parse_args(argv)
     if a.cmd == "keygen":
         priv, pub = new_keypair()
@@ -162,7 +210,8 @@ def main(argv=None):
         print("PUBLIC  (CONTENT_SIGNING_PUBKEY):", pub)
         return
     try:
-        m = build(pathlib.Path(a.src), pathlib.Path(a.out), load_private(pathlib.Path(a.key_file).read_text().strip()))
+        m = build(pathlib.Path(a.src), pathlib.Path(a.out), load_private(pathlib.Path(a.key_file).read_text().strip()),
+                  check_reference_solutions=a.check_solutions)
     except BuildError as e:
         sys.exit(str(e))
     print(f"built {m['book']['id']} {m['book']['version']}: {len(m['files'])} public files -> {a.out}/public (protected set: {a.out}/protected.json — never publish)")

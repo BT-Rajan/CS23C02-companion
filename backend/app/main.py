@@ -7,6 +7,9 @@ from .content.router import router as content_router
 from .progress import router as progress_router
 from .config import get_settings
 from .me import router as me_router
+from .practice import router as practice_router
+from .exercises import router as exercises_router
+from .assessments import router as assessments_router
 
 
 class _TooLarge(Exception):
@@ -69,6 +72,9 @@ def create_app() -> FastAPI:
     app.include_router(me_router)
     app.include_router(content_router)
     app.include_router(progress_router)
+    app.include_router(practice_router)
+    app.include_router(exercises_router)
+    app.include_router(assessments_router)
 
     @app.get("/healthz", include_in_schema=False)
     def healthz():

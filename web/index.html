@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CS23C02 Companion</title>
+<meta name="description" content="The companion app for the CS23C02 textbook: read, step through code line by line, practise and check your programs.">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<main>
+  <h1>CS23C02 Companion</h1>
+  <p class="lead">The app that comes with your CS23C02 textbook. Read the lessons offline, step through every program one line
+  at a time, ask the tutor to show you a program or guide you while you type it, practise, and check your own code.</p>
+
+  <h2>Get the app</h2>
+  {{if env "PLAY_URL"}}<p><a class="button" href="{{env "PLAY_URL"}}">Get it on Google Play</a></p>
+  {{else}}<p class="note">The app is not on Google Play yet. This page will link to it as soon as it is.</p>{{end}}
+  <p>You need an Android phone (Android 8 or newer) and the activation code printed inside your copy of the book.</p>
+
+  <h2>How to start</h2>
+  <ol>
+    <li>Install the app and create an account with your email address.</li>
+    <li>Enter the code we email you to confirm the address.</li>
+    <li>Scratch the panel in your book and enter the activation code.</li>
+  </ol>
+
+  <h2>Help</h2>
+  <p>Problems with an activation code or your account? {{if env "SUPPORT_EMAIL"}}Write to
+  <a href="mailto:{{env "SUPPORT_EMAIL"}}">{{env "SUPPORT_EMAIL"}}</a> with the serial number printed next to the code (never send
+  the code itself).{{else}}Contact the publisher with the serial number printed next to the code (never send the code itself).{{end}}</p>
+
+  <p class="small"><a href="/privacy.html">Privacy policy</a></p>
+</main>
+</body>
+</html>

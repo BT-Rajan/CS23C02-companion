@@ -12,7 +12,7 @@
 | A7 | Replay successful request | Activation | Idempotent; second returns generic failure | Replay test | Pass (Phase 2) – see test-evidence.md | None |
 | A8 | Many accounts, one code | Activation | Unique constraints on code and (user, edition) | Concurrency + DB constraint test | Pass (Phase 2) – see test-evidence.md | None |
 | A9 | Fake client "activated" flag | Client | Flags are cosmetic; every API call checks server entitlement | Patch app; call APIs | Server-authoritative (Phase 2) – see test-evidence.md | None |
-| B1 | Credential sharing | Accounts | Device cap, anomaly re-verification, support flag | Multi-device simulation | Partial: device cap only – see test-evidence.md | **Medium** |
+| B1 | Credential sharing | Accounts | Device cap, anomaly re-verification, support flag | Multi-device simulation | **Pass** (K9): signals, per-device re-verification, support flag; mutation-checked – `test_anomaly.py`, live contract | **Medium** (inherent: a determined owner can forward codes, K44) |
 | B2 | Brute-force login | Auth | Throttling, Argon2id, uniform errors | Burst test | Pass (Phase 2) – see test-evidence.md | Low |
 | B3 | Account enumeration (login, register, forgot) | Auth | Uniform responses and timing | Differential test | Pass (Phase 2) – see test-evidence.md | Low |
 | B4 | Abuse reset codes | Recovery | 6-digit, 10 min, 5 tries, single use, send caps | Attempt test | Pass (Phase 2) – see test-evidence.md | Low |
@@ -27,22 +27,22 @@
 | C5 | Read cache after logout/user switch | Client | Encrypted store keyed per account; wiped on logout | Device test | Backend revocation passes; device cache not built – see test-evidence.md | Low |
 | C6 | Bulk scrape lessons | Content | Volume/rate detection; signed short-lived URLs | Load + alert test | Partial: per-account brake only – see test-evidence.md | **Medium** |
 | C7 | Screenshot/photograph content | Content | None possible | – | Accepted | **High (accepted)** |
-| D1 | Read answers from API/pre-submit | Assessment | No correctness in pre-submit payloads | Response schema test | Not tested | None |
-| D2 | Inspect app resources for keys | Assessment | None shipped | CI package scan | Pass for packages (Phase 3); app resources not built – see test-evidence.md | None |
-| D3 | Submit altered scores/answers | Assessment | Server scores from raw choices | Tamper tests | Not tested | None |
-| D4 | Replay a submission | Assessment | Idempotent request id | Replay test | Not tested | None |
-| D5 | Unlimited retries via local reset | Assessment | Attempt counts server-side | Reset test | Not tested | None |
-| D6 | Share answers by option position | Assessment | Per-attempt shuffle | Statistical test | Not tested | Low |
-| D7 | Repeated practice calls to learn keys | Practice | Per-question verdicts rate-limited; anomaly alerts | Enumeration test | Not tested | **Medium** (inherent to immediate feedback) |
+| D1 | Read answers from API/pre-submit | Assessment | No correctness in pre-submit payloads; the practice endpoint refuses assessment items with the same 404 as unknown ones | Response schema test | Pass (A5, A7): practice endpoint refuses assessment items; every assessment payload before submit is free of answers/explanations – `test_practice.py`, `test_assessments.py` | None |
+| D2 | Inspect app resources for keys | Assessment | None shipped | CI package scan | Pass for packages (Phase 3); release APK carries no keys (only the debug build has answers for its SAMPLE questions, outside the signed package) – see test-evidence.md | None |
+| D3 | Submit altered scores/answers | Assessment | Server scores from raw choices | Tamper tests | Pass (A7): score/extra fields rejected, answers outside the attempt rejected – `test_assessments.py` | None |
+| D4 | Replay a submission | Assessment | Idempotent request id | Replay test | Pass (A7): repeated/replayed submit returns the stored result; saving after submit refused; stale autosaves refused – `test_assessments.py`, live contract | None |
+| D5 | Unlimited retries via local reset | Assessment | Attempt counts server-side | Reset test | Pass (A7): one attempt per 24 h enforced by the server (mutation-checked); 8 simultaneous starts create exactly one attempt (found a snapshot-read race during testing, fixed) | None |
+| D6 | Share answers by option position | Assessment | Per-attempt shuffle | Statistical test | Pass (A7): options (and items) shuffled per attempt, stable within it – `test_d6_…` | Low |
+| D7 | Repeated practice calls to learn keys | Practice | One question per call; answer revealed only after a right answer or 2 wrong tries; 300/h per account, 30/h per question; anomaly alerts not built | Enumeration test | Pass for limits and reveal policy (A5) – `test_practice.py` (mutation-checked) | **Medium** (inherent to immediate feedback; practice keys are not assessment keys) |
 | D8 | Forge progress events | Progress | Only low-stakes events accepted from client; verified events server-derived | Event fuzz | Partial pass (Phase 3) – see test-evidence.md | Low |
-| E1 | Infinite loop | Sandbox | Wall/CPU limits, kill | Hostile suite | Not tested | None |
-| E2 | Memory bomb | Sandbox | cgroup limit | Hostile suite | Not tested | None |
-| E3 | Output flood | Sandbox/app | Output cap, truncation | Hostile suite | Not tested | None |
-| E4 | File access/write | Sandbox | Read-only root, tmpfs, no secrets mounted | Hostile suite | Not tested | None |
-| E5 | Network access | Sandbox | No network namespace | Hostile suite | Not tested | None |
-| E6 | Fork bomb / subprocess | Sandbox | pids limit, seccomp | Hostile suite | Not tested | None |
-| E7 | Malicious imports (`os`, `ctypes`, …) | Sandbox | Allow-list + isolation as defence in depth | Hostile suite | Not tested | None |
-| E8 | Sandbox escape | Sandbox | gVisor/nsjail, non-root, no shared state, fresh per job, host patching | Third-party review before release | Not tested | **Low–Medium** |
+| E1 | Infinite loop | Sandbox | Wall/CPU limits, kill | Hostile suite | Pass (A6) – infinite loop and sleep stopped – see test-evidence.md | None |
+| E2 | Memory bomb | Sandbox | cgroup limit | Hostile suite | Pass (A6) – see test-evidence.md | None |
+| E3 | Output flood | Sandbox/app | Output cap, truncation | Hostile suite | Pass (A6) – output capped at 64 KB – see test-evidence.md | None |
+| E4 | File access/write | Sandbox | Read-only root, tmpfs, no secrets mounted | Hostile suite | Pass (A6) – host files invisible, /usr and code read-only, 4 MB scratch – see test-evidence.md | None |
+| E5 | Network access | Sandbox | No network namespace | Hostile suite | Pass (A6) – no network or DNS – see test-evidence.md | None |
+| E6 | Fork bomb / subprocess | Sandbox | pids limit, seccomp | Hostile suite | Pass (A6) – contained per job; does not starve parallel jobs – see test-evidence.md | None |
+| E7 | Malicious imports (`os`, `ctypes`, …) | Sandbox | Allow-list + isolation as defence in depth | Hostile suite | Pass (A6) – allow-list plus OS layers that hold when it is bypassed – see test-evidence.md | None |
+| E8 | Sandbox escape | Sandbox | gVisor/nsjail, non-root, no shared state, fresh per job, host patching | Third-party review before release | Partial (A6) – namespaces, per-job UID, no-new-privs; no seccomp, no third-party review – see test-evidence.md | **Low–Medium** |
 | E9 | Flood Submit to exhaust workers | Sandbox | Queue, per-user concurrency 1, limits, circuit breaker | Load test | Not tested | Low |
 | E10 | Tamper local run result to look passed | Practice | Local results never recorded as pass | Tamper test | Not tested | None |
 | F1 | Unauthorised API calls | API | Auth dependency + route inventory test | ZAP/API suite | Not tested | None |

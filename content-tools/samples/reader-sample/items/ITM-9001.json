@@ -1,0 +1,27 @@
+{
+  "id": "ITM-9001",
+  "type": "mcq",
+  "purpose": "practice",
+  "level": 1,
+  "stem": "What does `age = 19` do?",
+  "options": [
+    {
+      "id": "a",
+      "text": "Checks whether age is 19"
+    },
+    {
+      "id": "b",
+      "text": "Stores the value 19 under the name age"
+    },
+    {
+      "id": "c",
+      "text": "Prints 19"
+    }
+  ],
+  "answer": "b",
+  "explanation": "SAMPLE: = stores the value on the right under the name on the left. It does not compare and does not print.",
+  "option_explanations": {
+    "a": "Comparing uses ==, not =.",
+    "c": "Nothing is printed until print() is called."
+  }
+}

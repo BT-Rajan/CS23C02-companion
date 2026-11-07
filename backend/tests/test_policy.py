@@ -49,10 +49,13 @@ def test_settings_refuse_weak_placeholder_or_duplicate_secrets():
 
 
 def test_production_refuses_dev_mail_backends_and_cheap_password_hashing():
-    prod = {**BASE, "env": "prod", "argon_memory_kb": 65536, "argon_time_cost": 3, "email_backend": "smtp", "smtp_user": "u@gmail.com", "smtp_password": "pw", "smtp_from": "u@gmail.com"}
+    prod = {**BASE, "env": "prod", "argon_memory_kb": 65536, "argon_time_cost": 3, "email_backend": "smtp", "smtp_user": "u@gmail.com", "smtp_password": "pw", "smtp_from": "u@gmail.com",
+            "sandbox_mode": "http", "sandbox_url": "https://sandbox.internal", "sandbox_key": "ef" * 32}
     Settings(**prod)
     for bad in ({"email_backend": "console"}, {"email_backend": "memory"}, {"smtp_password": ""},
-                {"argon_memory_kb": 8192}, {"argon_time_cost": 1}):
+                {"argon_memory_kb": 8192}, {"argon_time_cost": 1},
+                {"sandbox_mode": "local"},                       # student code never runs inside the API process in prod
+                {"sandbox_key": "short"}, {"sandbox_url": ""}):
         with pytest.raises(ValueError):
             Settings(**{**prod, **bad})
 

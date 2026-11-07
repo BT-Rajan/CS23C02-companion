@@ -1,0 +1,28 @@
+{
+  "id": "ITM-9003",
+  "type": "trace",
+  "purpose": "practice",
+  "level": 1,
+  "stem": "What does this program print?",
+  "options": [
+    {
+      "id": "a",
+      "text": "10"
+    },
+    {
+      "id": "b",
+      "text": "15"
+    },
+    {
+      "id": "c",
+      "text": "score + 5"
+    }
+  ],
+  "answer": "b",
+  "explanation": "SAMPLE: the right-hand side score + 5 is worked out first using the old value 10, giving 15, which is stored back in score.",
+  "option_explanations": {
+    "a": "score was given a new value on line 2.",
+    "c": "print shows the value, not the expression."
+  },
+  "code": "score = 10\nscore = score + 5\nprint(score)"
+}

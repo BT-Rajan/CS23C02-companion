@@ -1,0 +1,27 @@
+{
+  "id": "ITM-9101",
+  "type": "mcq",
+  "purpose": "assessment",
+  "level": 2,
+  "stem": "After `a = 5` and then `a = a * 2`, what is `a`?",
+  "options": [
+    {
+      "id": "a",
+      "text": "5"
+    },
+    {
+      "id": "b",
+      "text": "7"
+    },
+    {
+      "id": "c",
+      "text": "10"
+    }
+  ],
+  "answer": "c",
+  "explanation": "SAMPLE: the right side uses the old value 5, so a becomes 10.",
+  "option_explanations": {
+    "a": "a was given a new value.",
+    "b": "* multiplies; it does not add 2."
+  }
+}

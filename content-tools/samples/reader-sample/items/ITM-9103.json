@@ -1,0 +1,28 @@
+{
+  "id": "ITM-9103",
+  "type": "trace",
+  "purpose": "assessment",
+  "level": 2,
+  "stem": "What does this program print?",
+  "options": [
+    {
+      "id": "a",
+      "text": "yes"
+    },
+    {
+      "id": "b",
+      "text": "no"
+    },
+    {
+      "id": "c",
+      "text": "yes and no"
+    }
+  ],
+  "answer": "b",
+  "explanation": "SAMPLE: 3 > 5 is False, so the else branch runs.",
+  "option_explanations": {
+    "a": "3 > 5 is False.",
+    "c": "Only one branch runs."
+  },
+  "code": "x = 3\nif x > 5:\n    print('yes')\nelse:\n    print('no')"
+}

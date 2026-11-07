@@ -31,7 +31,7 @@ def test_build_produces_signed_manifest_and_hashed_files(built):
     out, m, pub = built
     mbytes = (out / "public" / "manifest.json").read_bytes()
     Ed25519PublicKey.from_public_bytes(base64.b64decode(pub)).verify(base64.b64decode((out / "public" / "manifest.sig").read_text()), mbytes)
-    assert m["book"]["id"] == "BOK-0001" and len(m["files"]) == 3 + 3 + 2 + 1
+    assert m["book"]["id"] == "BOK-0001" and len(m["files"]) == 3 + 7 + 2 + 2
     for f in m["files"]:
         assert hashlib.sha256((out / "public" / f["path"]).read_bytes()).hexdigest() == f["sha256"]
 
@@ -108,3 +108,72 @@ def test_release_validation_rejects_bad_source(tmp_path, keys, mutate, expect):
     (src / "nav.json").write_text(json.dumps(d["nav"]))
     with pytest.raises(B.BuildError, match=expect):
         B.build(src, tmp_path / "o", B.load_private(keys[0]))
+
+
+def test_trace_item_ships_its_code_but_never_its_answer(built):
+    out, _, _ = built
+    pub = json.loads((out / "public" / "items" / "ITM-0004.json").read_text())
+    assert pub["type"] == "trace" and "print('odd')" in pub["code"]
+    assert set(pub) == {"id", "type", "purpose", "level", "stem", "code", "options"}
+    prot = json.loads((out / "protected.json").read_text())["items"]["ITM-0004"]
+    assert prot["answer"] == "b" and prot["explanation"].startswith("FIXTURE-EXPLAIN-4")
+
+
+def test_trace_item_without_code_fails_release_validation(tmp_path, keys):
+    src = tmp_path / "src"
+    shutil.copytree(FIX, src)
+    it = json.loads((src / "items" / "ITM-0004.json").read_text())
+    del it["code"]
+    (src / "items" / "ITM-0004.json").write_text(json.dumps(it))
+    with pytest.raises(B.BuildError, match="trace item needs the code"):
+        B.build(src, tmp_path / "out", B.load_private(keys[0]))
+
+
+def _sandbox_ok():
+    sys_path = pathlib.Path(__file__).resolve().parents[2] / "sandbox"
+    import sys
+    sys.path.insert(0, str(sys_path))
+    from sandbox import runner
+    return runner.available()
+
+
+@pytest.mark.skipif(not _sandbox_ok(), reason="sandbox not available")
+def test_reference_solutions_pass_all_their_tests_in_the_sandbox(tmp_path, keys):
+    B.build(FIX, tmp_path / "out", B.load_private(keys[0]), check_reference_solutions=True)
+
+
+@pytest.mark.skipif(not _sandbox_ok(), reason="sandbox not available")
+def test_a_wrong_reference_solution_fails_the_build(tmp_path, keys):
+    src = tmp_path / "src"
+    shutil.copytree(FIX, src)
+    e = json.loads((src / "exercises" / "EXR-0001.json").read_text())
+    e["reference_solution"] = "n = int(input())\nprint(abs(n) * 2)\n"   # right for the public test, wrong for -3
+    (src / "exercises" / "EXR-0001.json").write_text(json.dumps(e))
+    with pytest.raises(B.BuildError, match="EXR-0001: reference solution fails hidden test 2"):
+        B.build(src, tmp_path / "out", B.load_private(keys[0]), check_reference_solutions=True)
+
+
+def _broken(tmp_path, keys, change):
+    src = tmp_path / "src"
+    shutil.copytree(FIX, src)
+    change(src)
+    with pytest.raises(B.BuildError) as e:
+        B.build(src, tmp_path / "out", B.load_private(keys[0]))
+    return str(e.value)
+
+
+def test_unit_assessment_rules(tmp_path, keys):
+    def practice_item_in_assessment(src):
+        a = json.loads((src / "assessments" / "ASM-0002.json").read_text()); a["items"].append("ITM-0001")
+        (src / "assessments" / "ASM-0002.json").write_text(json.dumps(a))
+    assert "ITM-0001 must be an assessment-only" in _broken(tmp_path / "1", keys, practice_item_in_assessment)
+
+    def reused_in_practice(src):
+        l = json.loads((src / "lessons" / "LSN-0002.json").read_text()); l["practice"]["items"] = ["ITM-0006"]
+        (src / "lessons" / "LSN-0002.json").write_text(json.dumps(l))
+    assert "also a practice question" in _broken(tmp_path / "2", keys, reused_in_practice)
+
+    def wrong_purpose(src):
+        n = json.loads((src / "nav.json").read_text()); n["units"][0]["assessment"] = "ASM-0001"
+        (src / "nav.json").write_text(json.dumps(n))
+    assert "purpose unit_assessment" in _broken(tmp_path / "3", keys, wrong_purpose)
