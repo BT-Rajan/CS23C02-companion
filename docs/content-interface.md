@@ -55,3 +55,12 @@ that the correct option of a trace item is exactly what the program prints (know
 A unit in `nav.json` may name its assessment: `{"id": "UNT-…", "assessment": "ASM-…"}`. That `ASM` must have `purpose:
 unit_assessment` and only `ITM` items with `purpose: assessment` of type `mcq` or `trace`; none of them may also appear in a lesson's
 practice list (its answer would be revealed before the assessment). `rules` may set `shuffle_items` and `shuffle_options`.
+
+## 8. QR codes in the printed book (book decision X5)
+The book prints QR codes for `cs23c02://o/<ID>`: a private scheme that only this app registers (`AndroidManifest.xml`), so a
+browser or a phone without the app has nothing to open. The link carries only a public content ID; the content still needs a
+signed-in account with the book activated. `DeepLink.resolve` opens exactly: `TOP`/`LSN` → that lesson; `COD` → that program
+in the stepper (with the input the book used); `ITM` → that question in the lesson's practice; `EXR` → that exercise;
+`ASM` → that unit assessment. A link that arrives before sign-in or before lessons are downloaded waits and opens afterwards.
+Unknown or malformed links open nothing. Book code blocks carry `id`, `title` and `stdin` for this.
+Limit: another installed app could also register the scheme; this is acceptable because the link holds no secret.

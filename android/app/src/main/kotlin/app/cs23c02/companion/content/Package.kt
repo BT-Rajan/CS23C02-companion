@@ -51,6 +51,10 @@ data class Block(
     val code: String? = null,
     @SerialName("expected_output") val expectedOutput: String? = null,
     val items: List<String>? = null,
+    /** Code blocks from the book carry the program's ID (target of its QR code), title and the input it was run with. */
+    val id: String? = null,
+    val title: String? = null,
+    val stdin: String? = null,
 )
 
 internal val ContentJson = Json { ignoreUnknownKeys = true }

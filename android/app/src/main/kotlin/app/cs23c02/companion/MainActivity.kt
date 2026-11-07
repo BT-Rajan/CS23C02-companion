@@ -62,10 +62,19 @@ object ApiConfig {
 }
 
 class MainActivity : ComponentActivity() {
+    /** A book QR code (cs23c02://o/<ID>) handed to the ViewModel once the UI is up; also set by onNewIntent. */
+    private val link = kotlinx.coroutines.flow.MutableStateFlow<String?>(null)
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        link.value = app.cs23c02.companion.content.DeepLink.parse(intent.dataString)
+    }
+
     /** Lessons live in no-backup app storage; the account's copy is wiped on sign-out (attack C5). */
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        if (savedInstanceState == null) link.value = app.cs23c02.companion.content.DeepLink.parse(intent?.dataString)
         val factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -91,6 +100,8 @@ class MainActivity : ComponentActivity() {
                     val exercise by vm.exercise.collectAsStateWithLifecycle()
                     val assessment by vm.assessment.collectAsStateWithLifecycle()
                     val me by vm.me.collectAsStateWithLifecycle()
+                    val pending by link.collectAsStateWithLifecycle()
+                    androidx.compose.runtime.LaunchedEffect(pending) { pending?.let { vm.openLink(it); link.value = null } }
                     val canGoBack = s.screen is Screen.CreateAccount || s.screen is Screen.SignIn || s.screen is Screen.VerifyEmail ||
                         s.screen is Screen.Forgot || s.screen is Screen.Reset || s.screen is Screen.Stepper ||
                         s.screen is Screen.Tutor || s.screen is Screen.TypeIt || s.screen is Screen.Playground ||

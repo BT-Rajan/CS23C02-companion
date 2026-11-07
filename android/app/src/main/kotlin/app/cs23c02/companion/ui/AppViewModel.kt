@@ -8,6 +8,7 @@ import app.cs23c02.companion.api.Me
 import app.cs23c02.companion.core.ActivationCode
 import app.cs23c02.companion.core.Validation
 import app.cs23c02.companion.stepper.StepProgram
+import app.cs23c02.companion.content.DeepLink
 import app.cs23c02.companion.content.InstalledPackage
 import app.cs23c02.companion.content.ProgressStore
 import app.cs23c02.companion.content.ReaderRepository
@@ -187,6 +188,7 @@ class AppViewModel(
                 offline = out is ReaderRepository.SyncOutcome.Offline,
                 problem = (out as? ReaderRepository.SyncOutcome.Failed)?.message
                     ?: (if (out is ReaderRepository.SyncOutcome.Offline && !out.hasContent) "You're offline. Connect once to download your lessons." else null))
+            openPendingLink()
         }
     }
 
@@ -224,6 +226,28 @@ class AppViewModel(
     }
 
     fun openUnit(unitId: String) = go(Screen.UnitPage(unitId, homeScreen()))
+
+    // ---- QR codes in the printed book (X5) --------------------------------------------------------------------
+    private var pendingLink: String? = null
+
+    /** Opens exactly the content a book QR code names. Before sign-in or before lessons are downloaded, the link waits. */
+    fun openLink(id: String) {
+        val pkg = _reader.value.pkg
+        if (repo == null || pkg == null) { pendingLink = id; return }
+        pendingLink = null
+        when (val t = DeepLink.resolve(pkg, id)) {
+            is DeepLink.Target.Lesson -> openLesson(t.lessonId)
+            is DeepLink.Target.Practice -> { openLesson(t.lessonId); openPractice(t.lessonId, t.index) }
+            is DeepLink.Target.Exercise -> { openLesson(t.lessonId); openExercise(t.exerciseId, t.lessonId) }
+            is DeepLink.Target.Program -> { openLesson(t.lessonId); stepThroughCode(t.title, t.code, t.stdin) }
+            is DeepLink.Target.Assessment -> openAssessment(t.assessmentId, t.unitId)
+            DeepLink.Target.NotFound -> _state.update {
+                it.copy(info = "That page ($id) isn't in your lessons yet. Pull to refresh, or check that this book is activated.")
+            }
+        }
+    }
+
+    private fun openPendingLink() { pendingLink?.let { if (_reader.value.pkg != null) openLink(it) } }
 
     /** Opening a lesson records it (low-stakes, ADR 0009) and remembers it for Continue. Back goes to the lesson's unit. */
     fun openLesson(lessonId: String) {
