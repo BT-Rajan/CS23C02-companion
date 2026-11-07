@@ -13,7 +13,9 @@ This is a teaching tool, not a security boundary: isolation comes from the Pyodi
 from __future__ import annotations
 
 import builtins
+import errno
 import io
+import os
 import random
 import re
 import reprlib
@@ -32,7 +34,7 @@ MAX_OUTPUT = 64 * 1024
 REPR_LIMIT = 200
 # ADR 0006 allow-list; extended per lesson via content.
 ALLOWED_MODULES = frozenset({"math", "random", "statistics", "string", "datetime", "collections", "itertools",
-                             "functools", "re", "json"})
+                             "functools", "re", "json", "csv", "pathlib"})
 
 
 class _Stop(BaseException):
@@ -91,6 +93,92 @@ class _Output(io.StringIO):
         if room <= 0:
             raise _Stop("output_limit")
         return super().write(s[:room])
+
+
+class _VirtualFile(io.StringIO):
+    """A text file that lives only in memory for one run (book Unit IV): writes are saved to the run's file table on
+    flush and close, so `with open(...)` behaves like a real file without touching the phone's or the build's disk."""
+
+    def __init__(self, table: dict, name: str, mode: str, initial: str, newline):
+        super().__init__(initial, newline=newline)
+        self._table, self.name, self.mode = table, name, mode
+        self._can_read = "r" in mode or "+" in mode
+        self._can_write = any(c in mode for c in "wax+")
+        if "a" in mode:
+            self.seek(0, io.SEEK_END)
+
+    def readable(self):
+        return self._can_read
+
+    def writable(self):
+        return self._can_write
+
+    def _need(self, ok, what):
+        if self.closed:
+            raise ValueError("I/O operation on closed file.")
+        if not ok:
+            raise io.UnsupportedOperation(f"not {what}")
+
+    def read(self, *a):
+        self._need(self._can_read, "readable")
+        return super().read(*a)
+
+    def readline(self, *a):
+        self._need(self._can_read, "readable")
+        return super().readline(*a)
+
+    def readlines(self, *a):
+        self._need(self._can_read, "readable")
+        return super().readlines(*a)
+
+    def __next__(self):
+        self._need(self._can_read, "readable")
+        return super().__next__()
+
+    def write(self, text):
+        self._need(self._can_write, "writable")
+        return super().write(text)
+
+    def writelines(self, lines):
+        self._need(self._can_write, "writable")
+        return super().writelines(lines)
+
+    def flush(self):
+        if not self.closed and self._can_write:
+            self._table[self.name] = self.getvalue()
+        return super().flush()
+
+    def close(self):
+        if not self.closed and self._can_write:
+            self._table[self.name] = self.getvalue()
+        super().close()
+
+
+class _VirtualFiles:
+    """open() for the stepper: text files in a per-run table, optionally pre-loaded with `files`."""
+
+    def __init__(self, files: dict | None):
+        self.table: dict[str, str] = dict(files or {})
+        self.touched = False
+
+    def open(self, file, mode="r", buffering=-1, encoding=None, errors=None, newline=None, closefd=True, opener=None):
+        name = os.fspath(file)
+        if not isinstance(name, str):
+            raise TypeError("expected a file name")
+        if "b" in mode:
+            raise OSError("Binary files can't be opened in the stepper; use text mode ('r', 'w' or 'a').")
+        if not mode or mode[0] not in "rwax" or any(c not in "rwaxt+" for c in mode):
+            raise ValueError(f"invalid mode: '{mode}'")
+        self.touched = True
+        exists = name in self.table
+        if mode[0] == "r" and not exists:
+            raise FileNotFoundError(errno.ENOENT, "No such file or directory", name)
+        if mode[0] == "x" and exists:
+            raise FileExistsError(errno.EEXIST, "File exists", name)
+        initial = "" if mode[0] in "wx" else self.table.get(name, "")
+        if mode[0] in "wx":
+            self.table[name] = ""
+        return _VirtualFile(self.table, name, mode, initial, newline)
 
 
 class _Recorder:
@@ -201,11 +289,13 @@ class _Recorder:
 
 
 def record(source: str, stdin: str = "", *, max_steps: int = DEFAULT_MAX_STEPS,
-           max_seconds: float = DEFAULT_MAX_SECONDS, seed: int = 0, echo_input: bool = True) -> dict:
+           max_seconds: float = DEFAULT_MAX_SECONDS, seed: int = 0, echo_input: bool = True,
+           files: dict | None = None) -> dict:
     """Run `source` and return the recording. stdin is newline-separated input lines. `seed` makes random repeatable,
     so re-running with one more input line (status needs_input) replays the same program up to that point.
     `echo_input` shows typed input in the output like a terminal (stepper); turn it off to get exactly what the program printed
-    (exercise Run and grading, which must match the sandbox)."""
+    (exercise Run and grading, which must match the sandbox). `files` pre-loads text files ({name: content}) into the run's
+    in-memory file system; open() never touches a real disk, and files written by the program come back in result["files"]."""
     result = {"version": VERSION, "status": "ok", "steps": [], "stdout": "", "error": None}
     try:
         code = compile(source, FILENAME, "exec")
@@ -216,8 +306,9 @@ def record(source: str, stdin: str = "", *, max_steps: int = DEFAULT_MAX_STEPS,
 
     rec = _Recorder(stdin.splitlines() if stdin else [], max_steps, max_seconds, echo_input)
     safe_builtins = dict(vars(builtins))
-    safe_builtins.update(input=rec.input, print=rec.print, __import__=rec.importer)
-    for name in ("open", "exec", "eval", "compile", "breakpoint", "exit", "quit", "help"):
+    vfs = _VirtualFiles(files)
+    safe_builtins.update(input=rec.input, print=rec.print, __import__=rec.importer, open=vfs.open)
+    for name in ("exec", "eval", "compile", "breakpoint", "exit", "quit", "help"):
         safe_builtins.pop(name, None)
     env = {"__name__": "__main__", "__builtins__": safe_builtins}
 
@@ -251,6 +342,8 @@ def record(source: str, stdin: str = "", *, max_steps: int = DEFAULT_MAX_STEPS,
         random.setstate(state)
     result["steps"] = rec.steps
     result["stdout"] = rec.out.getvalue()
+    if vfs.touched:
+        result["files"] = dict(sorted(vfs.table.items()))
     return result
 
 

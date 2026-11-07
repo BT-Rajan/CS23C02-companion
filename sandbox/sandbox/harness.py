@@ -3,7 +3,8 @@ The allow-list is defence in depth only; the real boundary is the bubblewrap con
 import builtins
 import sys
 
-ALLOWED = {"math", "random", "statistics", "string", "datetime", "collections", "itertools", "functools", "re", "json"}
+ALLOWED = {"math", "random", "statistics", "string", "datetime", "collections", "itertools", "functools", "re", "json",
+           "csv", "pathlib"}   # same list as the stepper (runtime/stepper/stepper.py)
 FILENAME = "<student>"
 _real_import = builtins.__import__
 

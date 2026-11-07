@@ -172,9 +172,13 @@ def test_import_allow_list():
 
 
 def test_dangerous_builtins_are_absent():
-    for src in ("open('/etc/passwd')\n", "eval('1')\n", "exec('x=1')\n", "breakpoint()\n"):
+    for src in ("eval('1')\n", "exec('x=1')\n", "breakpoint()\n"):
         r = rec(src)
         assert r["status"] == "error" and r["error"]["type"] == "NameError", src
+    # open() exists for Unit IV but only sees the run's in-memory files: the real disk is invisible
+    for path in ("/etc/passwd", "../../etc/passwd", "stepper.py"):
+        r = rec(f"print(open({path!r}).read())\n")
+        assert r["status"] == "error" and r["error"]["type"] == "FileNotFoundError", path
 
 
 def test_output_is_capped():
@@ -249,3 +253,41 @@ def test_input_echo_can_be_turned_off_for_grading():
     src = "n = int(input())\nprint(n * 2)\n"
     assert rec(src, stdin="4")["stdout"] == "4\n8\n"                      # stepper: reads like a terminal
     assert rec(src, stdin="4", echo_input=False)["stdout"] == "8\n"        # grading/Run: exactly what was printed
+
+
+# ---- Unit IV: files in memory (book decision X5; companion stepper) ---------------------------------------------------
+def test_files_written_and_read_back_in_memory(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    src = ('with open("notes.txt", "w") as f:\n    f.write("one\\ntwo\\n")\n'
+           'with open("notes.txt", "a") as f:\n    f.write("three\\n")\n'
+           'with open("notes.txt") as f:\n    for line in f:\n        print(line.strip())\n')
+    r = stepper.record(src)
+    assert r["status"] == "ok" and r["stdout"] == "one\ntwo\nthree\n"
+    assert r["files"] == {"notes.txt": "one\ntwo\nthree\n"}
+    assert list(tmp_path.iterdir()) == []          # nothing reached the real disk
+
+
+def test_missing_file_and_binary_mode_fail_like_python():
+    r = stepper.record('open("nope.txt")\n')
+    assert r["status"] == "error" and r["error"]["type"] == "FileNotFoundError"
+    assert "No such file or directory: 'nope.txt'" in r["error"]["message"]
+    r = stepper.record('open("data.bin", "wb")\n')
+    assert r["status"] == "error" and "Binary files" in r["error"]["message"]
+    r = stepper.record('f = open("a.txt", "w")\nf.read()\n')
+    assert r["error"]["type"] == "UnsupportedOperation"
+
+
+def test_csv_and_json_round_trip_and_preloaded_files():
+    src = ('import csv\nimport json\n'
+           'with open("m.csv", "w", newline="") as f:\n    w = csv.writer(f)\n    w.writerow(["Asha", 82])\n'
+           'with open("m.csv", newline="") as f:\n    for row in csv.reader(f):\n        print(row)\n'
+           'with open("c.json", "w") as f:\n    json.dump({"n": 1}, f)\n'
+           'with open("c.json") as f:\n    print(json.load(f))\n'
+           'with open("given.txt") as f:\n    print(f.read())\n')
+    r = stepper.record(src, files={"given.txt": "hello"})
+    assert r["status"] == "ok", r["error"]
+    assert r["stdout"] == "['Asha', '82']\n{'n': 1}\nhello\n"
+
+
+def test_programs_without_files_record_exactly_as_before():
+    assert "files" not in stepper.record("print(1)\n")
