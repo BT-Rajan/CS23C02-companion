@@ -1,4 +1,4 @@
-run: 42277043518  sha: 968396500f933643b23db0f267fa72ab5e72e8cb  job: success
+run: 42344232781  sha: 0fa8794622fcf9c6dcc15c6cca9c94fa827dc47d  job: success
 
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.10.2/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
 Daemon will be stopped at the end of the build 
@@ -18,11 +18,11 @@ Daemon will be stopped at the end of the build
 > Task :app:processDebugMainManifest
 > Task :app:processDebugManifest
 > Task :app:preDebugAndroidTestBuild SKIPPED
-> Task :app:javaPreCompileDebug
 > Task :app:generateDebugAndroidTestResValues
+> Task :app:processDebugManifestForPackage
+> Task :app:javaPreCompileDebug
 > Task :app:extractProguardFiles
 > Task :app:preDebugUnitTestBuild UP-TO-DATE
-> Task :app:processDebugManifestForPackage
 > Task :app:javaPreCompileDebugUnitTest
 > Task :app:mergeDebugShaders
 > Task :app:compileDebugShaders NO-SOURCE
@@ -41,7 +41,11 @@ Downloading Pyodide 0.27.8 from https://registry.npmjs.org/pyodide/-/pyodide-0.2
 > Task :app:mergeDebugJniLibFolders
 > Task :app:checkDebugDuplicateClasses
 > Task :app:mergeDebugNativeLibs
+
 > Task :app:compileDebugKotlin
+e: The daemon has terminated unexpectedly on startup attempt #1 with error code: 0. The daemon process output:
+    1. Kotlin compile daemon is ready
+
 > Task :app:mergeExtDexDebug
 > Task :app:mergeLibDexDebug
 
@@ -88,7 +92,7 @@ w: file:///home/runner/work/CS23C02-companion/CS23C02-companion/android/app/src/
 Wrote HTML report to file:///home/runner/work/CS23C02-companion/CS23C02-companion/android/app/build/reports/lint-results-debug.html
 
 > Task :app:lintDebug
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1793992150855.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1794030497179.json
 
-BUILD SUCCESSFUL in 2m 23s
+BUILD SUCCESSFUL in 2m 18s
 56 actionable tasks: 56 executed
