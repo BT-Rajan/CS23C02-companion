@@ -1,4 +1,4 @@
-run: 42348498385  sha: 7d9ffb633bc022f30cc881e92b807fa20a387d4c  job: success
+run: 42372586313  sha: 29296dfce98b1c6db8a02d180fa9d024691c356f  job: success
 
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.10.2/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
 Daemon will be stopped at the end of the build 
@@ -11,9 +11,9 @@ Daemon will be stopped at the end of the build
 > Task :app:mapDebugSourceSetPaths
 > Task :app:generateDebugResources
 > Task :app:packageDebugResources
-> Task :app:mergeDebugResources
 > Task :app:createDebugCompatibleScreenManifests
 > Task :app:extractDeepLinksDebug
+> Task :app:mergeDebugResources
 > Task :app:parseDebugLocalResources
 > Task :app:processDebugMainManifest
 > Task :app:processDebugManifest
@@ -23,43 +23,44 @@ Daemon will be stopped at the end of the build
 > Task :app:extractProguardFiles
 > Task :app:preDebugUnitTestBuild UP-TO-DATE
 > Task :app:javaPreCompileDebugUnitTest
-> Task :app:processDebugManifestForPackage
 > Task :app:mergeDebugShaders
 > Task :app:compileDebugShaders NO-SOURCE
 > Task :app:generateDebugAssets UP-TO-DATE
-> Task :app:processDebugResources
 
 > Task :app:runnerAssets
 Downloading Pyodide 0.27.8 from https://registry.npmjs.org/pyodide/-/pyodide-0.27.8.tgz
 
 > Task :app:mergeDebugAssets
-> Task :app:packageDebugUnitTestForUnitTest
 > Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
-> Task :app:generateDebugUnitTestConfig
 > Task :app:desugarDebugFileDependencies
 > Task :app:compressDebugAssets
 > Task :app:mergeDebugJniLibFolders
 > Task :app:checkDebugDuplicateClasses
 > Task :app:mergeDebugNativeLibs
-> Task :app:compileDebugKotlin
+> Task :app:processDebugManifestForPackage
 > Task :app:mergeExtDexDebug
 > Task :app:mergeLibDexDebug
 
 > Task :app:stripDebugDebugSymbols
 Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so.
 
+> Task :app:processDebugResources
+> Task :app:validateSigningDebug
+> Task :app:packageDebugUnitTestForUnitTest
+> Task :app:writeDebugAppMetadata
+> Task :app:generateDebugUnitTestConfig
+> Task :app:writeDebugSigningConfigVersions
 > Task :app:compileDebugKotlin
 w: file:///home/runner/work/CS23C02-companion/CS23C02-companion/android/app/src/main/kotlin/app/cs23c02/companion/ReaderFactory.kt:35:21 Redundant creation of Json format. Creating instances for each usage can be slow.
 
-> Task :app:validateSigningDebug
-> Task :app:writeDebugAppMetadata
-> Task :app:writeDebugSigningConfigVersions
 > Task :app:compileDebugJavaWithJavac
 > Task :app:bundleDebugClassesToCompileJar
 > Task :app:generateDebugLintReportModel
 > Task :app:generateDebugAndroidTestLintModel
 > Task :app:generateDebugUnitTestLintModel
 > Task :app:bundleDebugClassesToRuntimeJar
+> Task :app:lintAnalyzeDebugAndroidTest
+> Task :app:processDebugJavaRes
 
 > Task :app:compileDebugUnitTestKotlin
 w: file:///home/runner/work/CS23C02-companion/CS23C02-companion/android/app/src/test/kotlin/app/cs23c02/companion/api/LiveBackendContractTest.kt:28:29 Java type mismatch: inferred type is 'kotlin.String?', but 'kotlin.String' was expected.
@@ -68,26 +69,24 @@ w: file:///home/runner/work/CS23C02-companion/CS23C02-companion/android/app/src/
 w: file:///home/runner/work/CS23C02-companion/CS23C02-companion/android/app/src/test/kotlin/app/cs23c02/companion/api/LiveBackendContractTest.kt:58:28 Java type mismatch: inferred type is 'kotlin.String?', but 'kotlin.String' was expected.
 w: file:///home/runner/work/CS23C02-companion/CS23C02-companion/android/app/src/test/kotlin/app/cs23c02/companion/api/LiveBackendContractTest.kt:164:29 Java type mismatch: inferred type is 'kotlin.String?', but 'kotlin.String' was expected.
 
-> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
-> Task :app:processDebugJavaRes
-> Task :app:processDebugUnitTestJavaRes
-> Task :app:lintAnalyzeDebugAndroidTest
-> Task :app:testDebugUnitTest
 > Task :app:dexBuilderDebug
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processDebugUnitTestJavaRes
+> Task :app:lintAnalyzeDebug
+> Task :app:lintAnalyzeDebugUnitTest
+> Task :app:testDebugUnitTest
 > Task :app:mergeDebugGlobalSynthetics
 > Task :app:mergeProjectDexDebug
 > Task :app:mergeDebugJavaResource
 > Task :app:packageDebug
 > Task :app:createDebugApkListingFileRedirect
 > Task :app:assembleDebug
-> Task :app:lintAnalyzeDebug
-> Task :app:lintAnalyzeDebugUnitTest
 
 > Task :app:lintReportDebug
 Wrote HTML report to file:///home/runner/work/CS23C02-companion/CS23C02-companion/android/app/build/reports/lint-results-debug.html
 
 > Task :app:lintDebug
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1794034041586.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1794054490304.json
 
-BUILD SUCCESSFUL in 2m 41s
+BUILD SUCCESSFUL in 3m 9s
 56 actionable tasks: 56 executed
